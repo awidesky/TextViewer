@@ -5,7 +5,10 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.BorderFactory;
@@ -21,7 +24,7 @@ import javax.swing.KeyStroke;
 public class MainFrame extends JFrame {
 
 	private JTextArea ta = new JTextArea();
-	
+	private File openedFile = null;
 	public MainFrame() {
 		
 		setSize(800, 700);
@@ -63,7 +66,17 @@ public class MainFrame extends JFrame {
 			ta.setText(readSelectedFile());
 			
 		});
+		JMenuItem saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
+		saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.ALT_MASK));
+		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
+		saveFile.addActionListener((e) -> {
+			
+			/** Read file in EDT */
+			saveFile();
+			
+		});
 		fileMenu.add(openFile);
+		fileMenu.add(saveFile);
 
 		
 		
@@ -77,7 +90,7 @@ public class MainFrame extends JFrame {
 		font.addActionListener((e) -> {
 			//TODO
 		});
-		fileMenu.add(font);
+		formatMenu.add(font);
 		
 		
 		menuBar.add(fileMenu);
@@ -87,6 +100,28 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	/**
+	 *  This method saves content to the file.
+	 * 	
+	 * 	File may be written in another thread, or in EDT.
+	 *  
+	 *  TODO: Deal with super large file(that should be paged)
+	 *  
+	 *  */
+	private void saveFile() {
+		
+		try {
+			BufferedWriter bw = selectSaveLocation();
+			if(bw == null) return;
+			bw.write(ta.getText().replace("\n", System.lineSeparator()));
+			bw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
 	/**
 	 *  This method returns content of the file.
 	 * 	
@@ -102,12 +137,12 @@ public class MainFrame extends JFrame {
 		try {
 			BufferedReader br = selectFile();
 			String line = null;
-			
+			if(br == null) return "";
 			while((line = br.readLine()) != null) {
 				result.append(line);
 				result.append("\n");
 			}
-			
+			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -118,8 +153,18 @@ public class MainFrame extends JFrame {
 
 	public BufferedReader selectFile() throws IOException {
 	    TestFilechooser f = new TestFilechooser();
+	    
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
-	    return new BufferedReader(new FileReader(f.getSelectedFile(), f.getSelectedCharset()));
+	    return new BufferedReader(new FileReader((openedFile = f.getSelectedFile()), f.getSelectedCharset()));
+	}
+	
+	public BufferedWriter selectSaveLocation() throws IOException {
+		TestFilechooser f = new TestFilechooser();
+		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
+	    	return null;
+		
+		System.out.println(f.getSelectedFile().getAbsolutePath());
+	    return new BufferedWriter(new FileWriter(f.getSelectedFile(), f.getSelectedCharset()));
 	}
 }

@@ -23,7 +23,7 @@ public class TestFilechooser extends JFileChooser{
     	comboBox.setSelectedIndex(charsetNameList.indexOf("UTF-8"));
     	
     	setMultiSelectionEnabled(false);
-    	setFileSelectionMode(FILES_ONLY);
+    	setFileSelectionMode(JFileChooser.FILES_ONLY);
     	addChoosableFileFilter(new FileFilter() {
 			public boolean accept(File f) {
 				if (f.isDirectory()	|| f.getName().endsWith(".txt"))
