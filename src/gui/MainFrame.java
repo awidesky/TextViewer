@@ -24,9 +24,13 @@ import javax.swing.KeyStroke;
 public class MainFrame extends JFrame {
 
 	private JTextArea ta = new JTextArea();
-	private File openedFile = null;
+	private File openedFile = new File (System.getProperty("user.home"));
+	private String version = "1.0";
+	
+	
 	public MainFrame() {
 		
+		setTitle("TextViewer v" + version);
 		setSize(800, 700);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
@@ -81,7 +85,7 @@ public class MainFrame extends JFrame {
 		
 		
 		JMenu formatMenu = new JMenu("Format");
-		formatMenu.setMnemonic(KeyEvent.VK_O);
+		formatMenu.setMnemonic(KeyEvent.VK_R);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Format menu");
 		
 		JMenuItem font = new JMenuItem("Change font", KeyEvent.VK_C);
@@ -153,7 +157,7 @@ public class MainFrame extends JFrame {
 
 	public BufferedReader selectFile() throws IOException {
 	    TestFilechooser f = new TestFilechooser();
-	    
+	    f.setCurrentDirectory(openedFile.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
 	    return new BufferedReader(new FileReader((openedFile = f.getSelectedFile()), f.getSelectedCharset()));
@@ -161,6 +165,8 @@ public class MainFrame extends JFrame {
 	
 	public BufferedWriter selectSaveLocation() throws IOException {
 		TestFilechooser f = new TestFilechooser();
+		f.setCurrentDirectory(openedFile.getParentFile());
+		f.setSelectedFile(openedFile);
 		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
 	    	return null;
 		
