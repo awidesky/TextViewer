@@ -11,19 +11,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import javax.swing.BorderFactory;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 
 public class MainFrame extends JFrame {
 
+	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
 	private File lastOpened = new File (System.getProperty("user.home"));
 	private File lastSaved = new File (System.getProperty("user.home"));
@@ -39,17 +31,14 @@ public class MainFrame extends JFrame {
 		
 		addMenubar();
 		
-		
-		JPanel jp = new JPanel();
-		jp.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		jp.setBackground(Color.WHITE);
-		jp.setLayout(new BorderLayout());
-		
 		ta.setBackground(Color.LIGHT_GRAY);
 		ta.setEditable(false);
-		jp.add(ta);
+
+		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		sp.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		sp.setBackground(Color.WHITE);
 		
-		add(jp);
+		add(sp);
 		
 		setVisible(true);
 		
