@@ -43,8 +43,8 @@ public class FontDialog extends JDialog {
 		setLayout(null);
 		
 		fontName.setSelectedItem(now.getFamily());
-		bold = new JCheckBox("bold", now.isBold());
-		italic = new JCheckBox("italic", now.isItalic());
+		bold = new JCheckBox("Bold", now.isBold());
+		italic = new JCheckBox("Italic", now.isItalic());
 		fontSize = new JTextField("" + now.getSize()); //default font size
 		
 		name.setBounds(14, 10, name.getPreferredSize().width, name.getPreferredSize().height);
