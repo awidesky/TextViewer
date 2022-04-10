@@ -170,6 +170,7 @@ public class MainFrame extends JFrame {
 	}
 
 	public BufferedReader selectFile() throws IOException {
+		f.setSelectedFile(lastOpened);
 	    f.setCurrentDirectory(lastOpened.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
