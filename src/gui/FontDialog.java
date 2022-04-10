@@ -6,7 +6,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ItemEvent;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -15,6 +14,8 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+
+import main.ReferenceDTO;
 
 public class FontDialog extends JDialog {
 
@@ -31,7 +32,7 @@ public class FontDialog extends JDialog {
 	
 	private int fontStyle = Font.PLAIN;
 	
-	public FontDialog(AtomicReference<Font> ref, Font now) {
+	public FontDialog(ReferenceDTO<Font> ref, Font now) {
 		
 		super((Window)null);
 		

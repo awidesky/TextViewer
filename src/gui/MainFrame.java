@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
+import java.nio.charset.Charset;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
@@ -26,6 +26,9 @@ import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 
+import main.LargeFileHandlingRule;
+import main.ReferenceDTO;
+
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 4096788492544078810L;
@@ -34,9 +37,14 @@ public class MainFrame extends JFrame {
 	private JTextArea ta = new JTextArea();
 	private File lastOpened = new File (System.getProperty("user.home"));
 	private File lastSaved = new File (System.getProperty("user.home"));
+	private Charset lastedOpenedCharset = null;
 	private String version = "TextViewer v1.0";
 	
 	private TestFilechooser f = new TestFilechooser();
+	
+	private LargeFileHandlingRule lfhRule = new LargeFileHandlingRule(3221225472L, 322000);
+
+	private boolean paged = false;
 	
 	public MainFrame() {
 		
@@ -95,18 +103,28 @@ public class MainFrame extends JFrame {
 
 		
 		
-		JMenu formatMenu = new JMenu("Format");
-		formatMenu.setMnemonic(KeyEvent.VK_R);
-		formatMenu.getAccessibleContext().setAccessibleDescription("Format menu");
+		JMenu formatMenu = new JMenu("Setting");
+		formatMenu.setMnemonic(KeyEvent.VK_E);
+		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
+		JMenuItem largeSetting = new JMenuItem("Large file handling", KeyEvent.VK_L);
+		largeSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.ALT_MASK));
+		largeSetting.getAccessibleContext().setAccessibleDescription("Large file handling setting");
+		largeSetting.addActionListener((e) -> {
+			ReferenceDTO<LargeFileHandlingRule> ref = new ReferenceDTO<>(lfhRule);
+			new LargeFileSettingDialog(ref);
+			lfhRule = ref.get();
+			//TODO : re-read file
+		});
 		JMenuItem font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
 		font.getAccessibleContext().setAccessibleDescription("Change font type or size");
 		font.addActionListener((e) -> {
-			AtomicReference<Font> ref = new AtomicReference<>(ta.getFont());
+			ReferenceDTO<Font> ref = new ReferenceDTO<>(ta.getFont());
 			new FontDialog(ref, ta.getFont());
 			ta.setFont(ref.get());
 		});
+		formatMenu.add(largeSetting);
 		formatMenu.add(font);
 		
 		
@@ -122,15 +140,19 @@ public class MainFrame extends JFrame {
 	 * 	
 	 * 	File may be written in another thread, or in EDT.
 	 *  
-	 *  TODO: Deal with super large file(that should be paged)
-	 *  
 	 *  */
 	private void saveFile() {
 		
 		try {
 			BufferedWriter bw = selectSaveLocation();
 			if(bw == null) return;
-			bw.write(ta.getText().replace("\n", System.lineSeparator()));
+			if(paged) {
+				BufferedReader br = new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset));
+				br.transferTo(bw);
+				br.close();
+			} else {
+				bw.write(ta.getText());
+			}
 			bw.close();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to save the file!", JOptionPane.ERROR_MESSAGE);
@@ -144,20 +166,25 @@ public class MainFrame extends JFrame {
 	 * 	
 	 * 	File may be read in another thread, or in EDT.
 	 *  
-	 *  TODO: Deal with super large file(that should be paged)
-	 *  
 	 *  */
 	private String readSelectedFile() {
 
-		StringBuilder result = new StringBuilder();
+		String result = "";
+		StringBuilder buff = new StringBuilder();
 		
 		try {
 			BufferedReader br = selectFile();
 			if(br == null) return ta.getText();
-			String line = null;
-			while((line = br.readLine()) != null) {
-				result.append(line);
-				result.append("\n");
+			
+			if(paged) {
+				result = lfhRule.readOnce(br);
+			} else {
+				String line = null;
+				while((line = br.readLine()) != null) {
+					buff.append(line);
+					buff.append("\n");
+				}
+				result = buff.toString();
 			}
 			br.close();
 		} catch (IOException e) {
@@ -165,7 +192,7 @@ public class MainFrame extends JFrame {
 			e.printStackTrace();
 		}
 		
-		return result.toString();
+		return result;
 		
 	}
 
@@ -175,8 +202,12 @@ public class MainFrame extends JFrame {
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
 	    
+	    lastOpened = f.getSelectedFile();
+	    if(lastOpened.length() > lfhRule.getFileSizeLimit()) {
+	    	paged = true;
+	    }
 	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" in " + f.getSelectedCharset().name());
-	    return new BufferedReader(new FileReader((lastOpened = f.getSelectedFile()), f.getSelectedCharset()));
+	    return new BufferedReader(new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset())));
 	}
 	
 	public BufferedWriter selectSaveLocation() throws IOException {
@@ -191,5 +222,22 @@ public class MainFrame extends JFrame {
 		}
 		
 	    return new BufferedWriter(new FileWriter(lastSaved, f.getSelectedCharset()));
+	}
+	
+	
+	/**
+	 * 
+	 * Reads next page of the file.
+	 * This method considers <code>paged</code> is <code>true</code>
+	 * 
+	 * */
+	public String nextPage() { //TODO : call this method in next button action listener. if return null. show message "this is end of the file!"
+		try {
+			return lfhRule.readOnce(null);
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
