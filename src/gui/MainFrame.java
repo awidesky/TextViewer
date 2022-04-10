@@ -174,7 +174,7 @@ public class MainFrame extends JFrame {
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
 	    
-	    setTitle(version + " - " + f.getSelectedFile().getAbsolutePath());
+	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" in " + f.getSelectedCharset().name());
 	    return new BufferedReader(new FileReader((lastOpened = f.getSelectedFile()), f.getSelectedCharset()));
 	}
 	
