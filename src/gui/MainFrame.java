@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
@@ -101,7 +103,9 @@ public class MainFrame extends JFrame {
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
 		font.getAccessibleContext().setAccessibleDescription("Change font type or size");
 		font.addActionListener((e) -> {
-			//TODO
+			AtomicReference<Font> ref = new AtomicReference<>(ta.getFont());
+			new FontDialog(ref, ta.getFont());
+			ta.setFont(ref.get());
 		});
 		formatMenu.add(font);
 		
