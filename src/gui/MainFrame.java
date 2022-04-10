@@ -112,7 +112,7 @@ public class MainFrame extends JFrame {
 			bw.write(ta.getText().replace("\n", System.lineSeparator()));
 			bw.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to save the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
 		
@@ -140,6 +140,7 @@ public class MainFrame extends JFrame {
 			}
 			br.close();
 		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
 		
