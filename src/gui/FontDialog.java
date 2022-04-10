@@ -13,6 +13,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 public class FontDialog extends JDialog {
@@ -35,10 +36,10 @@ public class FontDialog extends JDialog {
 		super((Window)null);
 		
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setModal(true);
 		setTitle("Change font...");
 		setSize(350, 150);
+		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setLayout(null);
 		
 		fontName.setSelectedItem(now.getFamily());
@@ -71,7 +72,12 @@ public class FontDialog extends JDialog {
 		
 		done.setBounds(144, 70, done.getPreferredSize().width, done.getPreferredSize().height);
 		done.addActionListener((e) -> {
-			ref.set(new Font(fontName.getSelectedItem().toString(), fontStyle, Integer.parseInt(fontSize.getText())));
+			try {
+				ref.set(new Font(fontName.getSelectedItem().toString(), fontStyle, Integer.parseInt(fontSize.getText())));
+			} catch (NumberFormatException err) {
+				JOptionPane.showMessageDialog(null, err.getMessage(), "Invalid font size!!", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 			setVisible(false);
 			dispose();
 		});
