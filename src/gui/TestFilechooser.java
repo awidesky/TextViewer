@@ -67,6 +67,7 @@ public class TestFilechooser extends JFileChooser{
    }
     
     public Charset getSelectedCharset() {
+    	comboBox.setSelectedIndex(comboBox.getSelectedIndex());
     	return Charset.forName(charsetNameList.get(comboBox.getSelectedIndex()));
     }
 }

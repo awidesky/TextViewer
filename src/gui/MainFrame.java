@@ -29,6 +29,7 @@ public class MainFrame extends JFrame {
 	private File lastSaved = new File (System.getProperty("user.home"));
 	private String version = "TextViewer v1.0";
 	
+	private TestFilechooser f = new TestFilechooser();
 	
 	public MainFrame() {
 		
@@ -158,7 +159,6 @@ public class MainFrame extends JFrame {
 	}
 
 	public BufferedReader selectFile() throws IOException {
-	    TestFilechooser f = new TestFilechooser();
 	    f.setCurrentDirectory(lastOpened.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
@@ -168,7 +168,6 @@ public class MainFrame extends JFrame {
 	}
 	
 	public BufferedWriter selectSaveLocation() throws IOException {
-		TestFilechooser f = new TestFilechooser();
 		f.setSelectedFile(lastOpened);
 		f.setCurrentDirectory(lastSaved.getParentFile());
 		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
