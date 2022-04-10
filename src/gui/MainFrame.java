@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
@@ -24,13 +25,14 @@ import javax.swing.KeyStroke;
 public class MainFrame extends JFrame {
 
 	private JTextArea ta = new JTextArea();
-	private File openedFile = new File (System.getProperty("user.home"));
-	private String version = "1.0";
+	private File lastOpened = new File (System.getProperty("user.home"));
+	private File lastSaved = new File (System.getProperty("user.home"));
+	private String version = "TextViewer v1.0";
 	
 	
 	public MainFrame() {
 		
-		setTitle("TextViewer v" + version);
+		setTitle(version);
 		setSize(800, 700);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
@@ -140,8 +142,8 @@ public class MainFrame extends JFrame {
 		
 		try {
 			BufferedReader br = selectFile();
+			if(br == null) return ta.getText();
 			String line = null;
-			if(br == null) return "";
 			while((line = br.readLine()) != null) {
 				result.append(line);
 				result.append("\n");
@@ -157,20 +159,26 @@ public class MainFrame extends JFrame {
 
 	public BufferedReader selectFile() throws IOException {
 	    TestFilechooser f = new TestFilechooser();
-	    f.setCurrentDirectory(openedFile.getParentFile());
+	    f.setCurrentDirectory(lastOpened.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return null;
-	    return new BufferedReader(new FileReader((openedFile = f.getSelectedFile()), f.getSelectedCharset()));
+	    
+	    setTitle(version + " - " + f.getSelectedFile().getAbsolutePath());
+	    return new BufferedReader(new FileReader((lastOpened = f.getSelectedFile()), f.getSelectedCharset()));
 	}
 	
 	public BufferedWriter selectSaveLocation() throws IOException {
 		TestFilechooser f = new TestFilechooser();
-		f.setCurrentDirectory(openedFile.getParentFile());
-		f.setSelectedFile(openedFile);
+		f.setSelectedFile(lastOpened);
+		f.setCurrentDirectory(lastSaved.getParentFile());
 		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
 	    	return null;
 		
-		System.out.println(f.getSelectedFile().getAbsolutePath());
-	    return new BufferedWriter(new FileWriter(f.getSelectedFile(), f.getSelectedCharset()));
+		lastSaved = f.getSelectedFile();
+		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+			return null;
+		}
+		
+	    return new BufferedWriter(new FileWriter(lastSaved, f.getSelectedCharset()));
 	}
 }
