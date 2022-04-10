@@ -1,6 +1,5 @@
 package gui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -11,10 +10,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.ScrollPaneConstants;
 
 public class MainFrame extends JFrame {
 
+	private static final long serialVersionUID = 4096788492544078810L;
+	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
 	private File lastOpened = new File (System.getProperty("user.home"));

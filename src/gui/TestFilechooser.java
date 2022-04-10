@@ -14,6 +14,8 @@ import javax.swing.filechooser.FileFilter;
 
 public class TestFilechooser extends JFileChooser{
 	
+	private static final long serialVersionUID = -7422889910012973877L;
+	
 	//private final ArrayList<Entry<String, Charset>> charsetList = Charset.availableCharsets().entrySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	private final ArrayList<String> charsetNameList = Charset.availableCharsets().keySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	private final JComboBox<String> comboBox = new JComboBox<>(new DefaultComboBoxModel<String>(charsetNameList.toArray(new String[] {})));
