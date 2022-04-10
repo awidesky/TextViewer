@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -38,6 +40,10 @@ public class MainFrame extends JFrame {
 		
 		setTitle(version);
 		setSize(800, 700);
+
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
+		
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		addMenubar();
