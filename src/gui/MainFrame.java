@@ -42,8 +42,8 @@ public class MainFrame extends JFrame {
 	
 	private TestFilechooser f = new TestFilechooser();
 	
-	private LargeFileHandlingRule lfhRule = new LargeFileHandlingRule(3221225472L, 322000);
-
+	private LargeFileHandlingRule lfhRule = new LargeFileHandlingRule(2L * 1024 * 1024 * 1024, false, 500000); //about 500000 line in 100mb DISM log file
+	private JMenu pageMenu = new JMenu("Pages");
 	private boolean paged = false;
 	
 	public MainFrame() {
@@ -114,7 +114,13 @@ public class MainFrame extends JFrame {
 			ReferenceDTO<LargeFileHandlingRule> ref = new ReferenceDTO<>(lfhRule);
 			new LargeFileSettingDialog(ref);
 			lfhRule = ref.get();
-			//TODO : re-read file
+			
+			try {
+				ta.setText(lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset))));
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+				e1.printStackTrace();
+			}
 		});
 		JMenuItem font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -128,8 +134,39 @@ public class MainFrame extends JFrame {
 		formatMenu.add(font);
 		
 		
+
+		formatMenu.setMnemonic(KeyEvent.VK_P);
+		formatMenu.getAccessibleContext().setAccessibleDescription("Pages menu");
+		
+		JMenuItem next = new JMenuItem("Next page", KeyEvent.VK_N);
+		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
+		next.getAccessibleContext().setAccessibleDescription("Show next page");
+		next.addActionListener((e) -> {
+			try {
+				ta.setText(lfhRule.readOnce(null));
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+				e1.printStackTrace();
+			}
+		});
+		JMenuItem reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
+		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
+		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
+		reRead.addActionListener((e) -> {
+			try {
+				ta.setText(lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset))));
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+				e1.printStackTrace();
+			}
+		});
+		pageMenu.add(next);
+		pageMenu.add(reRead);
+		pageMenu.setEnabled(false);
+		
 		menuBar.add(fileMenu);
 		menuBar.add(formatMenu);
+		menuBar.add(pageMenu);
 		
 		setJMenuBar(menuBar);
 		
@@ -205,11 +242,16 @@ public class MainFrame extends JFrame {
 	    lastOpened = f.getSelectedFile();
 	    if(lastOpened.length() > lfhRule.getFileSizeLimit()) {
 	    	paged = true;
+	    	enableNextPageMenu();
+	    } else {
+	    	paged = false;
+	    	disableNextPageMenu();
 	    }
 	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" in " + f.getSelectedCharset().name());
 	    return new BufferedReader(new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset())));
 	}
-	
+
+
 	public BufferedWriter selectSaveLocation() throws IOException {
 		f.setSelectedFile(lastOpened);
 		f.setCurrentDirectory(lastSaved.getParentFile());
@@ -224,6 +266,15 @@ public class MainFrame extends JFrame {
 	    return new BufferedWriter(new FileWriter(lastSaved, f.getSelectedCharset()));
 	}
 	
+	
+	
+	private void enableNextPageMenu() {
+		pageMenu.setEnabled(true);
+	}
+	
+	private void disableNextPageMenu() {
+		pageMenu.setEnabled(false);
+	}
 	
 	/**
 	 * 
