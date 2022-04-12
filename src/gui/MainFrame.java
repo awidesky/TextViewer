@@ -25,6 +25,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import main.LargeFileHandlingRule;
 import main.ReferenceDTO;
@@ -47,6 +49,13 @@ public class MainFrame extends JFrame {
 	private boolean paged = false;
 	
 	public MainFrame() {
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
 		
 		setTitle(version);
 		setSize(800, 700);
