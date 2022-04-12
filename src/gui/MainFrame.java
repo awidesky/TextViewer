@@ -95,7 +95,8 @@ public class MainFrame extends JFrame {
 		openFile.addActionListener((e) -> {
 			
 			/** Read file in EDT */
-			ta.setText(readSelectedFile());
+			String s = readSelectedFile();
+			if(s != null) ta.setText(s);
 			
 		});
 		JMenuItem saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -124,12 +125,7 @@ public class MainFrame extends JFrame {
 			new LargeFileSettingDialog(ref);
 			lfhRule = ref.get();
 			
-			try {
-				ta.setText(lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset))));
-			} catch (IOException e1) {
-				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
-			}
+			if(paged) reReadPagedFile();
 		});
 		JMenuItem font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -152,7 +148,13 @@ public class MainFrame extends JFrame {
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
 			try {
-				ta.setText(lfhRule.readOnce(null));
+				String s = lfhRule.readOnce(null);
+				if(s != null) {
+					ta.setText(s);
+				} else {
+					JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!", JOptionPane.INFORMATION_MESSAGE);
+					disableNextPageMenu();
+				}
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
 				e1.printStackTrace();
@@ -162,12 +164,7 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			try {
-				ta.setText(lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset))));
-			} catch (IOException e1) {
-				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
-			}
+			reReadPagedFile();
 		});
 		pageMenu.add(next);
 		pageMenu.add(reRead);
@@ -220,7 +217,7 @@ public class MainFrame extends JFrame {
 		
 		try {
 			BufferedReader br = selectFile();
-			if(br == null) return ta.getText();
+			if(br == null) return null;
 			
 			if(paged) {
 				result = lfhRule.readOnce(br);
@@ -236,6 +233,11 @@ public class MainFrame extends JFrame {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+		}
+		
+		if(result.equals("")) {
+			JOptionPane.showMessageDialog(null, "There's nothing to read!", "File is empty!", JOptionPane.ERROR_MESSAGE);
+			return null;
 		}
 		
 		return result;
@@ -275,7 +277,18 @@ public class MainFrame extends JFrame {
 	    return new BufferedWriter(new FileWriter(lastSaved, f.getSelectedCharset()));
 	}
 	
-	
+	private void reReadPagedFile() {
+		
+		try {
+			String s = lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset)));
+			if(s != null) ta.setText(s);
+			else JOptionPane.showMessageDialog(null, "There's nothing to read!", "File is empty!", JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e1) {
+			JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+			e1.printStackTrace();
+		}
+		
+	}
 	
 	private void enableNextPageMenu() {
 		pageMenu.setEnabled(true);

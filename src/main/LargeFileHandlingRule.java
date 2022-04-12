@@ -50,6 +50,7 @@ public class LargeFileHandlingRule {
 					}
 				}
 				sb.append(s);
+				sb.append("\n");
 			}
 			return sb.toString();
 		}
