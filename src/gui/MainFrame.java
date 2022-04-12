@@ -258,7 +258,7 @@ public class MainFrame extends JFrame {
 	    	paged = false;
 	    	disableNextPageMenu();
 	    }
-	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" in " + f.getSelectedCharset().name());
+	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + ")  in " + f.getSelectedCharset().name());
 	    return new BufferedReader(new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset())));
 	}
 
@@ -297,5 +297,23 @@ public class MainFrame extends JFrame {
 	private void disableNextPageMenu() {
 		pageMenu.setEnabled(false);
 	}
-	
+
+	public static String formatFileSize(long length) {
+		
+		if(length == 0L) return "0.00byte";
+		
+		switch ((int)(Math.log(length) / Math.log(1024))) {
+		
+		case 0:
+			return String.format("%.2f", length) + "byte";
+		case 1:
+			return String.format("%.2f", length / 1024.0) + "KB";
+		case 2:
+			return String.format("%.2f", length / (1024.0 * 1024)) + "MB";
+		case 3:
+			return String.format("%.2f", length / (1024.0 * 1024 * 1024)) + "GB";
+		}
+		return String.format("%.2f", length / (1024.0 * 1024 * 1024 * 1024)) + "TB";
+	}
+
 }
