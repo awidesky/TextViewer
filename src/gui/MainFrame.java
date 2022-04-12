@@ -276,19 +276,4 @@ public class MainFrame extends JFrame {
 		pageMenu.setEnabled(false);
 	}
 	
-	/**
-	 * 
-	 * Reads next page of the file.
-	 * This method considers <code>paged</code> is <code>true</code>
-	 * 
-	 * */
-	public String nextPage() { //TODO : call this method in next button action listener. if return null. show message "this is end of the file!"
-		try {
-			return lfhRule.readOnce(null);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-			return null;
-		}
-	}
 }
