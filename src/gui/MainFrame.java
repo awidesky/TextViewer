@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,6 +30,8 @@ import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import main.LargeFileHandlingRule;
 import main.ReferenceDTO;
@@ -38,8 +42,8 @@ public class MainFrame extends JFrame {
 	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
-	private File lastOpened = new File (System.getProperty("user.home"));
-	private File lastSaved = new File (System.getProperty("user.home"));
+	private File lastOpened = new File(System.getProperty("user.home"));
+	private File lastSaved = new File(System.getProperty("user.home"));
 	private Charset lastedOpenedCharset = null;
 	private String version = "TextViewer v1.0";
 	
@@ -60,6 +64,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem next;
 	private JMenuItem reRead;
 	
+	
 	public MainFrame() {
 		
 		try {
@@ -71,17 +76,56 @@ public class MainFrame extends JFrame {
 		
 		setTitle(version);
 		setSize(800, 700);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
 
+			@Override
+			public void windowClosing(WindowEvent e) {
+				
+				if(getTitle().startsWith("*")) {
+					switch(JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?", JOptionPane.YES_NO_CANCEL_OPTION)) {
+					case JOptionPane.YES_OPTION:
+						if(saveFile()) break;
+						else return;
+					case JOptionPane.CANCEL_OPTION:
+					case JOptionPane.CLOSED_OPTION:
+						return;
+					}
+				}
+
+				e.getWindow().dispose();
+				System.exit(0);
+
+			}
+
+		});
+		
+		
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		addMenubar();
 		
 		ta.setBackground(Color.LIGHT_GRAY);
 		ta.setEditable(false);
+		ta.getDocument().addDocumentListener(new DocumentListener() {
 
+	        @Override
+	        public void removeUpdate(DocumentEvent e) {
+	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        }
+
+	        @Override
+	        public void insertUpdate(DocumentEvent e) {
+	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        }
+
+	        @Override
+	        public void changedUpdate(DocumentEvent arg0) {
+	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        }
+	    });
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		sp.setBackground(Color.WHITE);
@@ -207,12 +251,14 @@ public class MainFrame extends JFrame {
 	 * 	
 	 * 	File may be written in another thread, or in EDT.
 	 *  
+	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
+	 *  
 	 *  */
-	private void saveFile() {
+	private boolean saveFile() {
 		
 		try {
 			BufferedWriter bw = selectSaveLocation();
-			if(bw == null) return;
+			if(bw == null) return false;
 			if(paged) {
 				BufferedReader br = new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset));
 				br.transferTo(bw);
@@ -221,9 +267,12 @@ public class MainFrame extends JFrame {
 				bw.write(ta.getText());
 			}
 			bw.close();
+			if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
+			return true;
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to save the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+			return false;
 		}
 		
 	}
