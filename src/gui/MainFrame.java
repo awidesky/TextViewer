@@ -49,6 +49,17 @@ public class MainFrame extends JFrame {
 	private JMenu pageMenu = new JMenu("Pages");
 	private boolean paged = false;
 	
+	private JMenuBar menuBar;
+	private JMenu fileMenu;
+	private JMenuItem openFile;
+	private JMenuItem saveFile;
+	private JMenu formatMenu;
+	private JMenuItem largeSetting;
+	private JMenuItem font;
+	private JCheckBoxMenuItem editable;
+	private JMenuItem next;
+	private JMenuItem reRead;
+	
 	public MainFrame() {
 		
 		try {
@@ -83,14 +94,14 @@ public class MainFrame extends JFrame {
 	
 	private void addMenubar() {
 		
-		JMenuBar menuBar = new JMenuBar();
+		menuBar = new JMenuBar();
 
 
-		JMenu fileMenu = new JMenu("File");
+		fileMenu = new JMenu("File");
 		fileMenu.setMnemonic(KeyEvent.VK_F);
 		fileMenu.getAccessibleContext().setAccessibleDescription("File menu");
 
-		JMenuItem openFile = new JMenuItem("Open file...", KeyEvent.VK_O);
+		openFile = new JMenuItem("Open file...", KeyEvent.VK_O);
 		openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.ALT_MASK));
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
 		openFile.addActionListener((e) -> {
@@ -100,7 +111,7 @@ public class MainFrame extends JFrame {
 			if(s != null) ta.setText(s);
 			
 		});
-		JMenuItem saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
+		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
 		saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.ALT_MASK));
 		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
 		saveFile.addActionListener((e) -> {
@@ -114,11 +125,11 @@ public class MainFrame extends JFrame {
 
 		
 		
-		JMenu formatMenu = new JMenu("Setting");
+		formatMenu = new JMenu("Setting");
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
-		JMenuItem largeSetting = new JMenuItem("Large file handling", KeyEvent.VK_L);
+		largeSetting = new JMenuItem("Large file handling", KeyEvent.VK_L);
 		largeSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.ALT_MASK));
 		largeSetting.getAccessibleContext().setAccessibleDescription("Large file handling setting");
 		largeSetting.addActionListener((e) -> {
@@ -128,7 +139,7 @@ public class MainFrame extends JFrame {
 			
 			if(paged) reReadPagedFile();
 		});
-		JMenuItem font = new JMenuItem("Change font", KeyEvent.VK_C);
+		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
 		font.getAccessibleContext().setAccessibleDescription("Change font type or size");
 		font.addActionListener((e) -> {
@@ -136,7 +147,7 @@ public class MainFrame extends JFrame {
 			new FontDialog(ref, ta.getFont());
 			ta.setFont(ref.get());
 		});
-		JCheckBoxMenuItem editable = new JCheckBoxMenuItem("Editable");
+		editable = new JCheckBoxMenuItem("Editable");
 		editable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK));
 		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
 		editable.addActionListener((e) -> {
@@ -156,7 +167,7 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_P);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Pages menu");
 		
-		JMenuItem next = new JMenuItem("Next page", KeyEvent.VK_N);
+		next = new JMenuItem("Next page", KeyEvent.VK_N);
 		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
@@ -173,7 +184,7 @@ public class MainFrame extends JFrame {
 				e1.printStackTrace();
 			}
 		});
-		JMenuItem reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
+		reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
