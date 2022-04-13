@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -114,7 +115,7 @@ public class MainFrame extends JFrame {
 		
 		
 		JMenu formatMenu = new JMenu("Setting");
-		formatMenu.setMnemonic(KeyEvent.VK_E);
+		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
 		JMenuItem largeSetting = new JMenuItem("Large file handling", KeyEvent.VK_L);
@@ -135,9 +136,21 @@ public class MainFrame extends JFrame {
 			new FontDialog(ref, ta.getFont());
 			ta.setFont(ref.get());
 		});
+		JCheckBoxMenuItem editable = new JCheckBoxMenuItem("Editable");
+		editable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK));
+		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
+		editable.addActionListener((e) -> {
+			
+			if(paged) {
+				JOptionPane.showMessageDialog(null, "Paged file is not editable!", "Try reduce size limit for paged files.", JOptionPane.ERROR_MESSAGE);
+			} else {
+				ta.setEditable(!ta.isEditable());
+			}
+			
+		});
 		formatMenu.add(largeSetting);
 		formatMenu.add(font);
-		
+		formatMenu.add(editable);
 		
 
 		formatMenu.setMnemonic(KeyEvent.VK_P);
@@ -258,7 +271,7 @@ public class MainFrame extends JFrame {
 	    	paged = false;
 	    	disableNextPageMenu();
 	    }
-	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + ")  in " + f.getSelectedCharset().name());
+	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + ((paged) ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
 	    return new BufferedReader(new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset())));
 	}
 
