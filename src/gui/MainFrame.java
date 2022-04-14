@@ -106,7 +106,6 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void removeUpdate(DocumentEvent e) {
-	        	System.out.println("removeUpdate" + newFileReading);
 	        	if(newFileReading) { //new file is just read. user didn't type anything.
 	        		return;
 	        	}
@@ -115,8 +114,6 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void insertUpdate(DocumentEvent e) {
-	        	System.out.println("insertUpdate" + newFileReading);
-
 	        	if(newFileReading) { //new file is just read. user didn't type anything.
 	        		return;
 	        	}
@@ -125,9 +122,7 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void changedUpdate(DocumentEvent arg0) {
-	        	System.out.println("changedUpdate" + newFileReading);
-
-	        	if(newFileReading) { //new file is just read. user didn't type anything.
+  	        	if(newFileReading) { //new file is just read. user didn't type anything.
 	        		return;
 	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
