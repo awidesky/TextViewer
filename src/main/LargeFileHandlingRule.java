@@ -11,6 +11,7 @@ public class LargeFileHandlingRule {
 	/** <code>true</code> if <code>limit</code> is number of chars to read, <code>false</code> if <code>limit</code> is number of lines to read. */
 	private boolean charIsUnit;
 	private BufferedReader br = null;
+	private char[] arr;
 	
 	/**
 	 * 
@@ -23,6 +24,7 @@ public class LargeFileHandlingRule {
 		largerThan = sizeLimit;
 		this.charIsUnit = charIsUnit;
 		limit = charsOrLinesPerPage;
+		arr = new char[limit];
 	}
 	
 	public long getFileSizeLimit() { 
@@ -34,10 +36,17 @@ public class LargeFileHandlingRule {
 		if(br != null) this.br = br;
 		
 		if(charIsUnit) {
-			char[] arr = new char[limit];
-			int read = this.br.read(arr);
-			if(read != -1) return null;
-			return String.valueOf(arr, 0, read);
+			int totalRead = this.br.read(arr);
+			if(totalRead != -1) return null;
+			
+			if(totalRead != arr.length) {
+				int read = totalRead;
+				while((read = this.br.read(arr, totalRead, arr.length - totalRead)) != -1) {
+					totalRead += read;
+					if(totalRead == arr.length) break; //TODO : 얼마나 읽었는지 저장하고 edit 시에 이용
+				}
+			}
+			return String.valueOf(arr, 0, totalRead);
 		} else {
 			StringBuilder sb = new StringBuilder();
 			for(int i = 0; i < limit; i++) {
