@@ -64,7 +64,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem next;
 	private JMenuItem reRead;
 
-	private boolean newFileRead = false;
+	private boolean newFileReading = false;
 	
 	
 	public MainFrame() {
@@ -106,13 +106,18 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void removeUpdate(DocumentEvent e) {
+	        	System.out.println("removeUpdate" + newFileReading);
+	        	if(newFileReading) { //new file is just read. user didn't type anything.
+	        		return;
+	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
 	        }
 
 	        @Override
 	        public void insertUpdate(DocumentEvent e) {
-	        	if(newFileRead) { //new file is just read. user didn't type antyhing.
-	        		newFileRead = !newFileRead;
+	        	System.out.println("insertUpdate" + newFileReading);
+
+	        	if(newFileReading) { //new file is just read. user didn't type anything.
 	        		return;
 	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
@@ -120,6 +125,11 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void changedUpdate(DocumentEvent arg0) {
+	        	System.out.println("changedUpdate" + newFileReading);
+
+	        	if(newFileReading) { //new file is just read. user didn't type anything.
+	        		return;
+	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
 	        }
 	    });
@@ -172,11 +182,12 @@ public class MainFrame extends JFrame {
 				return;
 			}
 			
-			newFileRead  = true;
 			/** Read file in EDT */
 			String s = readSelectedFile();
+			newFileReading = true;
 			if(s != null) ta.setText(s);
 			ta.setCaretPosition(0);
+			newFileReading = false;
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -342,6 +353,7 @@ public class MainFrame extends JFrame {
 	}
 
 	public BufferedReader selectFile() throws IOException {
+		f.setDialogTitle("Select file to read...");
 		f.setSelectedFile(lastOpened);
 	    f.setCurrentDirectory(lastOpened.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
@@ -361,6 +373,7 @@ public class MainFrame extends JFrame {
 
 
 	public BufferedWriter selectSaveLocation() throws IOException {
+		f.setDialogTitle("Save file at...");
 		f.setSelectedFile(lastOpened);
 		f.setCurrentDirectory(lastSaved.getParentFile());
 		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
