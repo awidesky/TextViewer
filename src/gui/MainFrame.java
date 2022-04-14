@@ -63,6 +63,8 @@ public class MainFrame extends JFrame {
 	private JCheckBoxMenuItem editable;
 	private JMenuItem next;
 	private JMenuItem reRead;
+
+	private boolean newFileRead = false;
 	
 	
 	public MainFrame() {
@@ -118,6 +120,10 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void insertUpdate(DocumentEvent e) {
+	        	if(newFileRead) { //new file is just read. user didn't type antyhing.
+	        		newFileRead = !newFileRead;
+	        		return;
+	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
 	        }
 
@@ -150,9 +156,11 @@ public class MainFrame extends JFrame {
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
 		openFile.addActionListener((e) -> {
 			
+			newFileRead  = true;
 			/** Read file in EDT */
 			String s = readSelectedFile();
 			if(s != null) ta.setText(s);
+			ta.setCaretPosition(0);
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
