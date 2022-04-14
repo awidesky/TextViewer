@@ -410,7 +410,7 @@ public class MainFrame extends JFrame {
 		switch ((int)(Math.log(length) / Math.log(1024))) {
 		
 		case 0:
-			return String.format("%.2f", Double.valueOf(length)) + "byte";
+			return String.format("%d", length) + "byte";
 		case 1:
 			return String.format("%.2f", length / 1024.0) + "KB";
 		case 2:
