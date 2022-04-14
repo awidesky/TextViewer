@@ -84,16 +84,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				
-				if(getTitle().startsWith("*")) {
-					switch(JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?", JOptionPane.YES_NO_CANCEL_OPTION)) {
-					case JOptionPane.YES_OPTION:
-						if(saveFile()) break;
-						else return;
-					case JOptionPane.CANCEL_OPTION:
-					case JOptionPane.CLOSED_OPTION:
-						return;
-					}
-				}
+				if(!saveBeforeClose()) return; 
 
 				e.getWindow().dispose();
 				System.exit(0);
@@ -142,6 +133,27 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	/**
+	 * 
+	 * Ask save the file before closing file.
+	 * 
+	 * @return <code>true</code> if current file is OK to close. <code>false</code> if it's not OK.
+	 * 
+	 * */
+	protected boolean saveBeforeClose() {
+		if(getTitle().startsWith("*")) {
+			switch(JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?", JOptionPane.YES_NO_CANCEL_OPTION)) {
+			case JOptionPane.YES_OPTION:
+				return saveFile();
+			case JOptionPane.CANCEL_OPTION:
+			case JOptionPane.CLOSED_OPTION:
+				return false;
+			}
+		}
+		if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
+		return true;
+	}
+
 	private void addMenubar() {
 		
 		menuBar = new JMenuBar();
@@ -155,6 +167,10 @@ public class MainFrame extends JFrame {
 		openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.ALT_MASK));
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
 		openFile.addActionListener((e) -> {
+			
+			if(!saveBeforeClose()) {
+				return;
+			}
 			
 			newFileRead  = true;
 			/** Read file in EDT */
