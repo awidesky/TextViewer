@@ -32,6 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.undo.UndoManager;
 
 import main.LargeFileHandlingRule;
 import main.ReferenceDTO;
@@ -42,6 +43,7 @@ public class MainFrame extends JFrame {
 	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
+	private UndoManager manager = new UndoManager();;
 	private File lastOpened = new File(System.getProperty("user.home"));
 	private File lastSaved = new File(System.getProperty("user.home"));
 	private Charset lastedOpenedCharset = null;
@@ -57,6 +59,9 @@ public class MainFrame extends JFrame {
 	private JMenu fileMenu;
 	private JMenuItem openFile;
 	private JMenuItem saveFile;
+	private JMenu editMenu;
+	private JMenuItem undo;
+	private JMenuItem redo;
 	private JMenu formatMenu;
 	private JMenuItem largeSetting;
 	private JMenuItem font;
@@ -102,6 +107,7 @@ public class MainFrame extends JFrame {
 		
 		ta.setBackground(Color.LIGHT_GRAY);
 		ta.setEditable(false);
+		ta.getDocument().addUndoableEditListener(manager);
 		ta.getDocument().addDocumentListener(new DocumentListener() {
 
 	        @Override
@@ -122,8 +128,9 @@ public class MainFrame extends JFrame {
 
 	        @Override
 	        public void changedUpdate(DocumentEvent arg0) {
+	        	//arg0.getDocument().
   	        	if(newFileReading) { //new file is just read. user didn't type anything.
-	        		return;
+	        		return;	
 	        	}
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
 	        }
@@ -199,6 +206,28 @@ public class MainFrame extends JFrame {
 
 		
 		
+		editMenu = new JMenu("Edit");
+		editMenu.getAccessibleContext().setAccessibleDescription("Edit menu");
+		
+		undo = new JMenuItem("Undo", KeyEvent.VK_Z);
+		undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.CTRL_MASK));
+		undo.getAccessibleContext().setAccessibleDescription("Undo");
+		undo.addActionListener((e) -> {
+			manager.undo();
+		});
+		undo.setEnabled(false);
+		redo = new JMenuItem("Redo", KeyEvent.VK_Y);
+		redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, ActionEvent.CTRL_MASK));
+		redo.getAccessibleContext().setAccessibleDescription("Undo");
+		redo.addActionListener((e) -> {
+			manager.redo();
+		});
+		redo.setEnabled(false);
+		editMenu.add(undo);
+		editMenu.add(redo);
+		
+		
+		
 		formatMenu = new JMenu("Setting");
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
@@ -269,6 +298,7 @@ public class MainFrame extends JFrame {
 		pageMenu.setEnabled(false);
 		
 		menuBar.add(fileMenu);
+		menuBar.add(editMenu);
 		menuBar.add(formatMenu);
 		menuBar.add(pageMenu);
 		
