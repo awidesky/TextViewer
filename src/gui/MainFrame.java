@@ -43,7 +43,7 @@ public class MainFrame extends JFrame {
 	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
-	private UndoManager manager = new UndoManager();;
+	private UndoManager undoManager = new UndoManager();;
 	private File lastOpened = new File(System.getProperty("user.home"));
 	private File lastSaved = new File(System.getProperty("user.home"));
 	private Charset lastedOpenedCharset = null;
@@ -107,31 +107,30 @@ public class MainFrame extends JFrame {
 		
 		ta.setBackground(Color.LIGHT_GRAY);
 		ta.setEditable(false);
-		ta.getDocument().addUndoableEditListener(manager);
+		ta.getDocument().addUndoableEditListener(undoManager);
 		ta.getDocument().addDocumentListener(new DocumentListener() {
 
 	        @Override
 	        public void removeUpdate(DocumentEvent e) {
-	        	if(newFileReading) { //new file is just read. user didn't type anything.
-	        		return;
-	        	}
-	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        	changed(e);
 	        }
 
 	        @Override
 	        public void insertUpdate(DocumentEvent e) {
-	        	if(newFileReading) { //new file is just read. user didn't type anything.
-	        		return;
-	        	}
-	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        	changed(e);
 	        }
 
 	        @Override
 	        public void changedUpdate(DocumentEvent arg0) {
-	        	//arg0.getDocument().
+	        	changed(arg0);
+	        }
+	        
+	        private void changed(DocumentEvent e) {
   	        	if(newFileReading) { //new file is just read. user didn't type anything.
 	        		return;	
 	        	}
+  	        	undo.setEnabled(undoManager.canUndo());
+  				redo.setEnabled(undoManager.canRedo());
 	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
 	        }
 	    });
@@ -213,14 +212,18 @@ public class MainFrame extends JFrame {
 		undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ActionEvent.CTRL_MASK));
 		undo.getAccessibleContext().setAccessibleDescription("Undo");
 		undo.addActionListener((e) -> {
-			manager.undo();
+			undoManager.undo();
+			undo.setEnabled(undoManager.canUndo());
+			redo.setEnabled(undoManager.canRedo());
 		});
 		undo.setEnabled(false);
 		redo = new JMenuItem("Redo", KeyEvent.VK_Y);
 		redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, ActionEvent.CTRL_MASK));
 		redo.getAccessibleContext().setAccessibleDescription("Undo");
 		redo.addActionListener((e) -> {
-			manager.redo();
+			undoManager.redo();
+			undo.setEnabled(undoManager.canUndo());
+			redo.setEnabled(undoManager.canRedo());
 		});
 		redo.setEnabled(false);
 		editMenu.add(undo);
@@ -278,6 +281,7 @@ public class MainFrame extends JFrame {
 				String s = lfhRule.readOnce(null);
 				if(s != null) {
 					ta.setText(s);
+					undoManager.discardAllEdits();
 				} else {
 					JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!", JOptionPane.INFORMATION_MESSAGE);
 					disableNextPageMenu();
