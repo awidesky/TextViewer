@@ -215,6 +215,7 @@ public class MainFrame extends JFrame {
 			undoManager.undo();
 			undo.setEnabled(undoManager.canUndo());
 			redo.setEnabled(undoManager.canRedo());
+			if(!undoManager.canUndo() && getTitle().startsWith("*")) setTitle(getTitle().substring(1));
 		});
 		undo.setEnabled(false);
 		redo = new JMenuItem("Redo", KeyEvent.VK_Y);
@@ -267,11 +268,11 @@ public class MainFrame extends JFrame {
 		});
 		formatMenu.add(largeSetting);
 		formatMenu.add(font);
-		formatMenu.add(editable);
+		formatMenu.add(editable);	
 		
 
-		formatMenu.setMnemonic(KeyEvent.VK_P);
-		formatMenu.getAccessibleContext().setAccessibleDescription("Pages menu");
+		pageMenu.setMnemonic(KeyEvent.VK_P);
+		pageMenu.getAccessibleContext().setAccessibleDescription("Pages menu");
 		
 		next = new JMenuItem("Next page", KeyEvent.VK_N);
 		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
