@@ -161,7 +161,6 @@ public class MainFrame extends JFrame {
 				return false;
 			}
 		}
-		if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
 		return true;
 	}
 
@@ -185,8 +184,10 @@ public class MainFrame extends JFrame {
 			
 			/** Read file in EDT */
 			String s = readSelectedFile();
+			if(s == null) return;
+			
 			newFileReading = true;
-			if(s != null) ta.setText(s);
+			ta.setText(s);
 			ta.setCaretPosition(0);
 			newFileReading = false;
 			
