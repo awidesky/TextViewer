@@ -1,17 +1,21 @@
 package gui;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ItemEvent;
+import java.util.Arrays;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -24,7 +28,7 @@ public class FontDialog extends JDialog {
 	private JLabel name = new JLabel("Name :");
 	private JLabel size = new JLabel("Size :");
 	private JLabel pt = new JLabel("pt");
-	private JComboBox<String> fontName = new JComboBox<>(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
+	private JComboBox<String> fontName;
 	private JCheckBox bold;
 	private JCheckBox italic;
 	private JTextField fontSize;
@@ -32,7 +36,7 @@ public class FontDialog extends JDialog {
 	
 	private int fontStyle = Font.PLAIN;
 	
-	public FontDialog(ReferenceDTO<Font> ref, Font now) {
+	public FontDialog(ReferenceDTO<Font> ref, Font now, String content) {
 		
 		super((Window)null);
 		
@@ -44,7 +48,9 @@ public class FontDialog extends JDialog {
 		setResizable(false);
 		setLayout(null);
 		
+		fontName = new JComboBox<>(Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()).map((s) -> new Font(s, Font.PLAIN, 20)).filter((f) -> f.canDisplayUpTo(content) == -1).map(Font::getFamily).toArray(String[]::new));
 		fontName.setSelectedItem(now.getFamily());
+		fontName.setRenderer(new FontCellRenderer());
 		bold = new JCheckBox("Bold", now.isBold());
 		italic = new JCheckBox("Italic", now.isItalic());
 		fontSize = new JTextField("" + now.getSize()); //default font size
@@ -96,6 +102,27 @@ public class FontDialog extends JDialog {
 		
 		//addWindowListener(null);
 		setVisible(true);
+		
+	}
+	
+	
+	private class FontCellRenderer extends DefaultListCellRenderer {
+
+		private static final long serialVersionUID = 5433840238044092528L;
+
+		@Override
+	    public Component getListCellRendererComponent(
+	        JList<?> list,
+	        Object value,
+	        int index,
+	        boolean isSelected,
+	        boolean cellHasFocus) {
+	        JLabel label = (JLabel)super.getListCellRendererComponent(
+	            list,value,index,isSelected,cellHasFocus);// System.out.println(value); 
+	        Font font = new Font((String)value, Font.PLAIN, label.getFont().getSize());
+	        label.setFont(font);
+	        return label;
+	    }
 		
 	}
 }

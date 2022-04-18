@@ -252,7 +252,7 @@ public class MainFrame extends JFrame {
 		font.getAccessibleContext().setAccessibleDescription("Change font type or size");
 		font.addActionListener((e) -> {
 			ReferenceDTO<Font> ref = new ReferenceDTO<>(ta.getFont());
-			new FontDialog(ref, ta.getFont());
+			new FontDialog(ref, ta.getFont(), ta.getText());
 			ta.setFont(ref.get());
 		});
 		editable = new JCheckBoxMenuItem("Editable");
