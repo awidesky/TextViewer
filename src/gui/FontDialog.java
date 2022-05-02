@@ -25,6 +25,8 @@ public class FontDialog extends JDialog {
 
 	private static final long serialVersionUID = -737932341920503748L;
 	
+	public static boolean showAll = false;
+	
 	private JLabel name = new JLabel("Name :");
 	private JLabel size = new JLabel("Size :");
 	private JLabel pt = new JLabel("pt");
@@ -47,10 +49,15 @@ public class FontDialog extends JDialog {
 		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setResizable(false);
 		setLayout(null);
-		
-		fontName = new JComboBox<>(Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()).map((s) -> new Font(s, Font.PLAIN, 20)).filter((f) -> f.canDisplayUpTo(content) == -1).map(Font::getFamily).toArray(String[]::new));
+			
+		fontName = new JComboBox<>(
+				Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames())
+							.map((s) -> new Font(s, Font.PLAIN, 20))
+							.filter( (f) -> showAll || (f.canDisplayUpTo(("".equals(content)) ? f.getFamily() : content) == -1) )
+							.map(Font::getFamily)
+							.toArray(String[]::new));
 		fontName.setSelectedItem(now.getFamily());
-		fontName.setRenderer(new FontCellRenderer());
+		if(!showAll) fontName.setRenderer(new FontCellRenderer());
 		bold = new JCheckBox("Bold", now.isBold());
 		italic = new JCheckBox("Italic", now.isItalic());
 		fontSize = new JTextField("" + now.getSize()); //default font size
