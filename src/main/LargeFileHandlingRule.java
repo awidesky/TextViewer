@@ -24,24 +24,24 @@ public class LargeFileHandlingRule {
 		largerThan = sizeLimit;
 		this.charIsUnit = charIsUnit;
 		limit = charsOrLinesPerPage;
-		arr = new char[limit];
+		arr = charIsUnit ? new char[limit] : null;
 	}
 	
 	public long getFileSizeLimit() { 
 		return largerThan;
 	}
 	
-	public String readOnce(BufferedReader br) throws IOException {
+	public String readOnce(BufferedReader initialBr) throws IOException {
 
-		if(br != null) this.br = br;
+		if(initialBr != null) br = initialBr;
 		
 		if(charIsUnit) {
-			int totalRead = this.br.read(arr);
+			int totalRead = br.read(arr);
 			if(totalRead != -1) return null;
 			
 			if(totalRead != arr.length) {
 				int read = totalRead;
-				while((read = this.br.read(arr, totalRead, arr.length - totalRead)) != -1) {
+				while((read = br.read(arr, totalRead, arr.length - totalRead)) != -1) { // 읽는 과정 확인
 					totalRead += read;
 					if(totalRead == arr.length) break; //TODO : 얼마나 읽었는지 저장하고 edit 시에 이용
 				}
