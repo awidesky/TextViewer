@@ -8,6 +8,7 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ItemEvent;
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -88,7 +89,7 @@ public class FontDialog extends JDialog {
 		done.setBounds(144, 70, done.getPreferredSize().width, done.getPreferredSize().height);
 		done.addActionListener((e) -> {
 			try {
-				ref.set(new Font(fontName.getSelectedItem().toString(), fontStyle, Integer.parseInt(fontSize.getText())));
+				ref.set(new Font(Optional.ofNullable(fontName.getSelectedItem()).orElseGet(() -> new JLabel().getFont()).toString(), fontStyle, Integer.parseInt(fontSize.getText())));
 			} catch (NumberFormatException err) {
 				JOptionPane.showMessageDialog(null, err.getMessage(), "Invalid font size!!", JOptionPane.ERROR_MESSAGE);
 				return;
