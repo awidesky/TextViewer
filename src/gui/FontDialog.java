@@ -54,7 +54,7 @@ public class FontDialog extends JDialog {
 		fontName = new JComboBox<>(
 				Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames())
 							.map((s) -> new Font(s, Font.PLAIN, 20))
-							.filter( (f) -> showAll || (f.canDisplayUpTo(("".equals(content)) ? f.getFamily() : content) == -1) )
+							.filter( (f) -> showAll || (("".equals(content)) ? true : (f.canDisplayUpTo(content) == -1)	) )
 							.map(Font::getFamily)
 							.toArray(String[]::new));
 		fontName.setSelectedItem(now.getFamily());
