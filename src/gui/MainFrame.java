@@ -198,7 +198,11 @@ public class MainFrame extends JFrame {
 		saveFile.addActionListener((e) -> {
 			
 			/** Read file in EDT */
-			saveFile();
+			if(lfhRule.isEdited()) {
+				lfhRule.saveFile(); //TODO : 아니면 savefile에서 그냥 readOnce 계속 호출하면서 output파일에 넣고, lfhRule에서 edit된 부분 있는지 체크하다 있으면 바꿔진 String 리턴?
+			} else {
+				saveFile();
+			}
 			
 		});
 		fileMenu.add(openFile);
@@ -325,7 +329,7 @@ public class MainFrame extends JFrame {
 		try {
 			BufferedWriter bw = selectSaveLocation();
 			if(bw == null) return false;
-			if(paged) {
+			if(paged) { //TODO : paged 상관없이 transferto로?
 				BufferedReader br = new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset));
 				br.transferTo(bw);
 				br.close();
