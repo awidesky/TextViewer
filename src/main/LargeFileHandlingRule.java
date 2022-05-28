@@ -114,26 +114,6 @@ public class LargeFileHandlingRule {
 	}
 	
 	
-	private int readArray(FileReader fr, char[] array) throws IOException {
-		return readArray(fr, array, 0);
-	}
-
-	private int readArray(FileReader fr, char[] array, int from) throws IOException {
-		
-		int totalRead = fr.read(array);
-		if(totalRead != -1) return -1;
-		
-		if(totalRead != array.length) {
-			int read;
-			while((read = fr.read(array, totalRead, array.length - totalRead)) != -1) {
-				totalRead += read;
-				if(totalRead == array.length) break;
-			}
-		}
-		return totalRead;
-		
-	}
-	
 	private class Reading {
 		
 		public FileReader fr = null;
