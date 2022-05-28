@@ -198,11 +198,7 @@ public class MainFrame extends JFrame {
 		saveFile.addActionListener((e) -> {
 			
 			/** Read file in EDT */
-			if(lfhRule.isEdited()) {
-				lfhRule.saveFile(); //TODO : 아니면 savefile에서 그냥 readOnce 계속 호출하면서 output파일에 넣고, lfhRule에서 edit된 부분 있는지 체크하다 있으면 바꿔진 String 리턴?
-			} else {
-				saveFile();
-			}
+			saveFile();
 			
 		});
 		fileMenu.add(openFile);
@@ -329,11 +325,11 @@ public class MainFrame extends JFrame {
 		try {
 			BufferedWriter bw = selectSaveLocation();
 			if(bw == null) return false;
-			if(paged) { //TODO : paged 상관없이 transferto로?
+			if(paged) {
 				BufferedReader br = new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset));
-				br.transferTo(bw);
+				
 				br.close();
-			} else {
+			} else { //TODO : fix
 				bw.write(ta.getText());
 			}
 			bw.close();
@@ -353,7 +349,7 @@ public class MainFrame extends JFrame {
 	 * 	File may be read in another thread, or in EDT.
 	 *  
 	 *  */
-	private String readSelectedFile() {
+	private String readSelectedFile() { //TODO : drag & drop open? 
 
 		String result = "";
 		StringBuilder buff = new StringBuilder();
@@ -366,7 +362,7 @@ public class MainFrame extends JFrame {
 				result = lfhRule.readOnce(br);
 			} else {
 				String line = null;
-				while((line = br.readLine()) != null) {
+				while((line = br.readLine()) != null) { //TODO : UTF-LE read stucked, read as char arr;
 					buff.append(line);
 					buff.append("\n");
 				}
@@ -396,6 +392,7 @@ public class MainFrame extends JFrame {
 	    
 	    lastOpened = f.getSelectedFile();
 	    if(lastOpened.length() > lfhRule.getFileSizeLimit()) {
+	    	System.out.println("paged!!");
 	    	paged = true;
 	    	enableNextPageMenu();
 	    } else {

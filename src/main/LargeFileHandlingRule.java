@@ -12,11 +12,11 @@ public class LargeFileHandlingRule {
 	private int limit;
 	/** <code>true</code> if <code>limit</code> is number of chars to read, <code>false</code> if <code>limit</code> is number of lines to read. */
 	private boolean charIsUnit;
-	/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th (char/line) of the file. */
-	private long thisPageStartsFrom = 0L;
 	private Map<Long, String> changes = new HashMap<>();
-	private BufferedReader br = null;
 	private char[] arr;
+	
+	private Reading reading = new Reading();
+	
 	
 	/**
 	 * 
@@ -36,32 +36,36 @@ public class LargeFileHandlingRule {
 		return largerThan;
 	}
 	
+	/**
+	 * Read one page from the file.
+	 * If <code>initialBr</code> is <code>null</code>, use previously used <code>BufferedReader</code> to read continuously.
+	 * */
 	public String readOnce(BufferedReader initialBr) throws IOException { //TODO : check if edited before send new inittialBr!
 
 		if(initialBr != null) { 
-			br = initialBr;
-			thisPageStartsFrom = 0L;
+			reading.br = initialBr;
+			reading.thisPageStartsFrom = 0L;
 			changes.clear();
 		}
 		
 		if(charIsUnit) { // read by char[]
-			int totalRead = br.read(arr);
+			int totalRead = reading.br.read(arr);
 			if(totalRead != -1) return null;
 			
 			if(totalRead != arr.length) {
 				int read;
-				while((read = br.read(arr, totalRead, arr.length - totalRead)) != -1) { // 읽는 과정 확인
+				while((read = reading.br.read(arr, totalRead, arr.length - totalRead)) != -1) {
 					totalRead += read;
 					if(totalRead == arr.length) break;
 				}
 			}
-			thisPageStartsFrom += totalRead;
+			reading.thisPageStartsFrom += totalRead;
 			return String.valueOf(arr, 0, totalRead);
 		} else {
 			StringBuilder sb = new StringBuilder();
 			int i;
 			for(i = 0; i < limit; i++) {
-				String s = br.readLine();
+				String s = reading.br.readLine();
 				if(s == null) {
 					if(i == 0) {
 						return null;
@@ -71,7 +75,7 @@ public class LargeFileHandlingRule {
 				}
 				sb.append(s);
 				sb.append("\n");
-				thisPageStartsFrom++;
+				reading.thisPageStartsFrom++;
 			}
 			return sb.toString();
 		}
@@ -80,14 +84,33 @@ public class LargeFileHandlingRule {
 	
 	/**  */
 	public void pageEdited(String edited) {
-		changes.put(thisPageStartsFrom, edited);
+		changes.put(reading.thisPageStartsFrom, edited);
 	}
 	
 	public boolean isEdited() {
-		return thisPageStartsFrom != 0L;
+		return reading.thisPageStartsFrom != 0L;
 	}
 	
-	public void saveFile() { //TODO
+	
+	/**
+	 * Get one page of now viewing(or editing) file.
+	 * If the file is edited, return the edited page, else read file once.
+	 * 
+	 * */
+	public String getPageOnce() {
+		
+		
+		return "";
+	}
+	
+	
+	
+	private class Reading {
+		
+		public BufferedReader br = null;
+		/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th (char/line) of the file. */
+		public long thisPageStartsFrom = 0L;
 		
 	}
+	
 }
