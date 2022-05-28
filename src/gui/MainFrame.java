@@ -355,20 +355,20 @@ public class MainFrame extends JFrame {
 		StringBuilder buff = new StringBuilder();
 		
 		try {
-			BufferedReader br = selectFile();
-			if(br == null) return null;
+			FileReader fr = selectFile();
+			if(fr == null) return null;
 			
 			if(paged) {
-				result = lfhRule.readOnce(br);
+				result = lfhRule.readOnce(fr);
 			} else {
 				String line = null;
-				while((line = br.readLine()) != null) { //TODO : UTF-LE read stucked, read as char arr;
+				while((line = fr.readLine()) != null) { //TODO : UTF-LE read stucked, read as char arr;
 					buff.append(line);
 					buff.append("\n");
 				}
 				result = buff.toString();
 			}
-			br.close();
+			fr.close();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
@@ -383,7 +383,7 @@ public class MainFrame extends JFrame {
 		
 	}
 
-	public BufferedReader selectFile() throws IOException {
+	public FileReader selectFile() throws IOException {
 		f.setDialogTitle("Select file to read...");
 		f.setSelectedFile(lastOpened);
 	    f.setCurrentDirectory(lastOpened.getParentFile());
@@ -400,7 +400,7 @@ public class MainFrame extends JFrame {
 	    	disableNextPageMenu();
 	    }
 	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + ((paged) ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
-	    return new BufferedReader(new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset())));
+	    return new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset()));
 	}
 
 

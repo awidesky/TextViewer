@@ -7,6 +7,8 @@ import gui.MainFrame;
 
 public class Main {
   
+	public static int bufferSize = 1024 * 8; //TODO : setting에서 이것도 정하기
+
 	public static void main(String[] args) {
 	 
 		for(int i = 0; i < args.length; i++) {

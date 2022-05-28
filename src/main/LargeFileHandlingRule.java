@@ -1,6 +1,6 @@
 package main;
 
-import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class LargeFileHandlingRule {
 		largerThan = sizeLimit;
 		this.charIsUnit = charIsUnit;
 		limit = charsOrLinesPerPage;
-		arr = charIsUnit ? new char[limit] : null;
+		arr = charIsUnit ? new char[limit] : new char[Main.bufferSize];
 	}
 	
 	public long getFileSizeLimit() { 
@@ -40,45 +40,55 @@ public class LargeFileHandlingRule {
 	 * Read one page from the file.
 	 * If <code>initialBr</code> is <code>null</code>, use previously used <code>BufferedReader</code> to read continuously.
 	 * */
-	public String readOnce(BufferedReader initialBr) throws IOException { //TODO : check if edited before send new inittialBr!
+	public String readOnce(FileReader initialFr) throws IOException { //TODO : check if edited before send new inittialBr!
 
-		if(initialBr != null) { 
-			reading.br = initialBr;
+		if(initialFr != null) { 
+			reading.fr = initialFr;
 			reading.thisPageStartsFrom = 0L;
 			changes.clear();
 		}
 		
-		if(charIsUnit) { // read by char[]
-			int totalRead = reading.br.read(arr);
-			if(totalRead != -1) return null;
+		if(charIsUnit) { // read a array
 			
-			if(totalRead != arr.length) {
-				int read;
-				while((read = reading.br.read(arr, totalRead, arr.length - totalRead)) != -1) {
-					totalRead += read;
-					if(totalRead == arr.length) break;
-				}
-			}
+			int totalRead = readArray(reading.fr, arr);
+			if(totalRead != -1) return null;
 			reading.thisPageStartsFrom += totalRead;
 			return String.valueOf(arr, 0, totalRead);
+			
 		} else {
-			StringBuilder sb = new StringBuilder();
-			int i;
-			for(i = 0; i < limit; i++) {
-				String s = reading.br.readLine();
-				if(s == null) {
-					if(i == 0) {
-						return null;
-					} else {
-						return sb.toString();
-					}
+			
+			StringBuilder sb = new StringBuilder(limit);
+			for(int i = 0; i < limit; i++) {
+				int totalRead = readArray(reading.fr, arr);
+				if(totalRead != -1) {
+					if(i == 0) return null;
+					else return sb.toString();
 				}
-				sb.append(s);
-				sb.append("\n");
-				reading.thisPageStartsFrom++;
+				
+				int offset = 0;
+				int len = 0;
+
+				while(len != -1) {
+					len = indexOfNL(offset);
+					if(len != -1) reading.thisPageStartsFrom++; //found a line
+					sb.append(arr, offset, (len == -1) ? Main.bufferSize : len);
+					offset = len;
+				}
+				
 			}
 			return sb.toString();
 		}
+		
+	}
+	
+	private int indexOfNL(int offset) {
+		
+		for(int j = offset; j < Main.bufferSize; j++) {
+			if(arr[j] == '\n') {
+				return j + 1;
+			}
+		}
+		return -1;
 		
 	}
 	
@@ -104,10 +114,29 @@ public class LargeFileHandlingRule {
 	}
 	
 	
+	private int readArray(FileReader fr, char[] array) throws IOException {
+		return readArray(fr, array, 0);
+	}
+
+	private int readArray(FileReader fr, char[] array, int from) throws IOException {
+		
+		int totalRead = fr.read(array);
+		if(totalRead != -1) return -1;
+		
+		if(totalRead != array.length) {
+			int read;
+			while((read = fr.read(array, totalRead, array.length - totalRead)) != -1) {
+				totalRead += read;
+				if(totalRead == array.length) break;
+			}
+		}
+		return totalRead;
+		
+	}
 	
 	private class Reading {
 		
-		public BufferedReader br = null;
+		public FileReader fr = null;
 		/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th (char/line) of the file. */
 		public long thisPageStartsFrom = 0L;
 		
