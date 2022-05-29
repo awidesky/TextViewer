@@ -1,7 +1,9 @@
 package main;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -12,8 +14,10 @@ import javax.swing.JOptionPane;
 
 public class SelectedFileHandler {
 
-	private File file;
+	private File readFile;
+	private Charset readAs;
 	private FileReader fr;
+	private FileWriter fw;
 	private Consumer<String> callback;
 	private boolean paged;
 	
@@ -41,12 +45,13 @@ public class SelectedFileHandler {
 	
 	public void startRead(File readFile, Charset readAs) {
 		
-		this.file = readFile;
+		this.readFile = readFile;
+		this.readAs = readAs;
 		this.paged = readFile.length() > singlePageFileSizeLimit; 
 		this.arr = saparatePageByLine ? new char[limit] : new char[Main.bufferSize];
 		
 		try {
-			this.fr = new FileReader(file, readAs);
+			this.fr = new FileReader(readFile, readAs);
 		} catch (IOException e) {
 			fr = null;
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
@@ -56,8 +61,11 @@ public class SelectedFileHandler {
 		
 	}
 	
-	public void startWrite(File writeFile, Charset writeAs) {
-		new Thread(this::writeTask).start();
+	/**
+	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
+	 * */
+	public void startWrite(File writeFile, Charset writeAs, String text) {
+		new Thread(() -> writeTask(writeFile, writeAs, text)).start();
 	}
 	
 	private void readTask() {
@@ -68,7 +76,7 @@ public class SelectedFileHandler {
 			leftOver = new StringBuilder("");
 			pagedFileReadLoop();
 		} else {
-			StringBuilder sb = new StringBuilder((int) file.length());
+			StringBuilder sb = new StringBuilder((int) readFile.length());
 			int read = 0;
 			while (read != -1) {
 				read = readArray(fr, arr);
@@ -106,12 +114,41 @@ public class SelectedFileHandler {
 
 	}
 
-	private void writeTask() {
+	/**
+	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
+	 * */
+	private void writeTask(File writeTo, Charset writeAs, String text) {
+		
+		
+		if(paged) {
+			pagedFileWriteLoop(writeTo, writeAs);
+		} else {
+			try {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
+				bw.write(text);
+				bw.close();
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, e.getMessage(), "unable to write file!", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+				return;
+			}
+		}
 		
 	}
 	
-	private void pagedFileWriteLoop() {
+	private void pagedFileWriteLoop(File writeTo, Charset writeAs) {
+		
+		try {
+			this.fr = new FileReader(readFile, readAs);
+			this.fw = new FileWriter(writeTo, writeAs);
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to open I/O stream!", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+			return;
+		}
+		
 		//그냥 다음 thisPageStartsFrom까지 계속 읽으면서 쓰다가 
+		
 	}
 	
 	
