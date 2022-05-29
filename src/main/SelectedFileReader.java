@@ -74,36 +74,40 @@ public class SelectedFileReader extends Thread {
 		
 		String result = null;
 		int read = 0;
+		int cnt = 0;
 		
-		while (read != -1) {
+		while (true) {
 			
 			if (charIsUnit) { // read a array
 
 				read = readArray(fr, arr);
-				if (read != -1) {
-					lf.thisPageStartsFrom += read;
-					result = String.valueOf(arr, 0, read);
-				}
+				if (read == -1) break;
+				
+				result = String.valueOf(arr, 0, read);
+				cnt = read;
 
 			} else {
 
 				StringBuilder sb = new StringBuilder(limit);
-				for (int i = 0; i < limit; i++) {
+				
+				int i = 0;
+				while (i < limit) {
 					read = readArray(fr, arr);
-					if (read != -1) {
-						if (i != 0)
-							result = sb.toString();
-					}
-
+					
+					if (read == -1) break;
+					
 					int offset = 0;
-					int len = 0;
+					int nlIndex = 0;
 
-					while (len != -1) {
-						len = indexOfNL(offset);
-						if (len != -1)
-							lf.thisPageStartsFrom++; // found a line
-						sb.append(arr, offset, (len == -1) ? Main.bufferSize : len);
-						offset = len;
+					while (true) { // append lines from array
+						nlIndex = indexOfNL(offset);
+
+						cnt++;
+						i++;
+						if (i >= limit) break;
+						sb.append(arr, offset, (nlIndex == -1) ? Main.bufferSize : nlIndex);
+						if(nlIndex == arr.length - 1)
+						offset = nlIndex;
 					}
 
 				}
@@ -111,11 +115,15 @@ public class SelectedFileReader extends Thread {
 			}
 
 			callback.accept(result);
+			lf.thisPageStartsFrom += cnt;
 
 		}
 		
 	}
 
+	public void pageEdited(String edited) {
+		lf.addEditCheckpoint(edited);
+	}
 	
 	private int indexOfNL(int offset) {
 		
@@ -163,6 +171,9 @@ public class SelectedFileReader extends Thread {
 		public Map<Long, String> changes = new HashMap<>();
 		/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th (char/line) of the file. */
 		public long thisPageStartsFrom = 0L;
+		public void addEditCheckpoint(String edited) {
+			changes.put(thisPageStartsFrom, edited);
+		}
 		
 	}
 }
