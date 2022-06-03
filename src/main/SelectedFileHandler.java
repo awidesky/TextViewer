@@ -54,24 +54,15 @@ public class SelectedFileHandler {
 		try {
 			this.fr = new FileReader(readFile, readAs);
 		} catch (IOException e) {
-			fr = null;
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+			return;
 		}
 		new Thread(this::readTask).start();
 		
 	}
 	
-	/**
-	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
-	 * */
-	public void startWrite(File writeFile, Charset writeAs, String text) {
-		new Thread(() -> writeTask(writeFile, writeAs, text)).start();
-	}
-	
 	private void readTask() {
-		
-		if(fr == null) return;
 		
 		if(paged) {
 			leftOver = new StringBuilder(arr.length);
@@ -84,6 +75,13 @@ public class SelectedFileHandler {
 				sb.append(arr, 0, read);
 			}
 			callback.accept(sb.toString());
+		}
+		
+		try {
+			fr.close();
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read file!", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
 		}
 		
 	}
@@ -112,6 +110,14 @@ public class SelectedFileHandler {
 		}
 
 
+	}
+	
+	
+	/**
+	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
+	 * */
+	public void startWrite(File writeFile, Charset writeAs, String text) {
+		new Thread(() -> writeTask(writeFile, writeAs, text)).start();
 	}
 
 	/**
