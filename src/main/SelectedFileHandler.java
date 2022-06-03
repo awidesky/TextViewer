@@ -119,7 +119,6 @@ public class SelectedFileHandler {
 	 * */
 	private void writeTask(File writeTo, Charset writeAs, String text) {
 		
-		
 		if(paged) {
 			pagedFileWriteLoop(writeTo, writeAs);
 		} else {
@@ -130,7 +129,6 @@ public class SelectedFileHandler {
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(null, e.getMessage(), "unable to write file!", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
-				return;
 			}
 		}
 		
@@ -162,7 +160,9 @@ public class SelectedFileHandler {
 		return readArray(fr, array, 0);
 	}
 
-	/** Fills the array by reading <code>fr</code> */
+	/** Fills the array by reading <code>fr</code>
+	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
+	 * */
 	private int readArray(FileReader fr, char[] array, int from) {
 
 		try {
