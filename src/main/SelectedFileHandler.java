@@ -6,8 +6,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
@@ -23,12 +23,13 @@ public class SelectedFileHandler {
 	
 	private StringBuilder leftOver = null;
 	
-	private LargeFile lf = new LargeFile();
+	private Map<Long, String> changes = new HashMap<>();
+	private long pageNum = 0L;
 	
 	public static long singlePageFileSizeLimit = 2L * 1024 * 1024 * 1024;
 	/** If <code>true</code>, a page always starts/ends as a whole line,
 	 *  If <code>false</code>, a page is always <code>limit</code> length of <code>char</code>s. */
-	public static boolean saparatePageByLine = false;
+	public static boolean saparatePageByLine = false; //TODO : paged 파일이 열려 있는 동안에는 변경 못하게 하기. Main.bufferSize는 파일 읽는 도중에 변경 못하게, Main.bufferSize으 설정창에서 변경..?
 	/** Limit of <code>char</code>s. */
 	public static int limit = 500000;
 	
@@ -73,7 +74,7 @@ public class SelectedFileHandler {
 		if(fr == null) return;
 		
 		if(paged) {
-			leftOver = new StringBuilder("");
+			leftOver = new StringBuilder(arr.length);
 			pagedFileReadLoop();
 		} else {
 			StringBuilder sb = new StringBuilder((int) readFile.length());
@@ -100,14 +101,13 @@ public class SelectedFileHandler {
 			
 			if (saparatePageByLine) {
 				String temp = leftOver.append(result.substring(0, result.lastIndexOf(System.lineSeparator()) - (System.lineSeparator().length() - 1))).toString();
-				leftOver = new StringBuilder("");
+				leftOver = new StringBuilder(arr.length);
 				leftOver.append(result.substring(result.lastIndexOf(System.lineSeparator()) + System.lineSeparator().length()));
 				result = temp;
 			}
 			
-			lf.thisPageEndsAt = lf.thisPageStartsFrom + result.length();
-			callback.accept(result); //callback에서 "edit된 page 저장? 물어보거나 확인. 저장할때 thisPageEndsAt포함까지는 다 버리기
-			lf.thisPageStartsFrom += result.length() + 1;
+			callback.accept(result); //callback에서 "edit된 page 저장? 물어보거나 확인.
+			pageNum++;
 
 		}
 
@@ -139,19 +139,34 @@ public class SelectedFileHandler {
 		try {
 			this.fr = new FileReader(readFile, readAs);
 			this.fw = new FileWriter(writeTo, writeAs);
+			
+			for(long i = 0L; true; i++) {
+				int read = readArray(fr, arr);
+				
+				if (read == -1)
+					break;
+				
+				if(changes.containsKey(i)) {
+					fw.write(changes.get(i));
+				} else {
+					fw.write(arr);
+				}
+			}
+			
+			fr.close();
+			fw.close();
+			
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to open I/O stream!", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to open&write I/O stream!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 			return;
 		}
 		
-		//그냥 다음 thisPageStartsFrom까지 계속 읽으면서 쓰다가 
-		
 	}
 	
 	
-	public void pageEdited(int offset, int len, String edited) {
-		lf.addEditCheckpoint(edited);
+	public void pageEdited(String edited) {
+		changes.put(pageNum, edited);
 	}
 	
 
@@ -188,31 +203,5 @@ public class SelectedFileHandler {
 		
 	}
 	
-	
-	private class LargeFile {
-		
-		public List<EditedPageData> changes = new ArrayList<>();
-		/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th char of the file. */
-		public long thisPageStartsFrom = 0L;
-		/** the first (char/line) of the page now shown is <code>thisPageStartsFrom</code>th char of the file. */
-		public long thisPageEndsAt= 0L;
-		public void addEditCheckpoint(String edited) {
-			changes.add(new EditedPageData(thisPageStartsFrom, thisPageEndsAt, edited));
-		}
-		
-	}
-	
 }
 
-
-class EditedPageData {
-	public long startsFrom;
-	public long endsAt;
-	public String edited;
-	
-	public EditedPageData(long startsFrom, long endsAt, String edited) {
-		this.startsFrom = startsFrom;
-		this.endsAt = endsAt;
-		this.edited = edited;
-	}
-}
