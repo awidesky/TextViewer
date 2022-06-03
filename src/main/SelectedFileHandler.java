@@ -90,8 +90,8 @@ public class SelectedFileHandler {
 	private void pagedFileReadLoop() {
 
 		String result = null;
-		int read = readArray(fr, arr);
 		while (true) {
+			int read = readArray(fr, arr);
 
 			if (read == -1)
 				break;
