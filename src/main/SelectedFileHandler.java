@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
@@ -130,7 +131,7 @@ public class SelectedFileHandler {
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
-				bw.write(text);
+				bw.write(text.replace(System.lineSeparator(), "\n").replace("\n", System.lineSeparator()));
 				bw.close();
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(null, e.getMessage(), "unable to write file!", JOptionPane.ERROR_MESSAGE);
@@ -146,19 +147,25 @@ public class SelectedFileHandler {
 			this.fr = new FileReader(readFile, readAs);
 			this.fw = new FileWriter(writeTo, writeAs);
 			
-			for(long i = 0L; true; i++) {
-				int read = readArray(fr, arr);
-				
-				if (read == -1)
-					break;
-				
-				if(changes.containsKey(i)) {
-					fw.write(changes.get(i));
-				} else {
-					fw.write(arr);
+			if(changes.isEmpty()) {
+		        int nRead;
+		        while ((nRead = fr.read(arr, 0, arr.length)) >= 0) {
+		            fw.write(arr, 0, nRead);
+		        }
+			} else {
+				for (long i = 0L; true; i++) {
+					int read = readArray(fr, arr);
+
+					if (read == -1)
+						break;
+
+					if (changes.containsKey(i)) {
+						fw.write(changes.get(i).replace(System.lineSeparator(), "\n").replace("\n", System.lineSeparator()));
+					} else {
+						fw.write(arr, 0, read);
+					}
 				}
 			}
-			
 			fr.close();
 			fw.close();
 			
@@ -176,7 +183,9 @@ public class SelectedFileHandler {
 	}
 	
 
-	/** Fills the array by reading <code>fr</code> */
+	/** Fills the array by reading <code>fr</code>
+	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
+	 * */
 	private int readArray(FileReader fr, char[] array) {
 		return readArray(fr, array, 0);
 	}
