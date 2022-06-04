@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.concurrent.SynchronousQueue;
 
 import javax.swing.JOptionPane;
 
@@ -18,9 +18,8 @@ public class SelectedFileHandler {
 	private Charset readAs;
 	private FileReader fr;
 	private FileWriter fw;
-	private Consumer<String> callback;
 	private boolean paged;
-	
+	private SynchronousQueue<String> textQueue;
 	private StringBuilder leftOver = null;
 	
 	private Map<Long, String> changes = new HashMap<>();
@@ -31,25 +30,25 @@ public class SelectedFileHandler {
 	 *  If <code>false</code>, a page is always <code>limit</code> length of <code>char</code>s. */
 	public static boolean saparatePageByLine = false; //TODO : paged 파일이 열려 있는 동안에는 변경 못하게 하기. Main.bufferSize는 파일 읽는 도중에 변경 못하게, Main.bufferSize으 설정창에서 변경..?
 	/** Limit of <code>char</code>s. */
-	public static int limit = 500000;
+	public static int limit = 500000; 
 	
 	
 	private char[] arr;
 	
-	public SelectedFileHandler() { }	
+	public SelectedFileHandler(File readFile, Charset readAs, SynchronousQueue<String> textQueue) {
+
+		this.readFile = readFile;
+		this.readAs = readAs;
+		this.textQueue = textQueue;
+		this.paged = readFile.length() > singlePageFileSizeLimit; 
+		this.arr = saparatePageByLine ? new char[limit] : new char[Main.bufferSize];
+		
+	}	
 	
 	public boolean isPaged() { return paged; }
 	
-	public void setCallback(Consumer<String> callback) {
-		this.callback = callback;
-	}
 	
-	public void startRead(File readFile, Charset readAs) {
-		
-		this.readFile = readFile;
-		this.readAs = readAs;
-		this.paged = readFile.length() > singlePageFileSizeLimit; 
-		this.arr = saparatePageByLine ? new char[limit] : new char[Main.bufferSize];
+	public void startRead() {
 		
 		try {
 			this.fr = new FileReader(readFile, readAs);
@@ -74,7 +73,7 @@ public class SelectedFileHandler {
 				read = readArray(fr, arr);
 				sb.append(arr, 0, read);
 			}
-			callback.accept(sb.toString());
+			textQueue.offer(sb.toString());
 		}
 		
 		try {
@@ -83,6 +82,8 @@ public class SelectedFileHandler {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read file!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
+
+		textQueue.offer(null);
 		
 	}
 	
@@ -104,43 +105,38 @@ public class SelectedFileHandler {
 				result = temp;
 			}
 			
-			callback.accept(result); //callback에서 "edit된 page 저장? 물어보거나 확인.
+			textQueue.offer(result); //callback에서 "edit된 page 저장? 물어보거나 확인.
 			pageNum++;
 
 		}
 
-
 	}
 	
 	
-	/**
-	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
-	 * */
-	public void startWrite(File writeFile, Charset writeAs, String text) {
-		new Thread(() -> writeTask(writeFile, writeAs, text)).start();
-	}
 
 	/**
 	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
 	 * */
-	private void writeTask(File writeTo, Charset writeAs, String text) {
+	public boolean write(File writeTo, Charset writeAs, String text) {
 		
 		if(paged) {
-			pagedFileWriteLoop(writeTo, writeAs);
+			return pagedFileWriteLoop(writeTo, writeAs);
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
 				bw.write(text.replace(System.lineSeparator(), "\n").replace("\n", System.lineSeparator()));
 				bw.close();
+				return true;
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(null, e.getMessage(), "unable to write file!", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
+				return false;
 			}
 		}
 		
 	}
 	
-	private void pagedFileWriteLoop(File writeTo, Charset writeAs) {
+	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) {
 		
 		try {
 			this.fr = new FileReader(readFile, readAs);
@@ -167,11 +163,13 @@ public class SelectedFileHandler {
 			}
 			fr.close();
 			fw.close();
+
+			return true;
 			
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to open&write I/O stream!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		
 	}
@@ -217,5 +215,24 @@ public class SelectedFileHandler {
 		
 	}
 	
+//	public void killNow() {
+//		worker.interrupt();
+//		try {
+//			if(fr != null) fr.close();
+//			if(fw != null) fw.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
+	public void reRead() {
+		// TODO Filereader만 새오 만들고, 변경점 유지하면서.. queue 새로 받아와야?
+		try {
+			fr = new FileReader(readFile, readAs);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
 

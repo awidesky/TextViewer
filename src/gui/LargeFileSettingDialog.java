@@ -6,12 +6,9 @@ import java.awt.Window;
 
 import javax.swing.JDialog;
 
-import main.LargeFileHandlingRule;
-import main.ReferenceDTO;
-
 public class LargeFileSettingDialog extends JDialog {
 
-	public LargeFileSettingDialog(ReferenceDTO<LargeFileHandlingRule> ref) {
+	public LargeFileSettingDialog() {
 		
 		super((Window)null);
 		
@@ -23,7 +20,6 @@ public class LargeFileSettingDialog extends JDialog {
 		setResizable(false);
 		setLayout(null);
 		
-		new LargeFileHandlingRule(10 * 1024 * 1024 * 1024, true, 0);
 	}
 	
 }

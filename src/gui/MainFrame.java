@@ -8,13 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.concurrent.SynchronousQueue;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
@@ -34,8 +29,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
-import main.LargeFileHandlingRule;
 import main.ReferenceDTO;
+import main.SelectedFileHandler;
 
 public class MainFrame extends JFrame {
 
@@ -46,15 +41,14 @@ public class MainFrame extends JFrame {
 	private UndoManager undoManager = new UndoManager();;
 	private File lastOpened = new File(System.getProperty("user.home"));
 	private File lastSaved = new File(System.getProperty("user.home"));
-	private Charset lastedOpenedCharset = null;
 	private String version = "TextViewer v1.0";
 	
 	private TestFilechooser f = new TestFilechooser();
 	
-	private LargeFileHandlingRule lfhRule = new LargeFileHandlingRule(2L * 1024 * 1024 * 1024, false, 500000); //about 500000 line in 100mb DISM log file
-	private JMenu pageMenu = new JMenu("Pages");
-	private boolean paged = false;
+	private SynchronousQueue<String> textQueue = new SynchronousQueue<>();
 	
+	private SelectedFileHandler fileHandle;
+	private JMenu pageMenu = new JMenu("Pages");
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openFile;
@@ -69,7 +63,8 @@ public class MainFrame extends JFrame {
 	private JMenuItem next;
 	private JMenuItem reRead;
 
-	private boolean newFileReading = false;
+	/** <code>true</code> if new content is being written in TextArea */
+	private boolean newPageReading = false;
 	
 	
 	public MainFrame() {
@@ -126,7 +121,7 @@ public class MainFrame extends JFrame {
 	        }
 	        
 	        private void changed(DocumentEvent e) {
-  	        	if(newFileReading) { //new file is just read. user didn't type anything.
+  	        	if(newPageReading) { //new file is just read. user didn't type anything.
 	        		return;	
 	        	}
   	        	undo.setEnabled(undoManager.canUndo());
@@ -182,14 +177,7 @@ public class MainFrame extends JFrame {
 				return;
 			}
 			
-			/** Read file in EDT */
-			String s = readSelectedFile();
-			if(s == null) return;
-			
-			newFileReading = true;
-			ta.setText(s);
-			ta.setCaretPosition(0);
-			newFileReading = false;
+			readSelectedFile();
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -241,11 +229,9 @@ public class MainFrame extends JFrame {
 		largeSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.ALT_MASK));
 		largeSetting.getAccessibleContext().setAccessibleDescription("Large file handling setting");
 		largeSetting.addActionListener((e) -> {
-			ReferenceDTO<LargeFileHandlingRule> ref = new ReferenceDTO<>(lfhRule);
-			new LargeFileSettingDialog(ref);
-			lfhRule = ref.get();
 			
-			if(paged) reReadPagedFile();
+			new LargeFileSettingDialog();
+
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -260,11 +246,7 @@ public class MainFrame extends JFrame {
 		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
 		editable.addActionListener((e) -> {
 			
-			if(paged) {
-				JOptionPane.showMessageDialog(null, "Paged file is not editable!", "Try reduce size limit for paged files.", JOptionPane.ERROR_MESSAGE);
-			} else {
-				ta.setEditable(!ta.isEditable());
-			}
+			ta.setEditable(!ta.isEditable());
 			
 		});
 		formatMenu.add(largeSetting);
@@ -279,25 +261,21 @@ public class MainFrame extends JFrame {
 		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
-			try {
-				String s = lfhRule.readOnce(null);
-				if(s != null) {
-					ta.setText(s);
-					undoManager.discardAllEdits();
-				} else {
-					JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!", JOptionPane.INFORMATION_MESSAGE);
-					disableNextPageMenu();
-				}
-			} catch (IOException e1) {
-				JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
+			String s = textQueue.poll();
+			if (s != null) {
+				ta.setText(s);
+				undoManager.discardAllEdits();
+			} else {
+				JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!",
+						JOptionPane.INFORMATION_MESSAGE);
+				disableNextPageMenu();
 			}
 		});
 		reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			reReadPagedFile();
+			fileHandle.reRead();
 		});
 		pageMenu.add(next);
 		pageMenu.add(reRead);
@@ -322,116 +300,63 @@ public class MainFrame extends JFrame {
 	 *  */
 	private boolean saveFile() {
 		
-		try {
-			BufferedWriter bw = selectSaveLocation();
-			if(bw == null) return false;
-			if(paged) {
-				BufferedReader br = new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset));
-				
-				br.close();
-			} else { //TODO : fix
-				bw.write(ta.getText());
-			}
-			bw.close();
-			if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
-			return true;
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to save the file!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-			return false;
-		}
-		
-	}
-
-	/**
-	 *  This method returns content of the file.
-	 * 	
-	 * 	File may be read in another thread, or in EDT.
-	 *  
-	 *  */
-	private String readSelectedFile() { //TODO : drag & drop open? 
-
-		String result = "";
-		StringBuilder buff = new StringBuilder();
-		
-		try {
-			FileReader fr = selectFile();
-			if(fr == null) return null;
-			
-			if(paged) {
-				result = lfhRule.readOnce(fr);
-			} else {
-				String line = null;
-				while((line = fr.readLine()) != null) { //TODO : UTF-LE read stucked, read as char arr;
-					buff.append(line);
-					buff.append("\n");
-				}
-				result = buff.toString();
-			}
-			fr.close();
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		}
-		
-		if(result.equals("")) {
-			JOptionPane.showMessageDialog(null, "There's nothing to read!", "File is empty!", JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-		
-		return result;
-		
-	}
-
-	public FileReader selectFile() throws IOException {
-		f.setDialogTitle("Select file to read...");
-		f.setSelectedFile(lastOpened);
-	    f.setCurrentDirectory(lastOpened.getParentFile());
-	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
-	    	return null;
-	    
-	    lastOpened = f.getSelectedFile();
-	    if(lastOpened.length() > lfhRule.getFileSizeLimit()) {
-	    	System.out.println("paged!!");
-	    	paged = true;
-	    	enableNextPageMenu();
-	    } else {
-	    	paged = false;
-	    	disableNextPageMenu();
-	    }
-	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + ((paged) ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
-	    return new FileReader(lastOpened, (lastedOpenedCharset = f.getSelectedCharset()));
-	}
-
-
-	public BufferedWriter selectSaveLocation() throws IOException {
 		f.setDialogTitle("Save file at...");
 		f.setSelectedFile(lastOpened);
 		f.setCurrentDirectory(lastSaved.getParentFile());
 		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
-	    	return null;
+	    	return false;
 		
 		lastSaved = f.getSelectedFile();
 		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-			return null;
+			return false;
 		}
 		
-	    return new BufferedWriter(new FileWriter(lastSaved, f.getSelectedCharset()));
+		if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
+		return fileHandle.write(lastSaved, f.getSelectedCharset(), ta.getText());
+			
 	}
 	
-	private void reReadPagedFile() {
+
+	
+	
+	/**
+	 * 	
+	 * 	File may be read in another thread, but EDT waits for the Thread to offer first String.
+	 *  
+	 *  */
+	private void readSelectedFile() { //TODO : drag & drop open? 
+
+		selectFile();
 		
-		try {
-			String s = lfhRule.readOnce(new BufferedReader(new FileReader(lastOpened, lastedOpenedCharset)));
-			if(s != null) ta.setText(s);
-			else JOptionPane.showMessageDialog(null, "There's nothing to read!", "File is empty!", JOptionPane.ERROR_MESSAGE);
-		} catch (IOException e1) {
-			JOptionPane.showMessageDialog(null, e1.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-			e1.printStackTrace();
-		}
+		newPageReading = true;
+		ta.setText(textQueue.poll());
+		ta.setCaretPosition(0);
+		newPageReading = false;
 		
 	}
-	
+
+	public void selectFile() {
+		f.setDialogTitle("Select file to read...");
+		f.setSelectedFile(lastOpened);
+	    f.setCurrentDirectory(lastOpened.getParentFile());
+	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+	    	return;
+	    
+	    lastOpened = f.getSelectedFile();
+	    
+	    fileHandle = new SelectedFileHandler(lastOpened, f.getSelectedCharset(), textQueue);
+	    
+	    largeSetting.setEnabled(!fileHandle.isPaged());
+	    if(fileHandle.isPaged()) {
+	    	enableNextPageMenu();
+	    } else {
+	    	disableNextPageMenu();
+	    }
+	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + (fileHandle.isPaged() ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
+	    
+	}
+
+
 	private void enableNextPageMenu() {
 		pageMenu.setEnabled(true);
 	}
