@@ -9,7 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
@@ -45,7 +45,7 @@ public class MainFrame extends JFrame {
 	
 	private TestFilechooser f = new TestFilechooser();
 	
-	private SynchronousQueue<String> textQueue = new SynchronousQueue<>();
+	private ArrayBlockingQueue<String> textQueue = new ArrayBlockingQueue<>(1);
 	
 	private SelectedFileHandler fileHandle;
 	private JMenu pageMenu = new JMenu("Pages");
@@ -177,7 +177,11 @@ public class MainFrame extends JFrame {
 				return;
 			}
 			
-			readSelectedFile();
+			try {
+				readSelectedFile();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -262,7 +266,7 @@ public class MainFrame extends JFrame {
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
 			String s = textQueue.poll();
-			if (s != null) {
+			if (s.equals("")) {
 				ta.setText(s);
 				undoManager.discardAllEdits();
 			} else {
@@ -275,7 +279,8 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			fileHandle.reRead();
+			textQueue = new ArrayBlockingQueue<>(1);
+			fileHandle.reRead(textQueue);
 		});
 		pageMenu.add(next);
 		pageMenu.add(reRead);
@@ -322,29 +327,32 @@ public class MainFrame extends JFrame {
 	/**
 	 * 	
 	 * 	File may be read in another thread, but EDT waits for the Thread to offer first String.
+	 * @throws InterruptedException when <code>textQueue.take()</code> interrupted.
 	 *  
 	 *  */
-	private void readSelectedFile() { //TODO : drag & drop open? 
+	private void readSelectedFile() throws InterruptedException { //TODO : drag & drop open? 
 
-		selectFile();
+		if(!selectFile()) return;
+		
+		fileHandle.startRead(textQueue);
 		
 		newPageReading = true;
-		ta.setText(textQueue.poll());
+		ta.setText(textQueue.take());
 		ta.setCaretPosition(0);
 		newPageReading = false;
 		
 	}
 
-	public void selectFile() {
+	public boolean selectFile() {
 		f.setDialogTitle("Select file to read...");
 		f.setSelectedFile(lastOpened);
 	    f.setCurrentDirectory(lastOpened.getParentFile());
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
-	    	return;
+	    	return false;
 	    
 	    lastOpened = f.getSelectedFile();
 	    
-	    fileHandle = new SelectedFileHandler(lastOpened, f.getSelectedCharset(), textQueue);
+	    fileHandle = new SelectedFileHandler(lastOpened, f.getSelectedCharset());
 	    
 	    largeSetting.setEnabled(!fileHandle.isPaged());
 	    if(fileHandle.isPaged()) {
@@ -353,7 +361,7 @@ public class MainFrame extends JFrame {
 	    	disableNextPageMenu();
 	    }
 	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + (fileHandle.isPaged() ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
-	    
+	    return true;
 	}
 
 

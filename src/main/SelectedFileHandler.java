@@ -6,9 +6,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.swing.JOptionPane;
 
@@ -19,11 +19,12 @@ public class SelectedFileHandler {
 	private FileReader fr;
 	private FileWriter fw;
 	private boolean paged;
-	private SynchronousQueue<String> textQueue;
+	private ArrayBlockingQueue<String> textQueue;
 	private StringBuilder leftOver = null;
 	
-	private Map<Long, String> changes = new HashMap<>();
+	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
 	private long pageNum = 0L;
+	private Thread readingThread;
 	
 	public static long singlePageFileSizeLimit = 2L * 1024 * 1024 * 1024;
 	/** If <code>true</code>, a page always starts/ends as a whole line,
@@ -35,11 +36,10 @@ public class SelectedFileHandler {
 	
 	private char[] arr;
 	
-	public SelectedFileHandler(File readFile, Charset readAs, SynchronousQueue<String> textQueue) {
+	public SelectedFileHandler(File readFile, Charset readAs) {
 
 		this.readFile = readFile;
 		this.readAs = readAs;
-		this.textQueue = textQueue;
 		this.paged = readFile.length() > singlePageFileSizeLimit; 
 		this.arr = saparatePageByLine ? new char[limit] : new char[Main.bufferSize];
 		
@@ -48,7 +48,10 @@ public class SelectedFileHandler {
 	public boolean isPaged() { return paged; }
 	
 	
-	public void startRead() {
+	public void startRead(ArrayBlockingQueue<String> textQueue) {
+		
+		pageNum = 0L;
+		this.textQueue = textQueue;
 		
 		try {
 			this.fr = new FileReader(readFile, readAs);
@@ -57,7 +60,7 @@ public class SelectedFileHandler {
 			e.printStackTrace();
 			return;
 		}
-		new Thread(this::readTask).start();
+		(readingThread = new Thread(this::readTask)).start();
 		
 	}
 	
@@ -83,32 +86,61 @@ public class SelectedFileHandler {
 			e.printStackTrace();
 		}
 
-		textQueue.offer(null);
+		try {
+			textQueue.put("");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
 	private void pagedFileReadLoop() {
 
-		String result = null;
+		String result = "";
 		while (true) {
-			int read = readArray(fr, arr);
 
-			if (read == -1)
-				break;
-			
-			result = String.valueOf(arr, 0, read);
-			
-			if (saparatePageByLine) {
-				String temp = leftOver.append(result.substring(0, result.lastIndexOf(System.lineSeparator()) - (System.lineSeparator().length() - 1))).toString();
-				leftOver = new StringBuilder(arr.length);
-				leftOver.append(result.substring(result.lastIndexOf(System.lineSeparator()) + System.lineSeparator().length()));
-				result = temp;
+			if (changes.containsKey(pageNum + 1)) {
+				result = changes.get(pageNum + 1);
+			} else {
+
+				int read = readArray(fr, arr);
+
+				if (read == -1)
+					break;
+
+				result = String.valueOf(arr, 0, read);
+
+				if (saparatePageByLine) {
+					String temp = leftOver
+							.append(result.substring(0,
+									result.lastIndexOf(System.lineSeparator()) - (System.lineSeparator().length() - 1)))
+							.toString();
+					leftOver = new StringBuilder(arr.length);
+					leftOver.append(result
+							.substring(result.lastIndexOf(System.lineSeparator()) + System.lineSeparator().length()));
+					result = temp;
+				}
+
 			}
 			
-			textQueue.offer(result); //callback에서 "edit된 page 저장? 물어보거나 확인.
+			try {
+				textQueue.put(result);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			pageNum++;
 
 		}
+		
+		try {
+			textQueue.put("");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 
 	}
 	
@@ -225,14 +257,9 @@ public class SelectedFileHandler {
 //		}
 //	}
 
-	public void reRead() {
-		// TODO Filereader만 새오 만들고, 변경점 유지하면서.. queue 새로 받아와야?
-		try {
-			fr = new FileReader(readFile, readAs);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void reRead(ArrayBlockingQueue<String> newTextQueue) {
+		readingThread.interrupt();
+		startRead(newTextQueue);
 	}
 }
 
