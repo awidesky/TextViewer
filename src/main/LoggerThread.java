@@ -12,10 +12,16 @@ public class LoggerThread extends Thread {
 	
 	public volatile boolean isStop = false;
 	
+	
+	public LoggerThread() {
+		this(System.out);
+	}
+	
 	public LoggerThread(OutputStream os) {
 		logTo = new PrintWriter(os);
 	}
-	
+
+
 	@Override
 	public void run() {
 
@@ -51,6 +57,24 @@ public class LoggerThread extends Thread {
 		loggerQueue.offer(() -> {
 			e.printStackTrace(logTo);
 		});
+		
+	}
+
+	/**
+	 * Kill LoggerThread in <code>timeOut</code> ms.
+	 * */
+	public void kill(int timeOut) {
+		
+		isStop = true;
+		
+		try {
+			this.join(timeOut);
+		} catch (InterruptedException e) {
+			logTo.println("Failed to join logger thread!");
+			e.printStackTrace(logTo);
+		}
+		
+		logTo.close();
 		
 	}
 }
