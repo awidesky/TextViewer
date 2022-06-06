@@ -36,7 +36,7 @@ public class SelectedFileHandler {
 	
 	private char[] arr;
 	
-	public SelectedFileHandler(File readFile, Charset readAs) {
+	public SelectedFileHandler(File readFile, Charset readAs) { //TODO : logging
 
 		this.readFile = readFile;
 		this.readAs = readAs;

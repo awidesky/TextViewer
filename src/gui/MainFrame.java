@@ -29,8 +29,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
+import main.Main;
 import main.ReferenceDTO;
 import main.SelectedFileHandler;
+import static main.Main.logger;
 
 public class MainFrame extends JFrame {
 
@@ -73,6 +75,7 @@ public class MainFrame extends JFrame {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
 				| UnsupportedLookAndFeelException e) {
+			SwingDialogs.error("Error while setting window look&feel", "%e%", e, false);
 			e.printStackTrace();
 		}
 		
@@ -87,7 +90,7 @@ public class MainFrame extends JFrame {
 				if(!saveBeforeClose()) return; 
 
 				e.getWindow().dispose();
-				System.exit(0);
+				Main.kill(0);
 
 			}
 
@@ -124,9 +127,13 @@ public class MainFrame extends JFrame {
   	        	if(newPageReading) { //new file is just read. user didn't type anything.
 	        		return;	
 	        	}
+  	        	
   	        	undo.setEnabled(undoManager.canUndo());
   				redo.setEnabled(undoManager.canRedo());
-	        	if(!getTitle().startsWith("*")) setTitle("*" + getTitle());
+	        	if(!getTitle().startsWith("*")) {
+	        		logger.log("File Edited!");
+	        		setTitle("*" + getTitle());
+	        	}
 	        }
 	    });
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -179,8 +186,8 @@ public class MainFrame extends JFrame {
 			
 			try {
 				readSelectedFile();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
+			} catch (InterruptedException excep) {
+				SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
 			}
 			
 		});
