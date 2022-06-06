@@ -347,9 +347,10 @@ public class MainFrame extends JFrame {
 		f.setDialogTitle("Select file to read...");
 		f.setSelectedFile(lastOpened);
 	    f.setCurrentDirectory(lastOpened.getParentFile());
+	    f.getActionMap().get("viewTypeDetails").actionPerformed(null);
 	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 	    	return false;
-	    
+
 	    lastOpened = f.getSelectedFile();
 	    
 	    fileHandle = new SelectedFileHandler(lastOpened, f.getSelectedCharset());
