@@ -26,7 +26,7 @@ public class SelectedFileHandler {
 	private long pageNum = 0L;
 	private Thread readingThread;
 	
-	public static long singlePageFileSizeLimit = 2L * 1024 * 1024 * 1024;
+	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
 	/** If <code>true</code>, a page always starts/ends as a whole line,
 	 *  If <code>false</code>, a page is always <code>limit</code> length of <code>char</code>s. */
 	public static boolean saparatePageByLine = false; //TODO : paged 파일이 열려 있는 동안에는 변경 못하게 하기. Main.bufferSize는 파일 읽는 도중에 변경 못하게, Main.bufferSize으 설정창에서 변경..?
@@ -156,7 +156,7 @@ public class SelectedFileHandler {
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
-				bw.write(text.replace(System.lineSeparator(), "\n").replace("\n", System.lineSeparator()));
+				bw.write(text.replaceAll("\\R", System.lineSeparator()));
 				bw.close();
 				return true;
 			} catch (IOException e) {
@@ -187,7 +187,7 @@ public class SelectedFileHandler {
 						break;
 
 					if (changes.containsKey(i)) {
-						fw.write(changes.get(i).replace(System.lineSeparator(), "\n").replace("\n", System.lineSeparator()));
+						fw.write(changes.get(i).replaceAll("\\R", System.lineSeparator()));
 					} else {
 						fw.write(arr, 0, read);
 					}
