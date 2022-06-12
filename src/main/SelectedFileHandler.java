@@ -33,8 +33,13 @@ public class SelectedFileHandler {
 	/** Limit of <code>char</code>s. */
 	public static int limit = 500000; 
 	
-	
 	private char[] arr;
+	
+
+	public SelectedFileHandler() { //write-only instance
+		this.paged = false;
+		this.arr = new char[Main.bufferSize];
+	}
 	
 	public SelectedFileHandler(File readFile, Charset readAs) { //TODO : logging
 
@@ -94,7 +99,7 @@ public class SelectedFileHandler {
 		
 	}
 	
-	private void pagedFileReadLoop() {
+	private void pagedFileReadLoop() { //TODO : add logging here
 
 		String result = "";
 		while (true) {

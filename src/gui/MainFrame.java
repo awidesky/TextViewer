@@ -49,7 +49,7 @@ public class MainFrame extends JFrame {
 	
 	private ArrayBlockingQueue<String> textQueue = new ArrayBlockingQueue<>(1);
 	
-	private SelectedFileHandler fileHandle;
+	private SelectedFileHandler fileHandle = new SelectedFileHandler();
 	private JMenu pageMenu = new JMenu("Pages");
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
