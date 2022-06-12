@@ -45,7 +45,7 @@ public class MainFrame extends JFrame {
 	private File lastSaved = new File(System.getProperty("user.home"));
 	private String version = "TextViewer v1.0";
 	
-	private TestFilechooser f = new TestFilechooser();
+	private TextFilechooser f = new TextFilechooser();
 	
 	private ArrayBlockingQueue<String> textQueue = new ArrayBlockingQueue<>(1);
 	
