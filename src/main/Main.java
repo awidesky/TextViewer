@@ -48,16 +48,19 @@ public class Main {
 			logger.start();
 		}
 		
-		
+		logger.log("Setup done!");
 		
 		SwingUtilities.invokeLater(() ->{
+			logger.log("Starting Mainframe...");
 			new MainFrame();
+			logger.log("Mainframe loaded!");
 		});
 	 
     }
 
 	public static void kill(int errCode) {
 		
+		logger.log("Kill application with error code : " + errCode);
 		logger.kill(3000);
 		System.exit(errCode);
 		

@@ -323,6 +323,9 @@ public class MainFrame extends JFrame {
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
 			
+			if (!pageMenu.isEnabled()) return;
+			
+			newPageReading = true;
 			if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
 			
 			try {
@@ -331,9 +334,9 @@ public class MainFrame extends JFrame {
 						ta.setText(s);
 						undoManager.discardAllEdits();
 						if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+						newPageReading = false;
 					} else {
-						JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!",
-								JOptionPane.INFORMATION_MESSAGE);
+						SwingDialogs.information("No more page to read!", "Reached EOF!", false);
 						disableNextPageMenu();
 					}
 				});

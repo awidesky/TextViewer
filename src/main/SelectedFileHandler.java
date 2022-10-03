@@ -105,12 +105,14 @@ public class SelectedFileHandler {
 	
 	private void pagedFileReadLoop() {
 
-		StringBuilder strBuf = new StringBuilder("");
-		String result;
 		
 		readFile:
 		while (true) {
 
+			StringBuilder strBuf = new StringBuilder("");
+			String result;
+			
+			Main.logger.log("start reading a page #" + pageNum);
 			if (changes.containsKey(pageNum + 1)) {
 				result = changes.get(pageNum + 1);
 			} else {
@@ -144,7 +146,7 @@ public class SelectedFileHandler {
 			}
 			
 			pageNum++;
-
+			Main.logger.log("page #" + pageNum + " is read!");
 		}
 		
 		try {
