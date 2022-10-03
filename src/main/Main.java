@@ -17,6 +17,10 @@ public class Main {
 	
 	public static int bufferSize = 1024 * 8; //TODO : setting에서 이것도 정하기(line단위로 limit 정할 때에만)
 
+	//TODO : menu disable돼도 단축키는 먹나?
+	//TODO : paged 읽다가 중간에 다른 파일 읽으면 queue 버려주기
+	
+	
 	public static LoggerThread logger;
 	
 	public static void main(String[] args) {
