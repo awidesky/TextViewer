@@ -44,7 +44,7 @@ public class SelectedFileHandler {
 		this.arr = new char[Main.bufferSize];
 	}
 	
-	public SelectedFileHandler(File readFile, Charset readAs) { //TODO : logging
+	public SelectedFileHandler(File readFile, Charset readAs) { 
 
 		this.readFile = readFile;
 		this.readAs = readAs;

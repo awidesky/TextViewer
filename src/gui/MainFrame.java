@@ -6,11 +6,20 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
@@ -47,7 +56,7 @@ public class MainFrame extends JFrame {
 	private File lastSaved = new File(System.getProperty("user.home"));
 	private String version = "TextViewer v1.0";
 	
-	private TextFilechooser f = new TextFilechooser();
+	private TextFilechooser fileChooser = new TextFilechooser();
 	
 	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
 	
@@ -138,6 +147,52 @@ public class MainFrame extends JFrame {
 	        	}
 	        }
 	    });
+		new DropTarget(ta, new DropTargetListener(){
+            public void dragEnter(DropTargetDragEvent e)
+            {
+            }
+            
+            public void dragExit(DropTargetEvent e)
+            {
+            }
+            
+            public void dragOver(DropTargetDragEvent e)
+            {
+            }
+            
+            public void dropActionChanged(DropTargetDragEvent e)
+            {
+            
+            }
+            
+			public void drop(DropTargetDropEvent e) {
+				File dropped = null;
+				try {
+					Transferable tr = e.getTransferable();
+					DataFlavor[] flavors = tr.getTransferDataFlavors();
+
+					if (flavors[0].isFlavorJavaFileListType()) {
+						
+						e.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+
+						@SuppressWarnings("unchecked")
+						List<File> list = (List<File>) tr.getTransferData(flavors[0]);
+
+						if(list.size() > 1) {
+							SwingDialogs.error("Drag & Drop error!", "Do not drag & drop more than one file!", null, false);
+							return;
+						}
+						 
+						dropped = list.get(0);
+					}
+				} catch (Exception ex) {
+					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
+				}
+				openFile(dropped);
+			}
+        });
+		
+		
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 		sp.setBackground(Color.WHITE);
@@ -180,33 +235,10 @@ public class MainFrame extends JFrame {
 		openFile = new JMenuItem("Open file...", KeyEvent.VK_O);
 		openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.ALT_MASK));
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
-		openFile.addActionListener((e) -> { //TODO : drag n drop?
+		openFile.addActionListener((e) -> {
 			
-			if(!saveBeforeClose()) {
-				return;
-			}
-			
-			try {
-				
-				if(!selectFile()) return;
-				
-				if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
-				fileHandle.startRead(readCallbackQueue);
-				
-				newPageReading = true;
-				readCallbackQueue.put(s -> {
-					if (s != null) {
-						ta.setText(s);
-						undoManager.discardAllEdits();
-						if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
-						ta.setCaretPosition(0);
-						newPageReading = false; 
-					}
-				});
-				
-			} catch (InterruptedException excep) {
-				SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
-			}
+			//open chosen file
+			openFile(null);
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -329,6 +361,60 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	
+	private void openFile(File file) {
+		
+
+		if(!saveBeforeClose()) {
+			return;
+		}
+		
+		try {
+			
+			if (file != null) {
+				lastOpened = file;
+			} else {
+				fileChooser.setDialogTitle("Select file to read...");
+				fileChooser.setSelectedFile(lastOpened);
+				fileChooser.setCurrentDirectory(lastOpened.getParentFile());
+				fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
+				if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+					return;
+
+				lastOpened = fileChooser.getSelectedFile();
+			}
+		    
+		    fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
+		    
+		    largeSetting.setEnabled(!fileHandle.isPaged());
+		    if(fileHandle.isPaged()) {
+		    	enableNextPageMenu();
+		    } else {
+		    	disableNextPageMenu();
+		    }
+		    setTitle(version + " - \"" + lastOpened.getAbsolutePath() + "\" (" + formatFileSize(lastOpened.length()) + (fileHandle.isPaged() ? ", paged" : "") + ")  in " + fileChooser.getSelectedCharset().name());
+			
+			if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
+			fileHandle.startRead(readCallbackQueue);
+			
+			newPageReading = true;
+			readCallbackQueue.put(s -> {
+				if (s != null) {
+					ta.setText(s);
+					undoManager.discardAllEdits();
+					if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+					ta.setCaretPosition(0);
+					newPageReading = false; 
+				}
+			});
+			
+		} catch (InterruptedException excep) {
+			SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
+		}
+		
+		
+	}
+	
 	/**
 	 *  This method saves content to the file.
 	 * 	
@@ -339,44 +425,23 @@ public class MainFrame extends JFrame {
 	 *  */
 	private boolean saveFile() {
 		
-		f.setDialogTitle("Save file at...");
-		f.setSelectedFile(lastOpened);
-		f.setCurrentDirectory(lastSaved.getParentFile());
-		if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
+		fileChooser.setDialogTitle("Save file at...");
+		fileChooser.setSelectedFile(lastOpened);
+		fileChooser.setCurrentDirectory(lastSaved.getParentFile());
+		if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
 	    	return false;
 		
-		lastSaved = f.getSelectedFile();
+		lastSaved = fileChooser.getSelectedFile();
 		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			return false;
 		}
 		
 		if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
-		return fileHandle.write(lastSaved, f.getSelectedCharset(), ta.getText());
+		return fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
 			
 	}
 	
 	
-	public boolean selectFile() {
-		f.setDialogTitle("Select file to read...");
-		f.setSelectedFile(lastOpened);
-	    f.setCurrentDirectory(lastOpened.getParentFile());
-	    f.getActionMap().get("viewTypeDetails").actionPerformed(null);
-	    if (f.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
-	    	return false;
-
-	    lastOpened = f.getSelectedFile();
-	    
-	    fileHandle = new SelectedFileHandler(lastOpened, f.getSelectedCharset());
-	    
-	    largeSetting.setEnabled(!fileHandle.isPaged());
-	    if(fileHandle.isPaged()) {
-	    	enableNextPageMenu();
-	    } else {
-	    	disableNextPageMenu();
-	    }
-	    setTitle(version + " - \"" + f.getSelectedFile().getAbsolutePath() + "\" (" + formatFileSize(f.getSelectedFile().length()) + (fileHandle.isPaged() ? ", paged" : "") + ")  in " + f.getSelectedCharset().name());
-	    return true;
-	}
 
 
 	private void enableNextPageMenu() {

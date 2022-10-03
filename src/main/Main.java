@@ -17,7 +17,7 @@ public class Main {
 
 	public static LoggerThread logger;
 	
-	public static void main(String[] args) { //TODO : logger Ãß°¡
+	public static void main(String[] args) {
 	 
 		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("--ShowAllFont")) {
