@@ -12,7 +12,9 @@ import gui.FontDialog;
 import gui.MainFrame;
 
 public class Main {
-  
+
+	public static final String VERSION = "TextViewer v1.0";
+	
 	public static int bufferSize = 1024 * 8; //TODO : setting에서 이것도 정하기(line단위로 limit 정할 때에만)
 
 	public static LoggerThread logger;

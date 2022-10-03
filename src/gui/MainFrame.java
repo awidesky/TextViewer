@@ -54,7 +54,6 @@ public class MainFrame extends JFrame {
 	private UndoManager undoManager = new UndoManager();;
 	private File lastOpened = new File(System.getProperty("user.home"));
 	private File lastSaved = new File(System.getProperty("user.home"));
-	private String version = "TextViewer v1.0";
 	
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
@@ -90,7 +89,9 @@ public class MainFrame extends JFrame {
 			e.printStackTrace();
 		}
 		
-		setTitle(version);
+		TitleGeneartor.titleConsumer(this::setTitle);	
+		
+		setTitle(Main.VERSION);
 		setSize(800, 700);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -143,7 +144,7 @@ public class MainFrame extends JFrame {
   				redo.setEnabled(undoManager.canRedo());
 	        	if(!getTitle().startsWith("*")) {
 	        		logger.log("File Edited!");
-	        		setTitle("*" + getTitle());
+	        		TitleGeneartor.edited(true);
 	        	}
 	        }
 	    });
@@ -265,7 +266,7 @@ public class MainFrame extends JFrame {
 			undoManager.undo();
 			undo.setEnabled(undoManager.canUndo());
 			redo.setEnabled(undoManager.canRedo());
-			if(!undoManager.canUndo() && getTitle().startsWith("*")) setTitle(getTitle().substring(1));
+			if(!undoManager.canUndo()) TitleGeneartor.edited(false);
 		});
 		undo.setEnabled(false);
 		redo = new JMenuItem("Redo", KeyEvent.VK_Y);
@@ -326,14 +327,14 @@ public class MainFrame extends JFrame {
 			if (!pageMenu.isEnabled()) return;
 			
 			newPageReading = true;
-			if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
+			TitleGeneartor.loading(true);
 			
 			try {
 				readCallbackQueue.put(s -> {
 					if (s != null) {
 						ta.setText(s);
 						undoManager.discardAllEdits();
-						if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+						TitleGeneartor.loading(false);
 						newPageReading = false;
 					} else {
 						SwingDialogs.information("No more page to read!", "Reached EOF!", false);
@@ -395,9 +396,8 @@ public class MainFrame extends JFrame {
 		    } else {
 		    	disableNextPageMenu();
 		    }
-		    setTitle(version + " - \"" + lastOpened.getAbsolutePath() + "\" (" + formatFileSize(lastOpened.length()) + (fileHandle.isPaged() ? ", paged" : "") + ")  in " + fileChooser.getSelectedCharset().name());
+		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 			
-			if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
 			fileHandle.startRead(readCallbackQueue);
 			
 			newPageReading = true;
@@ -405,7 +405,7 @@ public class MainFrame extends JFrame {
 				if (s != null) {
 					ta.setText(s);
 					undoManager.discardAllEdits();
-					if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+					TitleGeneartor.loading(false);
 					ta.setCaretPosition(0);
 					newPageReading = false; 
 				}
@@ -439,7 +439,7 @@ public class MainFrame extends JFrame {
 			return false;
 		}
 		
-		if(getTitle().startsWith("*")) setTitle(getTitle().substring(1));
+		TitleGeneartor.edited(false);
 		return fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
 			
 	}

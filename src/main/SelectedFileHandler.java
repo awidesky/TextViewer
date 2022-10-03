@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 
 import gui.SwingDialogs;
+import gui.TitleGeneartor;
 
 public class SelectedFileHandler {
 
@@ -51,6 +52,10 @@ public class SelectedFileHandler {
 		
 	}	
 	
+	public SelectedFileHandler(Object object) {
+		// TODO Auto-generated constructor stub
+	}
+
 	public boolean isPaged() { return paged; }
 	
 	
@@ -145,7 +150,7 @@ public class SelectedFileHandler {
 				SwingDialogs.error("cannot read file!", "%e%", e, false);
 			}
 			
-			pageNum++;
+			TitleGeneartor.pageNum(++pageNum);
 			Main.logger.log("page #" + pageNum + " is read!");
 		}
 		
