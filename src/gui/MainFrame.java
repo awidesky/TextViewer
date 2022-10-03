@@ -1,5 +1,7 @@
 package gui;
 
+import static main.Main.logger;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -9,7 +11,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
@@ -32,7 +35,6 @@ import javax.swing.undo.UndoManager;
 import main.Main;
 import main.ReferenceDTO;
 import main.SelectedFileHandler;
-import static main.Main.logger;
 
 public class MainFrame extends JFrame {
 
@@ -47,7 +49,7 @@ public class MainFrame extends JFrame {
 	
 	private TextFilechooser f = new TextFilechooser();
 	
-	private ArrayBlockingQueue<String> textQueue = new ArrayBlockingQueue<>(1);
+	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
 	
 	private SelectedFileHandler fileHandle = new SelectedFileHandler();
 	private JMenu pageMenu = new JMenu("Pages");
@@ -86,7 +88,7 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-				
+
 				if(!saveBeforeClose()) return; 
 
 				e.getWindow().dispose();
@@ -178,14 +180,30 @@ public class MainFrame extends JFrame {
 		openFile = new JMenuItem("Open file...", KeyEvent.VK_O);
 		openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.ALT_MASK));
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
-		openFile.addActionListener((e) -> {
+		openFile.addActionListener((e) -> { //TODO : drag n drop?
 			
 			if(!saveBeforeClose()) {
 				return;
 			}
 			
 			try {
-				readSelectedFile();
+				
+				if(!selectFile()) return;
+				
+				if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
+				fileHandle.startRead(readCallbackQueue);
+				
+				newPageReading = true;
+				readCallbackQueue.put(s -> {
+					if (s != null) {
+						ta.setText(s);
+						undoManager.discardAllEdits();
+						if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+						ta.setCaretPosition(0);
+						newPageReading = false; 
+					}
+				});
+				
 			} catch (InterruptedException excep) {
 				SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
 			}
@@ -272,22 +290,31 @@ public class MainFrame extends JFrame {
 		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
-			String s = textQueue.poll();
-			if (s.equals("")) {
-				ta.setText(s);
-				undoManager.discardAllEdits();
-			} else {
-				JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!",
-						JOptionPane.INFORMATION_MESSAGE);
-				disableNextPageMenu();
+			
+			if(!getTitle().endsWith(" (loading...)")) setTitle(getTitle() + " (loading...)");
+			
+			try {
+				readCallbackQueue.put(s -> {
+					if (s != null) {
+						ta.setText(s);
+						undoManager.discardAllEdits();
+						if(getTitle().endsWith(" (loading...)")) setTitle(getTitle().substring(0, getTitle().length() - " (loading...)".length()));
+					} else {
+						JOptionPane.showMessageDialog(null, "No more page to read!", "Reached EOF!",
+								JOptionPane.INFORMATION_MESSAGE);
+						disableNextPageMenu();
+					}
+				});
+			} catch (InterruptedException e1) {
+				SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
 			}
 		});
 		reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			textQueue = new ArrayBlockingQueue<>(1);
-			fileHandle.reRead(textQueue);
+			readCallbackQueue = new LinkedBlockingQueue<>();;
+			fileHandle.reRead(readCallbackQueue);
 		});
 		pageMenu.add(next);
 		pageMenu.add(reRead);
@@ -328,28 +355,7 @@ public class MainFrame extends JFrame {
 			
 	}
 	
-
 	
-	
-	/**
-	 * 	
-	 * 	File may be read in another thread, but EDT waits for the Thread to offer first String.
-	 * @throws InterruptedException when <code>textQueue.take()</code> interrupted.
-	 *  
-	 *  */
-	private void readSelectedFile() throws InterruptedException { //TODO : drag & drop open? 
-
-		if(!selectFile()) return;
-		
-		fileHandle.startRead(textQueue);
-		
-		newPageReading = true;
-		ta.setText(textQueue.take());
-		ta.setCaretPosition(0);
-		newPageReading = false;
-		
-	}
-
 	public boolean selectFile() {
 		f.setDialogTitle("Select file to read...");
 		f.setSelectedFile(lastOpened);

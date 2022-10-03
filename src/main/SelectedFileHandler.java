@@ -6,11 +6,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
+
+import gui.SwingDialogs;
 
 public class SelectedFileHandler {
 
@@ -19,7 +22,7 @@ public class SelectedFileHandler {
 	private FileReader fr;
 	private FileWriter fw;
 	private boolean paged;
-	private ArrayBlockingQueue<String> textQueue;
+	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue;
 	private StringBuilder leftOver = null;
 	
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
@@ -53,23 +56,26 @@ public class SelectedFileHandler {
 	public boolean isPaged() { return paged; }
 	
 	
-	public void startRead(ArrayBlockingQueue<String> textQueue) {
+	public void startRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		
 		pageNum = 0L;
-		this.textQueue = textQueue;
+		this.readCallbackQueue = readCallbackQueue;
 		
 		try {
 			this.fr = new FileReader(readFile, readAs);
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			SwingDialogs.error("unable to read the file!", "%e%", e, false);
 			return;
 		}
+		Main.logger.log("\nReading file " + readFile.getAbsolutePath());
 		(readingThread = new Thread(this::readTask)).start();
 		
 	}
 	
 	private void readTask() {
+		
+		Main.logger.log("File is " + (paged ? "" : "not ") + "paged");
+		Main.logger.log("Buffer size : " + arr.length + "\n");
 		
 		if(paged) {
 			leftOver = new StringBuilder(arr.length);
@@ -77,30 +83,30 @@ public class SelectedFileHandler {
 		} else {
 			StringBuilder sb = new StringBuilder((int) readFile.length());
 			int read = 0;
-			while (read != -1) {
-				read = readArray(fr, arr);
+			while (true) {
+				if ((read = readArray()) == -1) break;
 				sb.append(arr, 0, read);
 			}
-			textQueue.offer(sb.toString());
+			try {
+				readCallbackQueue.take().accept(sb.toString());
+			} catch (InterruptedException e) {
+				SwingDialogs.error("cannot read file!", "%e%", e, false);
+			}
+		
 		}
+		
+		Main.logger.log("File read completed!\n");
 		
 		try {
 			fr.close();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read file!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			SwingDialogs.error("unable to close file!", "%e%", e, false);
 		}
 
-		try {
-			textQueue.put("");
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
 	}
 	
-	private void pagedFileReadLoop() { //TODO : add logging here
-
+	private void pagedFileReadLoop() {
+		
 		String result = "";
 		while (true) {
 
@@ -108,7 +114,7 @@ public class SelectedFileHandler {
 				result = changes.get(pageNum + 1);
 			} else {
 
-				int read = readArray(fr, arr);
+				int read = readArray();
 
 				if (read == -1)
 					break;
@@ -129,10 +135,9 @@ public class SelectedFileHandler {
 			}
 			
 			try {
-				textQueue.put(result);
+				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				SwingDialogs.error("cannot read file!", "%e%", e, false);
 			}
 			
 			pageNum++;
@@ -140,10 +145,9 @@ public class SelectedFileHandler {
 		}
 		
 		try {
-			textQueue.put("");
+			readCallbackQueue.take().accept(null);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			SwingDialogs.error("cannot read file!", "%e%", e, false);
 		}
 		
 
@@ -186,7 +190,7 @@ public class SelectedFileHandler {
 		        }
 			} else {
 				for (long i = 0L; true; i++) {
-					int read = readArray(fr, arr);
+					int read = readArray();
 
 					if (read == -1)
 						break;
@@ -220,28 +224,36 @@ public class SelectedFileHandler {
 	/** Fills the array by reading <code>fr</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
 	 * */
-	private int readArray(FileReader fr, char[] array) {
-		return readArray(fr, array, 0);
+	private int readArray() {
+		return readArray(0);
 	}
 
 	/** Fills the array by reading <code>fr</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
 	 * */
-	private int readArray(FileReader fr, char[] array, int from) {
+	private int readArray(int from) {
 
 		try {
-			int totalRead = fr.read(array);
-			if (totalRead != -1)
+			int totalRead = fr.read(arr);
+			Main.logger.log("Read " + totalRead + " char(s)");
+			if (totalRead == -1)
 				return -1;
 
-			if (totalRead != array.length) {
+			if (totalRead != arr.length) {
+				Main.logger.log("Buffer not full, try reading more...");
 				int read;
-				while ((read = fr.read(array, totalRead, array.length - totalRead)) != -1) {
+				while ((read = fr.read(arr, totalRead, arr.length - totalRead)) != -1) {
+					Main.logger.log("Read " + read + " char(s), total : " + totalRead);
 					totalRead += read;
-					if (totalRead == array.length)
+					if (totalRead == arr.length) {
+						Main.logger.log("Buffer is full!");						
 						break;
+					}
 				}
+				if (read == -1) Main.logger.log("EOF reached!");
 			}
+			
+			Main.logger.log("total read char(s) : " + totalRead + "\n");
 			return totalRead;
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
@@ -262,9 +274,9 @@ public class SelectedFileHandler {
 //		}
 //	}
 
-	public void reRead(ArrayBlockingQueue<String> newTextQueue) {
+	public void reRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		readingThread.interrupt();
-		startRead(newTextQueue);
+		startRead(readCallbackQueue);
 	}
 }
 
