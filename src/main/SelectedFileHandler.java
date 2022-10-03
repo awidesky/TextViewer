@@ -26,15 +26,13 @@ public class SelectedFileHandler {
 	private StringBuilder leftOver = null;
 	
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
+	/** page number starts from 1, not 0! */
 	private long pageNum = 0L;
 	private Thread readingThread;
 	
 	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
-	/** If <code>true</code>, a page always starts/ends as a whole line,
-	 *  If <code>false</code>, a page is always <code>limit</code> length of <code>char</code>s. */
-	public static boolean saparatePageByLine = false; //TODO : paged 파일이 열려 있는 동안에는 변경 못하게 하기. Main.bufferSize는 파일 읽는 도중에 변경 못하게, Main.bufferSize으 설정창에서 변경..?
-	/** Limit of <code>char</code>s. */
-	public static int limit = 500000; 
+	
+	private static int maxCharPerPage = 500000; 
 	
 	private char[] arr;
 	
@@ -49,7 +47,7 @@ public class SelectedFileHandler {
 		this.readFile = readFile;
 		this.readAs = readAs;
 		this.paged = readFile.length() > singlePageFileSizeLimit; 
-		this.arr = saparatePageByLine ? new char[limit] : new char[Main.bufferSize];
+		this.arr = new char[paged ? maxCharPerPage : Main.bufferSize];
 		
 	}	
 	
@@ -106,34 +104,39 @@ public class SelectedFileHandler {
 	}
 	
 	private void pagedFileReadLoop() {
+
+		StringBuilder strBuf = new StringBuilder("");
+		String result;
 		
-		String result = "";
+		readFile:
 		while (true) {
 
 			if (changes.containsKey(pageNum + 1)) {
 				result = changes.get(pageNum + 1);
 			} else {
 
-				int read = readArray();
+				int totalRead = 0;
+				
+				int nextRead = Math.min(arr.length, maxCharPerPage);
+				while (true) {
+					int read = readArray(nextRead);
+					if (read == -1) break readFile;
 
-				if (read == -1)
-					break;
-
-				result = String.valueOf(arr, 0, read);
-
-				if (saparatePageByLine) {
-					String temp = leftOver
-							.append(result.substring(0,
-									result.lastIndexOf(System.lineSeparator()) - (System.lineSeparator().length() - 1)))
-							.toString();
-					leftOver = new StringBuilder(arr.length);
-					leftOver.append(result
-							.substring(result.lastIndexOf(System.lineSeparator()) + System.lineSeparator().length()));
-					result = temp;
+					strBuf.append(arr, 0, read);
+					totalRead += read;
+					if(totalRead == maxCharPerPage) break;
+					
+					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //readTask에서도 min메소드?
 				}
+				
+				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
+				
+				result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
+				leftOver = new StringBuilder("");
+				leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
 
 			}
-			
+
 			try {
 				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {
@@ -225,27 +228,30 @@ public class SelectedFileHandler {
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
 	 * */
 	private int readArray() {
-		return readArray(0);
+		return readArray(arr.length);
 	}
 
 	/** Fills the array by reading <code>fr</code>
-	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
+	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading.
+	 *  
+	 *  @param len amount of chars to read
 	 * */
-	private int readArray(int from) {
+	private int readArray(int len) {
 
+		Main.logger.log("Try reading " + len + " char(s)...");
 		try {
-			int totalRead = fr.read(arr);
+			int totalRead = fr.read(arr, 0, len);
 			Main.logger.log("Read " + totalRead + " char(s)");
 			if (totalRead == -1)
 				return -1;
 
-			if (totalRead != arr.length) {
+			if (totalRead != len) {
 				Main.logger.log("Buffer not full, try reading more...");
 				int read;
-				while ((read = fr.read(arr, totalRead, arr.length - totalRead)) != -1) {
+				while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
 					Main.logger.log("Read " + read + " char(s), total : " + totalRead);
 					totalRead += read;
-					if (totalRead == arr.length) {
+					if (totalRead == len) {
 						Main.logger.log("Buffer is full!");						
 						break;
 					}
