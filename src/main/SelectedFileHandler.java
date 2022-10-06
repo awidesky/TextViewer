@@ -52,10 +52,6 @@ public class SelectedFileHandler {
 		
 	}	
 	
-	public SelectedFileHandler(Object object) {
-		// TODO Auto-generated constructor stub
-	}
-
 	public boolean isPaged() { return paged; }
 	
 	
