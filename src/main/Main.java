@@ -15,7 +15,7 @@ public class Main {
 
 	public static final String VERSION = "TextViewer v1.0";
 	
-	public static int bufferSize = 1024 * 8; //TODO : setting에서 이것도 정하기(line단위로 limit 정할 때에만)
+	public static int bufferSize = 1024 * 8;
 
 	//TODO : menu disable돼도 단축키는 먹나?
 	//TODO : paged 읽다가 중간에 다른 파일 읽으면 queue 버려주기
@@ -63,6 +63,50 @@ public class Main {
 		});
 	 
     }
+	
+
+	public static String formatFileSize(long length) {
+		
+		if(length == 0L) return "0.00byte";
+		
+		switch ((int)(Math.log(length) / Math.log(1024))) {
+		
+		case 0:
+			return String.format("%d", length) + "byte";
+		case 1:
+			return String.format("%.2f", length / 1024.0) + "KB";
+		case 2:
+			return String.format("%.2f", length / (1024.0 * 1024)) + "MB";
+		case 3:
+			return String.format("%.2f", length / (1024.0 * 1024 * 1024)) + "GB";
+		}
+		return String.format("%.2f", length / (1024.0 * 1024 * 1024 * 1024)) + "TB";
+		
+	}
+	
+	
+	public static int getByteSize(String lengthText) {
+		
+		if(lengthText.matches("[0-9]+(\\.[0-9]+)?")) return 0;
+		
+		double result;
+		
+		if(lengthText.endsWith("byte"))
+			result = (Double.parseDouble(lengthText.replace("byte", "")));
+		else if(lengthText.endsWith("KB"))
+			result = (Double.parseDouble(lengthText.replace("KB", "")) * 1024);
+		else if(lengthText.endsWith("MB"))
+			result = (Double.parseDouble(lengthText.replace("MB", "")) * 1024 * 1024);
+		else if(lengthText.endsWith("GB"))
+			result = (Double.parseDouble(lengthText.replace("GB", "")) * 1024 * 1024 * 1024);
+		else
+			throw new NumberFormatException("\"" + lengthText + "\" is invalid!");
+		
+		if((int)result <= 0) throw new NumberFormatException("Buffer size should be positive!");
+		
+		return (int)result;
+		
+	}
 
 	public static void kill(int errCode) {
 		

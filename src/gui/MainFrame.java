@@ -60,7 +60,7 @@ public class MainFrame extends JFrame {
 	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
 	
 	private SelectedFileHandler fileHandle = new SelectedFileHandler();
-	private JMenu pageMenu = new JMenu("Pages");
+
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openFile;
@@ -70,8 +70,10 @@ public class MainFrame extends JFrame {
 	private JMenuItem redo;
 	private JMenu formatMenu;
 	private JMenuItem largeSetting;
+	private JMenuItem bufSetting;
 	private JMenuItem font;
 	private JCheckBoxMenuItem editable;
+	private JMenu pageMenu;
 	private JMenuItem next;
 	private JMenuItem reRead;
 
@@ -295,6 +297,14 @@ public class MainFrame extends JFrame {
 			new LargeFileSettingDialog();
 
 		});
+		bufSetting = new JMenuItem("Change buffer size", KeyEvent.VK_B);
+		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
+		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
+		bufSetting.addActionListener((e) -> {
+			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.bufferSize * 2);
+			new BufferSettingDialog(ref);
+			Main.bufferSize = ref.get()/2;
+		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
 		font.getAccessibleContext().setAccessibleDescription("Change font type or size");
@@ -312,10 +322,12 @@ public class MainFrame extends JFrame {
 			
 		});
 		formatMenu.add(largeSetting);
+		formatMenu.add(bufSetting);
 		formatMenu.add(font);
-		formatMenu.add(editable);	
+		formatMenu.add(editable);
 		
 
+		pageMenu = new JMenu("Pages");
 		pageMenu.setMnemonic(KeyEvent.VK_P);
 		pageMenu.getAccessibleContext().setAccessibleDescription("Pages menu");
 		
@@ -396,7 +408,7 @@ public class MainFrame extends JFrame {
 		    } else {
 		    	disableNextPageMenu();
 		    }
-		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
+		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 			
 			fileHandle.startRead(readCallbackQueue);
 			
@@ -455,22 +467,5 @@ public class MainFrame extends JFrame {
 		pageMenu.setEnabled(false);
 	}
 
-	public static String formatFileSize(long length) {
-		
-		if(length == 0L) return "0.00byte";
-		
-		switch ((int)(Math.log(length) / Math.log(1024))) {
-		
-		case 0:
-			return String.format("%d", length) + "byte";
-		case 1:
-			return String.format("%.2f", length / 1024.0) + "KB";
-		case 2:
-			return String.format("%.2f", length / (1024.0 * 1024)) + "MB";
-		case 3:
-			return String.format("%.2f", length / (1024.0 * 1024 * 1024)) + "GB";
-		}
-		return String.format("%.2f", length / (1024.0 * 1024 * 1024 * 1024)) + "TB";
-	}
 
 }
