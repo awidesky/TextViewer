@@ -282,6 +282,7 @@ public class MainFrame extends JFrame {
 		redo.setEnabled(false);
 		editMenu.add(undo);
 		editMenu.add(redo);
+		editMenu.setEnabled(false);
 		
 		
 		
@@ -318,7 +319,9 @@ public class MainFrame extends JFrame {
 		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
 		editable.addActionListener((e) -> {
 			
-			ta.setEditable(!ta.isEditable());
+			boolean swapped = !ta.isEditable();
+			ta.setEditable(swapped);
+			editMenu.setEnabled(swapped);
 			
 		});
 		formatMenu.add(largeSetting);
