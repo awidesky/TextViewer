@@ -18,7 +18,13 @@ public class Main {
 	public static int bufferSize = 1024 * 8;
 
 	//TODO : paged 읽다가 중간에 다른 파일 읽으면 queue 버려주기
-	
+	/*
+	 * 
+	 * next 두번 해야 넘어감
+새 파일 하면 안 바뀜
+reread Exception
+	 * 
+	 * */
 	
 	public static LoggerThread logger;
 	

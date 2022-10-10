@@ -364,7 +364,7 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			readCallbackQueue = new LinkedBlockingQueue<>();;
+			readCallbackQueue.clear();
 			fileHandle.reRead(readCallbackQueue);
 		});
 		pageMenu.add(next);
@@ -413,6 +413,7 @@ public class MainFrame extends JFrame {
 		    }
 		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 			
+			readCallbackQueue.clear();
 			fileHandle.startRead(readCallbackQueue);
 			
 			newPageReading = true;

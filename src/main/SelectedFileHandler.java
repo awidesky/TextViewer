@@ -30,6 +30,8 @@ public class SelectedFileHandler {
 	/** page number starts from 1, not 0! */
 	private long pageNum = 0L;
 	private Thread readingThread;
+	/** are we re-reading file now? */
+	private boolean reReading = false;
 	
 	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
 	
@@ -73,6 +75,7 @@ public class SelectedFileHandler {
 	
 	private void readTask() {
 		
+		Main.logger.log("Read " + readFile.getName() + " in new Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
 		Main.logger.log("File is " + (paged ? "" : "not ") + "paged");
 		Main.logger.log("Buffer size : " + arr.length + "\n");
 		
@@ -143,7 +146,13 @@ public class SelectedFileHandler {
 			try {
 				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {
-				SwingDialogs.error("cannot read file!", "%e%", e, false);
+				if(reReading) {
+					Main.logger.log("Re-reading the file. closing Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
+					reReading = false;
+					return;
+				} else {
+					SwingDialogs.error("cannot read file!", "%e%", e, false);
+				}
 			}
 			
 			TitleGeneartor.pageNum(++pageNum);
@@ -284,6 +293,7 @@ public class SelectedFileHandler {
 //	}
 
 	public void reRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
+		reReading = true;
 		readingThread.interrupt();
 		startRead(readCallbackQueue);
 	}
