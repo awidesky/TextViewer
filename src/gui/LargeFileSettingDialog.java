@@ -6,7 +6,7 @@ import java.awt.Window;
 
 import javax.swing.JDialog;
 
-public class LargeFileSettingDialog extends JDialog {
+public class LargeFileSettingDialog extends JDialog { //TODO : is this useless??
 
 	public LargeFileSettingDialog() {
 		
