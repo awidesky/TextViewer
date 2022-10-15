@@ -69,7 +69,6 @@ public class MainFrame extends JFrame {
 	private JMenuItem undo;
 	private JMenuItem redo;
 	private JMenu formatMenu;
-	private JMenuItem largeSetting;
 	private JMenuItem bufSetting;
 	private JMenuItem font;
 	private JCheckBoxMenuItem editable;
@@ -290,14 +289,6 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
-		largeSetting = new JMenuItem("Large file handling", KeyEvent.VK_L);
-		largeSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.ALT_MASK));
-		largeSetting.getAccessibleContext().setAccessibleDescription("Large file handling setting");
-		largeSetting.addActionListener((e) -> {
-			
-			new LargeFileSettingDialog();
-
-		});
 		bufSetting = new JMenuItem("Change buffer size", KeyEvent.VK_B);
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
@@ -324,7 +315,6 @@ public class MainFrame extends JFrame {
 			editMenu.setEnabled(swapped);
 			
 		});
-		formatMenu.add(largeSetting);
 		formatMenu.add(bufSetting);
 		formatMenu.add(font);
 		formatMenu.add(editable);
@@ -405,7 +395,6 @@ public class MainFrame extends JFrame {
 		    
 		    fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
 		    
-		    largeSetting.setEnabled(!fileHandle.isPaged());
 		    if(fileHandle.isPaged()) {
 		    	enableNextPageMenu();
 		    } else {
