@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
@@ -27,7 +30,8 @@ public class SelectedFileHandler {
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
 	/** page number starts from 1, not 0! */
 	private long pageNum = 1L;
-	private Thread readingThread;
+	private ExecutorService readingThread = Executors.newSingleThreadExecutor();
+	private Future<?> readTaskFuture = null;
 	private String taskID = null;
 	/** are we re-reading file now? */
 	private boolean reReading = false;
@@ -60,8 +64,14 @@ public class SelectedFileHandler {
 	
 	public void startNewRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		
-		pageNum = 1L;
 		this.readCallbackQueue = readCallbackQueue;
+		readTaskFuture = readingThread.submit(this::readTask);
+		
+	}
+	
+	private void readTask() {
+		
+		pageNum = 1L;
 		
 		try {
 			this.fr = new FileReader(readFile, readAs);
@@ -69,12 +79,6 @@ public class SelectedFileHandler {
 			SwingDialogs.error("unable to read the file!", "%e%", e, false);
 			return;
 		}
-		
-		(readingThread = new Thread(this::readTask)).start();
-		
-	}
-	
-	private void readTask() {
 		
 		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
@@ -297,13 +301,13 @@ public class SelectedFileHandler {
 
 	public void reRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		reReading = true;
-		readingThread.interrupt();
+		readTaskFuture.cancel(true);
 		startNewRead(readCallbackQueue);
 	}
 
 	public void close() {
 		closed = true;
-		readingThread.interrupt();
+		readTaskFuture.cancel(true);
 	}
 }
 

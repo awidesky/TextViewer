@@ -17,15 +17,6 @@ public class Main {
 	
 	public static int bufferSize = 1024 * 8;
 
-	//TODO : paged 읽다가 중간에 다른 파일 읽으면 queue 버려주기
-	/* 다른 두 파일의 페이지가 번갈아 가면서 찍힘..???
-	 * 
-	 * next 두번 해야 넘어감
-새 파일 하면 안 바뀜
-reread Exception
-	 * 
-	 * */
-	
 	public static LoggerThread logger;
 	
 	public static void main(String[] args) {

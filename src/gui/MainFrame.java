@@ -331,29 +331,7 @@ public class MainFrame extends JFrame {
 		next.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.ALT_MASK));
 		next.getAccessibleContext().setAccessibleDescription("Show next page");
 		next.addActionListener((e) -> {
-			
-			if (!pageMenu.isEnabled()) return;
-			
-			newPageReading = true;
-			TitleGeneartor.loading(true);
-			
-			try {
-				readCallbackQueue.put(s -> {
-					if (s != null) {
-						ta.setText(s);
-						ta.setCaretPosition(0);
-						sp.getVerticalScrollBar().setValue(0);
-						undoManager.discardAllEdits();
-						TitleGeneartor.loading(false);
-						newPageReading = false;
-					} else {
-						SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-						disableNextPageMenu();
-					}
-				});
-			} catch (InterruptedException e1) {
-				SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
-			}
+			nextPage();
 		});
 		reRead = new JMenuItem("Restart from begining", KeyEvent.VK_R);
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
@@ -361,6 +339,7 @@ public class MainFrame extends JFrame {
 		reRead.addActionListener((e) -> {
 			readCallbackQueue.clear();
 			fileHandle.reRead(readCallbackQueue);
+			nextPage();
 		});
 		pageMenu.add(next);
 		pageMenu.add(reRead);
@@ -456,6 +435,32 @@ public class MainFrame extends JFrame {
 	}
 	
 	
+	private void nextPage() {
+		
+		if (!pageMenu.isEnabled()) return;
+		
+		newPageReading = true;
+		TitleGeneartor.loading(true);
+		
+		try {
+			readCallbackQueue.put(s -> {
+				if (s != null) {
+					ta.setText(s);
+					ta.setCaretPosition(0);
+					sp.getVerticalScrollBar().setValue(0);
+					undoManager.discardAllEdits();
+					TitleGeneartor.loading(false);
+					newPageReading = false;
+				} else {
+					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
+					disableNextPageMenu();
+				}
+			});
+		} catch (InterruptedException e1) {
+			SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
+		}
+		
+	}
 
 
 	private void enableNextPageMenu() {
