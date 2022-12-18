@@ -7,14 +7,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class LoggerThread extends Thread {
 
+	private boolean verbose = false;
+	
 	private PrintWriter logTo;
 	private LinkedBlockingQueue<Runnable> loggerQueue = new LinkedBlockingQueue<>();
 	
 	public volatile boolean isStop = false;
 	
+	public LoggerThread() { 
+		this(false);
+	}
 	
-	public LoggerThread() {
+	public LoggerThread(boolean verbose) {
 		this(System.out);
+		this.verbose = verbose;
 	}
 	
 	public LoggerThread(OutputStream os) {
@@ -49,6 +55,12 @@ public class LoggerThread extends Thread {
 		loggerQueue.offer(() -> {
 			logTo.println(data.replaceAll("\\R", System.lineSeparator()));
 		});
+		
+	}
+	
+	public void logVerbose(String data) {
+
+		if(verbose) log(data);
 		
 	}
 	

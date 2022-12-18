@@ -136,7 +136,7 @@ public class SelectedFileHandler {
 					totalRead += read;
 					if(totalRead == maxCharPerPage) break;
 					
-					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: readTask에서도 min메소드?, line feed 단위로 안 자르는 옵션("Use line separator for page delimiter")
+					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: line feed 단위로 안 자르는 옵션("Use line separator for page delimiter")
 				}
 				
 				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
@@ -256,28 +256,28 @@ public class SelectedFileHandler {
 	 * */
 	private int readArray(int len) {
 
-		Main.logger.log(taskID + "Try reading " + len + " char(s)...");
+		Main.logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
 		try {
 			int totalRead = fr.read(arr, 0, len);
-			Main.logger.log(taskID + "Read " + totalRead + " char(s)");
+			Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
 			if (totalRead == -1)
 				return -1;
 
 			if (totalRead != len) {
-				Main.logger.log(taskID + "Buffer not full, try reading more...");
+				Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
 				int read;
 				while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
-					Main.logger.log(taskID + "Read " + read + " char(s), total : " + totalRead);
+					Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
 					totalRead += read;
 					if (totalRead == len) {
-						Main.logger.log(taskID + "Buffer is full!");						
+						Main.logger.logVerbose(taskID + "Buffer is full!");						
 						break;
 					}
 				}
-				if (read == -1) Main.logger.log(taskID + "EOF reached!");
+				if (read == -1) Main.logger.logVerbose(taskID + "EOF reached!");
 			}
 			
-			Main.logger.log(taskID + "total read char(s) : " + totalRead);
+			Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
 			return totalRead;
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
