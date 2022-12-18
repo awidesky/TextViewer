@@ -41,7 +41,7 @@ public class BufferSettingDialog extends JDialog {
 		label.setBounds(5, 8, label.getPreferredSize().width, label.getPreferredSize().height);
 		
 		tf.setBounds(8 + label.getPreferredSize().width, 5, 50, tf.getPreferredSize().height);
-		
+		tf.setText("" + ref.get());
 		cb.setSelectedIndex(0);
 		cb.setBounds(61 + label.getPreferredSize().width, 5, cb.getPreferredSize().width, 22);
 		
