@@ -338,6 +338,8 @@ public class MainFrame extends JFrame {
 				readCallbackQueue.put(s -> {
 					if (s != null) {
 						ta.setText(s);
+						ta.setCaretPosition(0);
+						sp.getVerticalScrollBar().setValue(0);
 						undoManager.discardAllEdits();
 						TitleGeneartor.loading(false);
 						newPageReading = false;
@@ -409,9 +411,10 @@ public class MainFrame extends JFrame {
 			readCallbackQueue.put(s -> {
 				if (s != null) {
 					ta.setText(s);
+					ta.setCaretPosition(0);
+					sp.getVerticalScrollBar().setValue(0);
 					undoManager.discardAllEdits();
 					TitleGeneartor.loading(false);
-					ta.setCaretPosition(0);
 					newPageReading = false; 
 				}
 			});
