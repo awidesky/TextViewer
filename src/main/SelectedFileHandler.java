@@ -23,19 +23,22 @@ public class SelectedFileHandler {
 	private FileReader fr;
 	private FileWriter fw;
 	private boolean paged;
-	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue;
+	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
 	private StringBuilder leftOver = null;
 	
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
 	/** page number starts from 1, not 0! */
-	private long pageNum = 0L;
+	private long pageNum = 1L;
 	private Thread readingThread;
+	private String taskID = null;
 	/** are we re-reading file now? */
 	private boolean reReading = false;
+	/** Is this SelectedFileHandler closed?? */
+	private boolean closed = false;
 	
 	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
 	
-	private static int maxCharPerPage = 500000; 
+	private static int maxCharPerPage = 500000; //TODO : 바꿀 수 있게
 	
 	private char[] arr;
 	
@@ -50,16 +53,16 @@ public class SelectedFileHandler {
 		this.readFile = readFile;
 		this.readAs = readAs;
 		this.paged = readFile.length() > singlePageFileSizeLimit; 
-		this.arr = new char[paged ? maxCharPerPage : Main.bufferSize];
+		this.arr = new char[Main.bufferSize];
 		
 	}	
 	
 	public boolean isPaged() { return paged; }
 	
 	
-	public void startRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
+	public void startNewRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		
-		pageNum = 0L;
+		pageNum = 1L;
 		this.readCallbackQueue = readCallbackQueue;
 		
 		try {
@@ -68,16 +71,17 @@ public class SelectedFileHandler {
 			SwingDialogs.error("unable to read the file!", "%e%", e, false);
 			return;
 		}
-		Main.logger.log("\nReading file " + readFile.getAbsolutePath());
+		
 		(readingThread = new Thread(this::readTask)).start();
 		
 	}
 	
 	private void readTask() {
 		
-		Main.logger.log("Read " + readFile.getName() + " in new Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
-		Main.logger.log("File is " + (paged ? "" : "not ") + "paged");
-		Main.logger.log("Buffer size : " + arr.length + "\n");
+		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
+		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(singlePageFileSizeLimit));
+		Main.logger.log(taskID + "Buffer size : " + arr.length);
 		
 		if(paged) {
 			leftOver = new StringBuilder(arr.length);
@@ -92,18 +96,18 @@ public class SelectedFileHandler {
 			try {
 				readCallbackQueue.take().accept(sb.toString());
 			} catch (InterruptedException e) {
-				SwingDialogs.error("cannot read file!", "%e%", e, false);
+				SwingDialogs.error(taskID + "cannot read file!", "%e%", e, false);
 			}
 		
 		}
 		
-		Main.logger.log("File read completed!\n");
-		
 		try {
 			fr.close();
 		} catch (IOException e) {
-			SwingDialogs.error("unable to close file!", "%e%", e, false);
+			SwingDialogs.error(taskID + "unable to close file in " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId(), "%e%", e, false);
 		}
+		
+		Main.logger.log(taskID + "Task completed!\n");
 
 	}
 	
@@ -116,9 +120,9 @@ public class SelectedFileHandler {
 			StringBuilder strBuf = new StringBuilder("");
 			String result;
 			
-			Main.logger.log("start reading a page #" + pageNum);
-			if (changes.containsKey(pageNum + 1)) {
-				result = changes.get(pageNum + 1);
+			Main.logger.log("\n" + taskID + "start reading a page #" + pageNum);
+			if (changes.containsKey(pageNum)) {
+				result = changes.get(pageNum);
 			} else {
 
 				int totalRead = 0;
@@ -132,7 +136,7 @@ public class SelectedFileHandler {
 					totalRead += read;
 					if(totalRead == maxCharPerPage) break;
 					
-					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //readTask에서도 min메소드?
+					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: readTask에서도 min메소드?, line feed 단위로 안 자르는 옵션("Use line separator for page delimiter")
 				}
 				
 				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
@@ -147,16 +151,19 @@ public class SelectedFileHandler {
 				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {
 				if(reReading) {
-					Main.logger.log("Re-reading the file. closing Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
+					Main.logger.log(taskID + "Re-reading the file. closing Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
 					reReading = false;
 					return;
+				} else if(closed) {
+					Main.logger.log(taskID + "File reading task has canceled.");
+					return;
 				} else {
-					SwingDialogs.error("cannot read file!", "%e%", e, false);
+					SwingDialogs.error(taskID + "cannot read file!", "%e%", e, false);
 				}
 			}
 			
-			TitleGeneartor.pageNum(++pageNum);
-			Main.logger.log("page #" + pageNum + " is read!");
+			TitleGeneartor.pageNum(pageNum);
+			Main.logger.log(taskID + "page #" + pageNum++ + " is consumed!");
 		}
 		
 		try {
@@ -168,12 +175,11 @@ public class SelectedFileHandler {
 
 	}
 	
-	
 
 	/**
 	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
 	 * */
-	public boolean write(File writeTo, Charset writeAs, String text) {
+	public boolean write(File writeTo, Charset writeAs, String text) { //TODO : log
 		
 		if(paged) {
 			return pagedFileWriteLoop(writeTo, writeAs);
@@ -250,28 +256,28 @@ public class SelectedFileHandler {
 	 * */
 	private int readArray(int len) {
 
-		Main.logger.log("Try reading " + len + " char(s)...");
+		Main.logger.log(taskID + "Try reading " + len + " char(s)...");
 		try {
 			int totalRead = fr.read(arr, 0, len);
-			Main.logger.log("Read " + totalRead + " char(s)");
+			Main.logger.log(taskID + "Read " + totalRead + " char(s)");
 			if (totalRead == -1)
 				return -1;
 
 			if (totalRead != len) {
-				Main.logger.log("Buffer not full, try reading more...");
+				Main.logger.log(taskID + "Buffer not full, try reading more...");
 				int read;
 				while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
-					Main.logger.log("Read " + read + " char(s), total : " + totalRead);
+					Main.logger.log(taskID + "Read " + read + " char(s), total : " + totalRead);
 					totalRead += read;
 					if (totalRead == len) {
-						Main.logger.log("Buffer is full!");						
+						Main.logger.log(taskID + "Buffer is full!");						
 						break;
 					}
 				}
-				if (read == -1) Main.logger.log("EOF reached!");
+				if (read == -1) Main.logger.log(taskID + "EOF reached!");
 			}
 			
-			Main.logger.log("total read char(s) : " + totalRead + "\n");
+			Main.logger.log(taskID + "total read char(s) : " + totalRead);
 			return totalRead;
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
@@ -295,7 +301,12 @@ public class SelectedFileHandler {
 	public void reRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
 		reReading = true;
 		readingThread.interrupt();
-		startRead(readCallbackQueue);
+		startNewRead(readCallbackQueue);
+	}
+
+	public void close() {
+		closed = true;
+		readingThread.interrupt();
 	}
 }
 

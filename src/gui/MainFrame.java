@@ -59,7 +59,7 @@ public class MainFrame extends JFrame {
 	
 	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
 	
-	private SelectedFileHandler fileHandle = new SelectedFileHandler();
+	private SelectedFileHandler fileHandle = null;
 
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
@@ -293,9 +293,9 @@ public class MainFrame extends JFrame {
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
-			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.bufferSize * 2);
+			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.bufferSize);
 			new BufferSettingDialog(ref);
-			Main.bufferSize = ref.get()/2;
+			Main.bufferSize = ref.get();
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -384,7 +384,6 @@ public class MainFrame extends JFrame {
 				lastOpened = file;
 			} else {
 				fileChooser.setDialogTitle("Select file to read...");
-				fileChooser.setSelectedFile(lastOpened);
 				fileChooser.setCurrentDirectory(lastOpened.getParentFile());
 				fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
 				if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
@@ -393,7 +392,9 @@ public class MainFrame extends JFrame {
 				lastOpened = fileChooser.getSelectedFile();
 			}
 		    
+			if(fileHandle != null) fileHandle.close();
 		    fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
+		    readCallbackQueue = new LinkedBlockingQueue<>();
 		    
 		    if(fileHandle.isPaged()) {
 		    	enableNextPageMenu();
@@ -402,8 +403,7 @@ public class MainFrame extends JFrame {
 		    }
 		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 			
-			readCallbackQueue.clear();
-			fileHandle.startRead(readCallbackQueue);
+			fileHandle.startNewRead(readCallbackQueue);
 			
 			newPageReading = true;
 			readCallbackQueue.put(s -> {
@@ -426,7 +426,7 @@ public class MainFrame extends JFrame {
 	/**
 	 *  This method saves content to the file.
 	 * 	
-	 * 	File may be written in another thread, or in EDT.
+	 * 	File is written in EDT.
 	 *  
 	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 *  
