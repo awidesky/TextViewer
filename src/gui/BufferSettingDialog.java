@@ -8,7 +8,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import main.Main;
@@ -50,7 +49,7 @@ public class BufferSettingDialog extends JDialog {
 			try {
 				ref.set(Main.getByteSize(tf.getText() + cb.getSelectedItem()));
 			} catch (NumberFormatException err) {
-				JOptionPane.showMessageDialog(null, err.getMessage(), "Invalid Buffer size!!", JOptionPane.ERROR_MESSAGE);
+				SwingDialogs.error("Invalid Buffer size!", "%e%", err, false);
 				return;
 			}
 			setVisible(false);

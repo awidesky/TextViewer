@@ -17,7 +17,6 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import main.ReferenceDTO;
@@ -91,7 +90,7 @@ public class FontDialog extends JDialog {
 			try {
 				ref.set(new Font(Optional.ofNullable(fontName.getSelectedItem()).orElseGet(() -> new JLabel().getFont()).toString(), fontStyle, Integer.parseInt(fontSize.getText())));
 			} catch (NumberFormatException err) {
-				JOptionPane.showMessageDialog(null, err.getMessage(), "Invalid font size!!", JOptionPane.ERROR_MESSAGE);
+				SwingDialogs.error("Invalid font size!!", "%e%", err, false);
 				return;
 			}
 			setVisible(false);

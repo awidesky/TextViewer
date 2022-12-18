@@ -11,8 +11,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
-import javax.swing.JOptionPane;
-
 import gui.SwingDialogs;
 import gui.TitleGeneartor;
 
@@ -190,7 +188,7 @@ public class SelectedFileHandler {
 				bw.close();
 				return true;
 			} catch (IOException e) {
-				JOptionPane.showMessageDialog(null, e.getMessage(), "unable to write file!", JOptionPane.ERROR_MESSAGE);
+				SwingDialogs.error("unable to write file!", "%e%", e, false);
 				e.printStackTrace();
 				return false;
 			}
@@ -229,8 +227,7 @@ public class SelectedFileHandler {
 			return true;
 			
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to open&write I/O stream!", JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			SwingDialogs.error("unable to open&write I/O stream!", "%e%", e, false);
 			return false;
 		}
 		
@@ -280,7 +277,7 @@ public class SelectedFileHandler {
 			Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
 			return totalRead;
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "unable to read the file!", JOptionPane.ERROR_MESSAGE);
+			SwingDialogs.error("unable to read the file!", "%e%", e, false);
 			e.printStackTrace();
 		}
 		
