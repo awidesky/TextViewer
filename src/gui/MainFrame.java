@@ -241,6 +241,7 @@ public class MainFrame extends JFrame {
 			
 			//open chosen file
 			openFile(null);
+			saveFile.setEnabled(true);
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -252,6 +253,7 @@ public class MainFrame extends JFrame {
 			saveFile();
 			
 		});
+		saveFile.setEnabled(false);
 		fileMenu.add(openFile);
 		fileMenu.add(saveFile);
 
@@ -310,6 +312,7 @@ public class MainFrame extends JFrame {
 		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
 		editable.addActionListener((e) -> {
 			
+			saveFile.setEnabled(true);
 			boolean swapped = !ta.isEditable();
 			ta.setEditable(swapped);
 			editMenu.setEnabled(swapped);

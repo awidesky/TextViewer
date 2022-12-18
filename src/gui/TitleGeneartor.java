@@ -44,7 +44,11 @@ public class TitleGeneartor {
 	}
 	
 	public static void generate() {
-		titleConsumer.accept((edited ? "*" : "") + Main.VERSION + " - \"" + filePath + "\" (" + fileSize + (paged ? ", page #" + pageNum : "") + ")  in " + charset + (loading ? " (loading...)" : ""));
+		
+		String fileExplainPart;
+		if(filePath == null) fileExplainPart = " - \"Untitled\"";
+		else fileExplainPart = " - \"" + filePath + "\" (" + fileSize + (paged ? ", page #" + pageNum : "") + ") in " + charset;
+		titleConsumer.accept((edited ? "*" : "") + Main.VERSION + fileExplainPart + (loading ? " (loading...)" : ""));
 	}
 
 	public static void pageNum(long l) {
