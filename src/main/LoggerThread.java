@@ -24,7 +24,7 @@ public class LoggerThread extends Thread {
 	}
 	
 	public LoggerThread(OutputStream os) {
-		logTo = new PrintWriter(os);
+		logTo = new PrintWriter(os, true);
 	}
 
 
