@@ -40,7 +40,7 @@ public class SelectedFileHandler {
 	
 	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
 	
-	private static int maxCharPerPage = 500000; //TODO : 바꿀 수 있게
+	private static int maxCharPerPage = 500000; //TODO : changable
 	
 	private char[] arr;
 	
@@ -138,7 +138,7 @@ public class SelectedFileHandler {
 					totalRead += read;
 					if(totalRead == maxCharPerPage) break;
 					
-					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: line feed 단위로 안 자르는 옵션("Use line separator for page delimiter")
+					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: "Use line separator for page delimiter"
 				}
 				
 				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());

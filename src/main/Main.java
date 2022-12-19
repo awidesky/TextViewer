@@ -19,7 +19,7 @@ public class Main {
 
 	public static LoggerThread logger;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) { //TODO : change encoding to UFT-8
 	 
 		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("--ShowAllFont")) {
