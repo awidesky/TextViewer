@@ -429,18 +429,30 @@ public class MainFrame extends JFrame {
 	}
 
 	private void read() {
-		newPageReading.set(true);
-		TitleGeneartor.loading(true);
 		
+		Main.logger.logVerbose("reading start. newPageReading : " + newPageReading.get());
+		TitleGeneartor.loading(true);
+		boolean originVal = ta.isEditable();
+		editable(false);
 		try {
+			/*
+			 * Reading mechanism must be changed.
+			 * this method must be waiting for worker to publish text.
+			 * readCallbackQueue must be a LinkedBlockingQueue<String>
+			 * just make sure worker does not hang when exception occured
+			 * */
 			readCallbackQueue.put(s -> { SwingUtilities.invokeLater( () -> {
+				Main.logger.logVerbose("callback Invoked. newPageReading : " + newPageReading.get());
 				if (s != null) {
+					newPageReading.set(true);
 					ta.setText(s);
 					ta.setCaretPosition(0);
 					sp.getVerticalScrollBar().setValue(0);
 					undoManager.discardAllEdits();
 					TitleGeneartor.loading(false);
 					newPageReading.set(false);
+					editable(originVal);
+					Main.logger.logVerbose("reading end. newPageReading : " + newPageReading.get());
 				} else {
 					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
 					disableNextPageMenu();
@@ -449,6 +461,8 @@ public class MainFrame extends JFrame {
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
 		}
+
+		Main.logger.logVerbose("callback queued. newPageReading : " + newPageReading.get());
 		
 	}
 
