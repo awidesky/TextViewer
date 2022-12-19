@@ -21,6 +21,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
@@ -78,7 +79,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem reRead;
 
 	/** <code>true</code> if new content is being written in TextArea */
-	private boolean newPageReading = false;
+	private AtomicBoolean newPageReading = new AtomicBoolean(false);
 	
 	
 	public MainFrame() {
@@ -138,7 +139,7 @@ public class MainFrame extends JFrame {
 	        }
 	        
 	        private void changed(DocumentEvent e) {
-  	        	if(newPageReading) { //new file is just read. user didn't type anything.
+  	        	if(newPageReading.get()) { //new file is just read. user didn't type anything.
 	        		return;	
 	        	}
   	        	
@@ -314,9 +315,7 @@ public class MainFrame extends JFrame {
 		editable.addActionListener((e) -> {
 			
 			saveFile.setEnabled(true);
-			boolean swapped = !ta.isEditable();
-			ta.setEditable(swapped);
-			editMenu.setEnabled(swapped);
+			editable(!ta.isEditable());
 			
 		});
 		formatMenu.add(bufSetting);
@@ -355,6 +354,10 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	private void editable(boolean flag) {
+		ta.setEditable(flag);
+		editMenu.setEnabled(flag);
+	}
 	
 	private void openFile(File file) {
 		
@@ -363,49 +366,31 @@ public class MainFrame extends JFrame {
 			return;
 		}
 		
-		try {
-			
-			if (file != null) {
-				lastOpened = file;
-			} else {
-				fileChooser.setDialogTitle("Select file to read...");
-				fileChooser.setCurrentDirectory(lastOpened.getParentFile());
-				fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
-				if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
-					return;
+		if (file != null) {
+			lastOpened = file;
+		} else {
+			fileChooser.setDialogTitle("Select file to read...");
+			fileChooser.setCurrentDirectory(lastOpened.getParentFile());
+			fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
+			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
+				return;
 
-				lastOpened = fileChooser.getSelectedFile();
-			}
-		    
-			if(fileHandle != null) fileHandle.close();
-		    fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
-		    readCallbackQueue = new LinkedBlockingQueue<>();
-		    
-		    if(fileHandle.isPaged()) {
-		    	enableNextPageMenu();
-		    } else {
-		    	disableNextPageMenu();
-		    }
-		    TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
-			
-			fileHandle.startNewRead(readCallbackQueue);
-			
-			newPageReading = true;
-			readCallbackQueue.put(s -> { SwingUtilities.invokeLater( () -> {
-				if (s != null) {
-					ta.setText(s);
-					ta.setCaretPosition(0);
-					sp.getVerticalScrollBar().setValue(0);
-					undoManager.discardAllEdits();
-					TitleGeneartor.loading(false);
-					newPageReading = false; 
-				}
-			});});
-			
-		} catch (InterruptedException excep) {
-			SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
+			lastOpened = fileChooser.getSelectedFile();
 		}
 		
+		if(fileHandle != null) fileHandle.close();
+		fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
+		readCallbackQueue = new LinkedBlockingQueue<>();
+		
+		if(fileHandle.isPaged()) {
+			enableNextPageMenu();
+		} else {
+			disableNextPageMenu();
+		}
+		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
+		
+		fileHandle.startNewRead(readCallbackQueue);
+		read();
 		
 	}
 	
@@ -439,8 +424,12 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled()) return;
+		read();
 		
-		newPageReading = true;
+	}
+
+	private void read() {
+		newPageReading.set(true);
 		TitleGeneartor.loading(true);
 		
 		try {
@@ -451,7 +440,7 @@ public class MainFrame extends JFrame {
 					sp.getVerticalScrollBar().setValue(0);
 					undoManager.discardAllEdits();
 					TitleGeneartor.loading(false);
-					newPageReading = false;
+					newPageReading.set(false);
 				} else {
 					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
 					disableNextPageMenu();
@@ -462,7 +451,6 @@ public class MainFrame extends JFrame {
 		}
 		
 	}
-
 
 	private void enableNextPageMenu() {
 		pageMenu.setEnabled(true);
