@@ -56,8 +56,8 @@ public class LoggerThread extends Thread {
 
 	}
 	
-	public void setStop(boolean isStop) {
-		this.isStop = isStop;
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 
 	public void log(String data) {

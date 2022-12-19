@@ -60,7 +60,7 @@ public class Main {
 			//GUI.error("Error when creating log flie", "%e%", e, false);
 			
 		} finally {
-			logger.setStop(verbose);
+			logger.setVerbose(verbose);
 			logger.start();
 		}
 		
