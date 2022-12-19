@@ -83,7 +83,7 @@ public class SelectedFileHandler {
 		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(singlePageFileSizeLimit));
-		Main.logger.log(taskID + "Buffer size : " + arr.length);
+		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		
 		if(paged) {
 			leftOver = new StringBuilder(arr.length);
@@ -149,6 +149,7 @@ public class SelectedFileHandler {
 
 			}
 
+			Main.logger.log(taskID + "reading page #" + pageNum + " is completed!");
 			try {
 				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {

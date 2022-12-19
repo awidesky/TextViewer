@@ -144,7 +144,7 @@ public class MainFrame extends JFrame {
   	        	undo.setEnabled(undoManager.canUndo());
   				redo.setEnabled(undoManager.canRedo());
 	        	if(!getTitle().startsWith("*")) {
-	        		logger.log("File Edited!");
+	        		logger.log("File Edited! : " + e.getType().toString());
 	        		TitleGeneartor.edited(true);
 	        	}
 	        }
