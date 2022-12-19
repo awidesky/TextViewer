@@ -35,6 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.DocumentEvent;
@@ -390,7 +391,7 @@ public class MainFrame extends JFrame {
 			fileHandle.startNewRead(readCallbackQueue);
 			
 			newPageReading = true;
-			readCallbackQueue.put(s -> {
+			readCallbackQueue.put(s -> { SwingUtilities.invokeLater( () -> {
 				if (s != null) {
 					ta.setText(s);
 					ta.setCaretPosition(0);
@@ -399,7 +400,7 @@ public class MainFrame extends JFrame {
 					TitleGeneartor.loading(false);
 					newPageReading = false; 
 				}
-			});
+			});});
 			
 		} catch (InterruptedException excep) {
 			SwingDialogs.error("Cannot read seleceted file!", "Thread Iterrupted when reading : %e%", excep, true);
@@ -443,7 +444,7 @@ public class MainFrame extends JFrame {
 		TitleGeneartor.loading(true);
 		
 		try {
-			readCallbackQueue.put(s -> {
+			readCallbackQueue.put(s -> { SwingUtilities.invokeLater( () -> {
 				if (s != null) {
 					ta.setText(s);
 					ta.setCaretPosition(0);
@@ -455,7 +456,7 @@ public class MainFrame extends JFrame {
 					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
 					disableNextPageMenu();
 				}
-			});
+			});});
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
 		}
