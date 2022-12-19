@@ -2,6 +2,8 @@ package main;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -59,11 +61,17 @@ public class LoggerThread extends Thread {
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}
+	
+	public void newLine() {
+		loggerQueue.offer(() -> {
+			logTo.println();
+		});
+	}
 
 	public void log(String data) {
 
 		loggerQueue.offer(() -> {
-			logTo.println(data.replaceAll("\\R", System.lineSeparator()));
+			logTo.println((verbose ? "[" + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + "] " : "") +data.replaceAll("\\R", System.lineSeparator()));
 		});
 		
 	}
@@ -99,4 +107,5 @@ public class LoggerThread extends Thread {
 		logTo.close();
 		
 	}
+
 }

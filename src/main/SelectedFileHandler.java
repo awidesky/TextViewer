@@ -122,7 +122,8 @@ public class SelectedFileHandler {
 			StringBuilder strBuf = new StringBuilder("");
 			String result;
 			
-			Main.logger.log("\n" + taskID + "start reading a page #" + pageNum);
+			Main.logger.newLine();
+			Main.logger.log(taskID + "start reading a page #" + pageNum);
 			if (changes.containsKey(pageNum)) {
 				result = changes.get(pageNum);
 			} else {
