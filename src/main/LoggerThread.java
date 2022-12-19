@@ -5,6 +5,12 @@ import java.io.PrintWriter;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
+/**
+ * In logging Thread, <code>isStop</code> is not written, only read.
+ * This makes declaring <code>isStop</code> as <code>volatile</code> is OK
+ * 
+ * Be careful not to modify <code>isStop</code> in multiple threads
+ * */
 public class LoggerThread extends Thread {
 
 	private boolean verbose = false;
@@ -12,7 +18,7 @@ public class LoggerThread extends Thread {
 	private PrintWriter logTo;
 	private LinkedBlockingQueue<Runnable> loggerQueue = new LinkedBlockingQueue<>();
 	
-	public volatile boolean isStop = false;
+	private volatile boolean isStop = false;
 	
 	public LoggerThread() { 
 		this(false);
@@ -29,7 +35,7 @@ public class LoggerThread extends Thread {
 
 
 	@Override
-	public void run() {
+	public void run() {  
 
 		while (true) {
 
@@ -50,6 +56,10 @@ public class LoggerThread extends Thread {
 
 	}
 	
+	public void setStop(boolean isStop) {
+		this.isStop = isStop;
+	}
+
 	public void log(String data) {
 
 		loggerQueue.offer(() -> {

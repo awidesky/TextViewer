@@ -30,9 +30,13 @@ public class Main {
 		 * 
 		 * */
 	 
+		boolean verbose = false;
+		
 		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("--ShowAllFont")) {
 				FontDialog.showAll = true;
+			} else if(args[i].equals("--Verbose")) {
+				verbose = true;
 			} else {
 				System.out.println("Usage : java -jar TextViewer.jar [options]");
 				System.out.println("Options : ");
@@ -56,6 +60,7 @@ public class Main {
 			//GUI.error("Error when creating log flie", "%e%", e, false);
 			
 		} finally {
+			logger.setStop(verbose);
 			logger.start();
 		}
 		
