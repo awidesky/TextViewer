@@ -135,7 +135,12 @@ public class SelectedFileHandler {
 				int nextRead = Math.min(arr.length, maxCharPerPage);
 				while (true) {
 					int read = readArray(nextRead);
-					if (read == -1) break readFile;
+					switch(read) {
+						case -1:
+							SwingDialogs.information("No more page to read!", "Reached EOF!", false);
+						case -2:
+							break readFile;
+					}
 
 					strBuf.append(arr, 0, read);
 					totalRead += read;
@@ -259,6 +264,9 @@ public class SelectedFileHandler {
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading.
 	 *  
 	 *  @param len amount of chars to read
+	 *  
+	 *  @return How many char(s) read<p>-1 when EOF reached<p>-2 when Exception occured
+	 *  
 	 * */
 	private int readArray(int len) {
 
@@ -288,9 +296,8 @@ public class SelectedFileHandler {
 		} catch (IOException e) {
 			SwingDialogs.error("unable to read the file!", "%e%", e, false);
 			e.printStackTrace();
+			return -2;
 		}
-		
-		return -1;
 		
 	}
 	

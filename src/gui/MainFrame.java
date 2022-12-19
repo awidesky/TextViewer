@@ -454,7 +454,6 @@ public class MainFrame extends JFrame {
 					editable(originVal);
 					Main.logger.logVerbose("reading end. newPageReading : " + newPageReading.get());
 				} else {
-					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
 					disableNextPageMenu();
 				}
 			});});
