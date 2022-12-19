@@ -19,7 +19,16 @@ public class Main {
 
 	public static LoggerThread logger;
 	
-	public static void main(String[] args) { //TODO : change encoding to UFT-8
+	public static void main(String[] args) { 
+		
+		//TODO : change encoding to UFT-8
+		//TODO : known bugs/problems below
+		/**
+		 * 
+		 * Deadlock or hanging when click nextpage lots of time
+		 * reread not working...?
+		 * 
+		 * */
 	 
 		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("--ShowAllFont")) {
