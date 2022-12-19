@@ -84,6 +84,7 @@ public class SelectedFileHandler {
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(singlePageFileSizeLimit));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
+		long startTime = System.currentTimeMillis();
 		
 		if(paged) {
 			leftOver = new StringBuilder(arr.length);
@@ -109,7 +110,7 @@ public class SelectedFileHandler {
 			SwingDialogs.error(taskID + "unable to close file in " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId(), "%e%", e, false);
 		}
 		
-		Main.logger.log(taskID + "Task completed!\n");
+		Main.logger.log(taskID + "Task completed in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
 	
@@ -124,6 +125,7 @@ public class SelectedFileHandler {
 			
 			Main.logger.newLine();
 			Main.logger.log(taskID + "start reading a page #" + pageNum);
+			long startTime = System.currentTimeMillis();
 			if (changes.containsKey(pageNum)) {
 				result = changes.get(pageNum);
 			} else {
@@ -150,7 +152,8 @@ public class SelectedFileHandler {
 
 			}
 
-			Main.logger.log(taskID + "reading page #" + pageNum + " is completed!");
+			Main.logger.log(taskID + "reading page #" + pageNum + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
+			startTime = System.currentTimeMillis();
 			try {
 				readCallbackQueue.take().accept(result);
 			} catch (InterruptedException e) {
@@ -167,7 +170,7 @@ public class SelectedFileHandler {
 			}
 			
 			TitleGeneartor.pageNum(pageNum);
-			Main.logger.log(taskID + "page #" + pageNum++ + " is consumed!");
+			Main.logger.log(taskID + "page #" + pageNum++ + " is consumed " + (System.currentTimeMillis()- startTime) + "ms after read");
 		}
 		
 		try {
