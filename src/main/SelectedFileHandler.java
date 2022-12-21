@@ -12,10 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Consumer;
 
 import gui.SwingDialogs;
-import gui.TitleGeneartor;
 
 public class SelectedFileHandler {
 
@@ -24,7 +22,7 @@ public class SelectedFileHandler {
 	private FileReader fr;
 	private FileWriter fw;
 	private boolean paged;
-	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
+	private LinkedBlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
 	private StringBuilder leftOver = null;
 	
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
@@ -61,10 +59,11 @@ public class SelectedFileHandler {
 	
 	public boolean isPaged() { return paged; }
 	
+	public long getPageNum() { return pageNum; }
 	
-	public void startNewRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
+	public void startNewRead(LinkedBlockingQueue<Page> fileContentQueue2) {
 		
-		this.readCallbackQueue = readCallbackQueue;
+		this.fileContentQueue = fileContentQueue2;
 		readTaskFuture = readingThread.submit(this::readTask);
 		
 	}
@@ -97,11 +96,11 @@ public class SelectedFileHandler {
 				sb.append(arr, 0, read);
 			}
 			try {
-				readCallbackQueue.take().accept(sb.toString());
+				fileContentQueue.put(new Page(sb.toString(), -1));
 			} catch (InterruptedException e) {
-				SwingDialogs.error(taskID + "cannot read file!", "%e%", e, false);
+				SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, false);
 			}
-		
+
 		}
 		
 		try {
@@ -116,7 +115,6 @@ public class SelectedFileHandler {
 	
 	private void pagedFileReadLoop() {
 
-		
 		readFile:
 		while (true) {
 
@@ -160,7 +158,7 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "reading page #" + pageNum + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
-				readCallbackQueue.take().accept(result);
+				fileContentQueue.put(new Page(result, pageNum));
 			} catch (InterruptedException e) {
 				if(reReading) {
 					Main.logger.log(taskID + "Re-reading the file. closing Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
@@ -173,13 +171,12 @@ public class SelectedFileHandler {
 					SwingDialogs.error(taskID + "cannot read file!", "%e%", e, false);
 				}
 			}
-			
-			TitleGeneartor.pageNum(pageNum);
-			Main.logger.log(taskID + "page #" + pageNum++ + " is consumed " + (System.currentTimeMillis()- startTime) + "ms after read");
+
+			pageNum++;
 		}
 		
 		try {
-			readCallbackQueue.take().accept(null);
+			fileContentQueue.put(null);
 		} catch (InterruptedException e) {
 			SwingDialogs.error("cannot read file!", "%e%", e, false);
 		}
@@ -311,10 +308,10 @@ public class SelectedFileHandler {
 //		}
 //	}
 
-	public void reRead(LinkedBlockingQueue<Consumer<String>> readCallbackQueue) {
+	public void reRead(LinkedBlockingQueue<Page> fileContentQueue2) {
 		reReading = true;
 		readTaskFuture.cancel(true);
-		startNewRead(readCallbackQueue);
+		startNewRead(fileContentQueue2);
 	}
 
 	public void close() {

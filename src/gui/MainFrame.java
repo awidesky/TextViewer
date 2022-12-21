@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
@@ -36,7 +35,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.DocumentEvent;
@@ -44,6 +42,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
 import main.Main;
+import main.Page;
 import main.ReferenceDTO;
 import main.SelectedFileHandler;
 
@@ -59,7 +58,8 @@ public class MainFrame extends JFrame {
 	
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
-	private LinkedBlockingQueue<Consumer<String>> readCallbackQueue = new LinkedBlockingQueue<>();
+	private LinkedBlockingQueue<Page> fileContentQueue = null;
+	private int contentQueueLength = 1; //TODO : changeable
 	
 	private SelectedFileHandler fileHandle = null;
 
@@ -152,22 +152,13 @@ public class MainFrame extends JFrame {
 	        }
 	    });
 		new DropTarget(ta, new DropTargetListener(){
-            public void dragEnter(DropTargetDragEvent e)
-            {
-            }
+            public void dragEnter(DropTargetDragEvent e) {}
             
-            public void dragExit(DropTargetEvent e)
-            {
-            }
+            public void dragExit(DropTargetEvent e) {}
             
-            public void dragOver(DropTargetDragEvent e)
-            {
-            }
+            public void dragOver(DropTargetDragEvent e){}
             
-            public void dropActionChanged(DropTargetDragEvent e)
-            {
-            
-            }
+            public void dropActionChanged(DropTargetDragEvent e){}
             
 			public void drop(DropTargetDropEvent e) {
 				File dropped = null;
@@ -337,8 +328,8 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			readCallbackQueue.clear();
-			fileHandle.reRead(readCallbackQueue);
+			fileContentQueue.clear();
+			fileHandle.reRead(fileContentQueue);
 			nextPage();
 		});
 		pageMenu.add(next);
@@ -380,7 +371,7 @@ public class MainFrame extends JFrame {
 		
 		if(fileHandle != null) fileHandle.close();
 		fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
-		readCallbackQueue = new LinkedBlockingQueue<>();
+		fileContentQueue = new LinkedBlockingQueue<>(contentQueueLength);
 		
 		if(fileHandle.isPaged()) {
 			enableNextPageMenu();
@@ -389,8 +380,8 @@ public class MainFrame extends JFrame {
 		}
 		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 		
-		fileHandle.startNewRead(readCallbackQueue);
-		read();
+		fileHandle.startNewRead(fileContentQueue);
+		displyNewPage();
 		
 	}
 	
@@ -424,44 +415,47 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled()) return;
-		read();
+		displyNewPage();
 		
 	}
 
-	private void read() {
+	private void displyNewPage() {
 		
-		Main.logger.logVerbose("reading start. newPageReading : " + newPageReading.get());
+		Page content = null;
 		TitleGeneartor.loading(true);
 		boolean originVal = ta.isEditable();
 		editable(false);
 		try {
 			/*
-			 * Reading mechanism must be changed.
-			 * this method must be waiting for worker to publish text.
-			 * readCallbackQueue must be a LinkedBlockingQueue<String>
-			 * just make sure worker does not hang when exception occured
-			 * */
-			readCallbackQueue.put(s -> { SwingUtilities.invokeLater( () -> {
-				Main.logger.logVerbose("callback Invoked. newPageReading : " + newPageReading.get());
-				if (s != null) {
-					newPageReading.set(true);
-					ta.setText(s);
-					ta.setCaretPosition(0);
-					sp.getVerticalScrollBar().setValue(0);
-					undoManager.discardAllEdits();
-					TitleGeneartor.loading(false);
-					newPageReading.set(false);
-					editable(originVal);
-					Main.logger.logVerbose("reading end. newPageReading : " + newPageReading.get());
-				} else {
-					disableNextPageMenu();
-				}
-			});});
+			 * TODO Reading mechanism must be changed. this method must be waiting for
+			 * worker to publish text. readCallbackQueue must be a
+			 * LinkedBlockingQueue<String> just make sure worker does not hang when
+			 * exception occurred
+			 */
+			content = fileContentQueue.take();
 		} catch (InterruptedException e1) {
-			SwingDialogs.error("interrupted while loading!", "%e%", e1, false);
+			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, false);
+			content = new Page("", -1);
 		}
 
-		Main.logger.logVerbose("callback queued. newPageReading : " + newPageReading.get());
+
+		if(fileHandle.isPaged()) {
+			Main.logger.log("[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] page #" + content.pageNum + " is consumed and displayed");
+			TitleGeneartor.pageNum(content.pageNum);
+		}
+		
+		if (content != null) {
+			newPageReading.set(true);
+			ta.setText(content.text);
+			ta.setCaretPosition(0);
+			sp.getVerticalScrollBar().setValue(0);
+			undoManager.discardAllEdits();
+			TitleGeneartor.loading(false);
+			newPageReading.set(false);
+			editable(originVal);
+		} else {
+			disableNextPageMenu();
+		}
 		
 	}
 
