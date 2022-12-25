@@ -288,9 +288,9 @@ public class MainFrame extends JFrame {
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
-			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.bufferSize);
+			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.charBufferSize);
 			new BufferSettingDialog(ref);
-			Main.bufferSize = ref.get();
+			Main.charBufferSize = ref.get();
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));

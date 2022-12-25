@@ -15,7 +15,7 @@ public class Main {
 
 	public static final String VERSION = "TextViewer v1.0";
 	
-	public static int bufferSize = 1024 * 8; //TODO : unit must be a char, not byte!!!!
+	public static int charBufferSize = 1024 * 8;
 
 	public static LoggerThread logger;
 	
