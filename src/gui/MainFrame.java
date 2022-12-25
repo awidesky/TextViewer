@@ -288,9 +288,11 @@ public class MainFrame extends JFrame {
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
-			ReferenceDTO<Integer> ref = new ReferenceDTO<>(Main.charBufferSize);
-			new BufferSettingDialog(ref);
-			Main.charBufferSize = ref.get();
+			ReferenceDTO<Integer> bufSize = new ReferenceDTO<>(Main.charBufferSize);
+			ReferenceDTO<Integer> charPerPage = new ReferenceDTO<>(Main.maxCharPerPage);
+			new BufferSettingDialog(bufSize, charPerPage);
+			Main.charBufferSize = bufSize.get();
+			Main.maxCharPerPage = charPerPage.get();
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -375,8 +377,10 @@ public class MainFrame extends JFrame {
 		
 		if(fileHandle.isPaged()) {
 			enableNextPageMenu();
+			bufSetting.setEnabled(false);
 		} else {
 			disableNextPageMenu();
+			bufSetting.setEnabled(true);
 		}
 		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 		
@@ -455,6 +459,7 @@ public class MainFrame extends JFrame {
 			editable(originVal);
 		} else {
 			disableNextPageMenu();
+			bufSetting.setEnabled(true);
 		}
 		
 	}

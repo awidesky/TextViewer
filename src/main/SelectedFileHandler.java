@@ -36,14 +36,17 @@ public class SelectedFileHandler {
 	/** Is this SelectedFileHandler closed?? */
 	private boolean closed = false;
 	
-	private static int maxCharPerPage = 500000; //TODO : changable
+	/** Even if <code>Main.charBufferSize</code> changes, current instance of <code>SelectedFileHandler</code> will not affected. */
+	private final int charBufferSize = Main.charBufferSize;
+	/** Even if <code>Main.maxCharPerPage</code> changes, current instance of <code>SelectedFileHandler</code> will not affected. */
+	private final int maxCharPerPage = Main.maxCharPerPage;
 	
 	private char[] arr;
 	
 
 	public SelectedFileHandler() { //write-only instance
 		this.paged = false;
-		this.arr = new char[Main.charBufferSize];
+		this.arr = new char[charBufferSize];
 	}
 	
 	public SelectedFileHandler(File readFile, Charset readAs) { 
@@ -51,7 +54,7 @@ public class SelectedFileHandler {
 		this.readFile = readFile;
 		this.readAs = readAs;
 		this.paged = readFile.length() > getSinglePageFileSizeLimit(); 
-		this.arr = new char[Main.charBufferSize];
+		this.arr = new char[charBufferSize];
 		
 	}	
 	
@@ -61,6 +64,10 @@ public class SelectedFileHandler {
 	
 	public long getSinglePageFileSizeLimit() { return 2L * maxCharPerPage; }
 	
+	public int getCharBufferSize() { return charBufferSize; }
+
+	public int getMaxCharPerPage() { return maxCharPerPage; }
+
 	public void startNewRead(LinkedBlockingQueue<Page> fileContentQueue2) {
 		
 		this.fileContentQueue = fileContentQueue2;
@@ -81,7 +88,7 @@ public class SelectedFileHandler {
 		
 		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(getSinglePageFileSizeLimit()));
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(getSinglePageFileSizeLimit()));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		

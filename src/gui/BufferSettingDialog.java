@@ -17,50 +17,57 @@ public class BufferSettingDialog extends JDialog {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7072653495837828247L;
-	private JLabel label = new JLabel("Prefered Buffer size :");
-	private JTextField tf = new JTextField();
+	private static final long serialVersionUID = -4298961566242537824L;
+	private JLabel label1 = new JLabel("Prefered Buffer size :");
+	private JTextField tf1 = new JTextField();
+	private JLabel label2 = new JLabel("Characters per page :");
+	private JTextField tf2 = new JTextField();
 	private JLabel chars = new JLabel("char(s)");
 	private JButton done = new JButton("done");
 	
-	public BufferSettingDialog(ReferenceDTO<Integer> ref) {
+	public BufferSettingDialog(ReferenceDTO<Integer> bufSize, ReferenceDTO<Integer> charPerPage) {
 		
 		super((Window)null);
 		
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setModal(true);
 		setTitle("Buffer size setting");
-		setSize(250, 100);
+		setSize(250, 130);
 		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setResizable(false);
 		setLayout(null);
 		
-		label.setBounds(5, 8, label.getPreferredSize().width, label.getPreferredSize().height);
+		label1.setBounds(5, 8, label1.getPreferredSize().width, label1.getPreferredSize().height);
+		label2.setBounds(5, 38, label2.getPreferredSize().width, label2.getPreferredSize().height);
 		
-		tf.setBounds(8 + label.getPreferredSize().width, 5, 60, tf.getPreferredSize().height);
-		tf.setText("" + ref.get());
-		chars.setBounds(70 + label.getPreferredSize().width, 5, chars.getPreferredSize().width, 22);
+		tf1.setBounds(8 + label1.getPreferredSize().width, 5, 60, tf1.getPreferredSize().height);
+		tf1.setText("" + bufSize.get());
+		chars.setBounds(70 + label1.getPreferredSize().width, 5, chars.getPreferredSize().width, 22);
 		
-		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2, 15 + label.getPreferredSize().height, done.getPreferredSize().width, done.getPreferredSize().height);
+		tf2.setBounds(8 + label2.getPreferredSize().width, 35, 80, tf2.getPreferredSize().height);
+		tf2.setText("" + charPerPage.get());
+		
+		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2 - 10, 25 + label2.getY(), done.getPreferredSize().width, done.getPreferredSize().height);
 		done.addActionListener((e) -> {
-			try {
-				ref.set(Integer.valueOf(tf.getText()));
+			try { //TODO : no negatives
+				bufSize.set(Integer.valueOf(tf1.getText()));
+				charPerPage.set(Integer.valueOf(tf2.getText()));
 			} catch (NumberFormatException err) {
-				SwingDialogs.error("Invalid Buffer size!", "%e%", err, false);
+				SwingDialogs.error("Invalid number!", "%e%", err, false);
 				return;
 			}
 			setVisible(false);
 			dispose();
 		});
 		
-		add(label);
-		add(tf);
+		add(label1);
+		add(label2);
+		add(tf1);
+		add(tf2);
 		add(chars);
 		add(done);
 		
 		setVisible(true);
-		
-		
 		
 	}
 	

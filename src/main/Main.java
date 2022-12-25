@@ -15,17 +15,17 @@ public class Main {
 
 	public static final String VERSION = "TextViewer v1.0";
 	
-	public static int charBufferSize = 1024 * 8;
-
+	public static volatile int charBufferSize = 1024 * 8;
+	public static volatile int maxCharPerPage = 1024 * 64;
+	
 	public static LoggerThread logger;
 	
 	public static void main(String[] args) { 
 		
 		//TODO : known bugs/problems below
 		/**
-		 * 
-		 * Deadlock or hanging when click nextpage lots of time
-		 * reread not working...?
+		 * very small buffer/pagelimit size
+		 * clear queue when reread
 		 * 
 		 * */
 	 
