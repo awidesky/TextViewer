@@ -21,7 +21,6 @@ public class Main {
 	
 	public static void main(String[] args) { 
 		
-		//TODO : change encoding to UFT-8
 		//TODO : known bugs/problems below
 		/**
 		 * 

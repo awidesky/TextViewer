@@ -36,7 +36,7 @@ public class SelectedFileHandler {
 	/** Is this SelectedFileHandler closed?? */
 	private boolean closed = false;
 	
-	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024;
+	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024; //set by maxCharPerPage, delete this variable
 	
 	private static int maxCharPerPage = 500000; //TODO : changable
 	
@@ -133,11 +133,13 @@ public class SelectedFileHandler {
 				int nextRead = Math.min(arr.length, maxCharPerPage);
 				while (true) {
 					int read = readArray(nextRead);
-					switch(read) {
-						case -1:
+					if (read == -1) {
+						if(totalRead == 0) {
 							SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-						case -2:
 							break readFile;
+						} else { break; }
+					} else if(read == -2) { //Exception
+						break readFile;
 					}
 
 					strBuf.append(arr, 0, read);
@@ -173,7 +175,7 @@ public class SelectedFileHandler {
 			}
 
 			pageNum++;
-		}
+		} //readFile:
 		
 		try {
 			fileContentQueue.put(null);
@@ -271,9 +273,11 @@ public class SelectedFileHandler {
 		try {
 			int totalRead = fr.read(arr, 0, len);
 			Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
-			if (totalRead == -1)
+			if (totalRead == -1) {
+				Main.logger.logVerbose(taskID + "File pointer position is at EOF");
 				return -1;
-
+			}
+			
 			if (totalRead != len) {
 				Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
 				int read;
