@@ -36,8 +36,6 @@ public class SelectedFileHandler {
 	/** Is this SelectedFileHandler closed?? */
 	private boolean closed = false;
 	
-	public static long singlePageFileSizeLimit = 1L * 1024 * 1024 * 1024; //set by maxCharPerPage, delete this variable
-	
 	private static int maxCharPerPage = 500000; //TODO : changable
 	
 	private char[] arr;
@@ -45,21 +43,23 @@ public class SelectedFileHandler {
 
 	public SelectedFileHandler() { //write-only instance
 		this.paged = false;
-		this.arr = new char[Main.bufferSize];
+		this.arr = new char[Main.charBufferSize];
 	}
 	
 	public SelectedFileHandler(File readFile, Charset readAs) { 
 
 		this.readFile = readFile;
 		this.readAs = readAs;
-		this.paged = readFile.length() > singlePageFileSizeLimit; 
-		this.arr = new char[Main.bufferSize];
+		this.paged = readFile.length() > getSinglePageFileSizeLimit(); 
+		this.arr = new char[Main.charBufferSize];
 		
 	}	
 	
 	public boolean isPaged() { return paged; }
 	
 	public long getPageNum() { return pageNum; }
+	
+	public long getSinglePageFileSizeLimit() { return 2L * maxCharPerPage; }
 	
 	public void startNewRead(LinkedBlockingQueue<Page> fileContentQueue2) {
 		
@@ -81,7 +81,7 @@ public class SelectedFileHandler {
 		
 		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(singlePageFileSizeLimit));
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller ") + " than " + Main.formatFileSize(getSinglePageFileSizeLimit()));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
