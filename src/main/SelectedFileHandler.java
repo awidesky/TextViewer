@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -86,7 +88,8 @@ public class SelectedFileHandler {
 			return;
 		}
 		
-		taskID = "[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] ";
+		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
+		Main.logger.log(taskID + "Task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(getSinglePageFileSizeLimit()));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
@@ -170,7 +173,7 @@ public class SelectedFileHandler {
 				fileContentQueue.put(new Page(result, pageNum));
 			} catch (InterruptedException e) {
 				if(reReading) {
-					Main.logger.log(taskID + "Re-reading the file. closing Thread : " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId());
+					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");
 					reReading = false;
 					return;
 				} else if(closed) {

@@ -25,7 +25,6 @@ public class Main {
 		//TODO : known bugs/problems below
 		/**
 		 * very small buffer/pagelimit size
-		 * clear queue when reread
 		 * 
 		 * */
 	 

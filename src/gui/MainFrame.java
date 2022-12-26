@@ -330,7 +330,7 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			fileContentQueue.clear();
+			fileContentQueue = new LinkedBlockingQueue<>(contentQueueLength);
 			fileHandle.reRead(fileContentQueue);
 			nextPage();
 		});
@@ -430,12 +430,6 @@ public class MainFrame extends JFrame {
 		boolean originVal = ta.isEditable();
 		editable(false);
 		try {
-			/*
-			 * TODO Reading mechanism must be changed. this method must be waiting for
-			 * worker to publish text. readCallbackQueue must be a
-			 * LinkedBlockingQueue<String> just make sure worker does not hang when
-			 * exception occurred
-			 */
 			content = fileContentQueue.take();
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, false);
@@ -444,7 +438,7 @@ public class MainFrame extends JFrame {
 
 
 		if(fileHandle.isPaged()) {
-			Main.logger.log("[" + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + "] page #" + content.pageNum + " is consumed and displayed");
+			Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + content.pageNum + " is consumed and displayed");
 			TitleGeneartor.pageNum(content.pageNum);
 		}
 		
