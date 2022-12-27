@@ -15,8 +15,8 @@ public class Main {
 
 	public static final String VERSION = "TextViewer v1.0";
 	
-	public static volatile int charBufferSize = 1024 * 8;
-	public static volatile int maxCharPerPage = 1024 * 64;
+	public static int charBufferSize = 1024 * 8;
+	public static int maxCharPerPage = 1024 * 64;
 	
 	public static LoggerThread logger;
 	
