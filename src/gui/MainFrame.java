@@ -45,6 +45,7 @@ import main.Main;
 import main.Page;
 import main.ReferenceDTO;
 import main.SelectedFileHandler;
+import main.SettingData;
 
 public class MainFrame extends JFrame {
 
@@ -284,13 +285,13 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
-		bufSetting = new JMenuItem("Change buffer size", KeyEvent.VK_B);
+		bufSetting = new JMenuItem("Setting", KeyEvent.VK_B);
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
 			ReferenceDTO<Integer> bufSize = new ReferenceDTO<>(Main.charBufferSize);
 			ReferenceDTO<Integer> charPerPage = new ReferenceDTO<>(Main.maxCharPerPage);
-			new BufferSettingDialog(bufSize, charPerPage);
+			new SettingDialog(new SettingData(bufSize, charPerPage));
 			Main.charBufferSize = bufSize.get();
 			Main.maxCharPerPage = charPerPage.get();
 		});

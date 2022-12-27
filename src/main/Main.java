@@ -99,7 +99,7 @@ public class Main {
 		
 		double result;
 		
-		if(lengthText.endsWith("byte"))
+		if(lengthText.endsWith("byte") || lengthText.endsWith("B"))
 			result = (Double.parseDouble(lengthText.replace("byte", "")));
 		else if(lengthText.endsWith("KB"))
 			result = (Double.parseDouble(lengthText.replace("KB", "")) * 1024);
