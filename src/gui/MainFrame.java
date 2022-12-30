@@ -20,7 +20,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
@@ -45,7 +47,6 @@ import main.Main;
 import main.Page;
 import main.ReferenceDTO;
 import main.SelectedFileHandler;
-import main.SettingData;
 
 public class MainFrame extends JFrame {
 
@@ -59,8 +60,7 @@ public class MainFrame extends JFrame {
 	
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
-	private LinkedBlockingQueue<Page> fileContentQueue = null;
-	private int contentQueueLength = 1; //TODO : changeable
+	private BlockingQueue<Page> fileContentQueue = null;
 	
 	private SelectedFileHandler fileHandle = null;
 
@@ -289,11 +289,7 @@ public class MainFrame extends JFrame {
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
-			ReferenceDTO<Integer> bufSize = new ReferenceDTO<>(Main.charBufferSize);
-			ReferenceDTO<Integer> charPerPage = new ReferenceDTO<>(Main.maxCharPerPage);
-			new SettingDialog(new SettingData(bufSize, charPerPage));
-			Main.charBufferSize = bufSize.get();
-			Main.maxCharPerPage = charPerPage.get();
+			new SettingDialog(new ReferenceDTO<>(Main.setting));
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -331,7 +327,7 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
-			fileContentQueue = new LinkedBlockingQueue<>(contentQueueLength);
+			makeNewQueue();
 			fileHandle.reRead(fileContentQueue);
 			nextPage();
 		});
@@ -348,13 +344,20 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	private void makeNewQueue() {
+		if(Main.setting.loadedPagesBufferLength == 1) {
+			fileContentQueue = new SynchronousQueue<>();
+		} else {
+			fileContentQueue = new LinkedBlockingQueue<>(Main.setting.loadedPagesBufferLength - 1);
+		}
+	}
+	
 	private void editable(boolean flag) {
 		ta.setEditable(flag);
 		editMenu.setEnabled(flag);
 	}
 	
 	private void openFile(File file) {
-		
 
 		if(!saveBeforeClose()) {
 			return;
@@ -374,7 +377,7 @@ public class MainFrame extends JFrame {
 		
 		if(fileHandle != null) fileHandle.close();
 		fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
-		fileContentQueue = new LinkedBlockingQueue<>(contentQueueLength);
+		makeNewQueue();
 		
 		if(fileHandle.isPaged()) {
 			enableNextPageMenu();

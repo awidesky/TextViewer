@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +25,7 @@ public class SelectedFileHandler {
 	private FileReader fr;
 	private FileWriter fw;
 	private boolean paged;
-	private LinkedBlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
+	private BlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
 	private StringBuilder leftOver = null;
 	
 	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
@@ -38,25 +39,23 @@ public class SelectedFileHandler {
 	/** Is this SelectedFileHandler closed?? */
 	private boolean closed = false;
 	
-	/** Even if <code>Main.charBufferSize</code> changes, current instance of <code>SelectedFileHandler</code> will not affected. */
-	private final int charBufferSize = Main.charBufferSize;
-	/** Even if <code>Main.maxCharPerPage</code> changes, current instance of <code>SelectedFileHandler</code> will not affected. */
-	private final int maxCharPerPage = Main.maxCharPerPage;
+	/** Even if <code>Main.setting</code> changes, current instance of <code>setting</code> will not affected. */
+	private final SettingData setting = new SettingData(Main.setting);
 	
 	private char[] arr;
 	
 
 	public SelectedFileHandler() { //write-only instance
 		this.paged = false;
-		this.arr = new char[charBufferSize];
+		this.arr = new char[setting.charBufSize];
 	}
 	
 	public SelectedFileHandler(File readFile, Charset readAs) { 
 
 		this.readFile = readFile;
 		this.readAs = readAs;
-		this.paged = readFile.length() > getSinglePageFileSizeLimit(); 
-		this.arr = new char[charBufferSize];
+		this.paged = readFile.length() > setting.singlePageFileSizeLimit; 
+		this.arr = new char[setting.charBufSize];
 		
 	}	
 	
@@ -64,13 +63,7 @@ public class SelectedFileHandler {
 	
 	public long getPageNum() { return pageNum; }
 	
-	public long getSinglePageFileSizeLimit() { return 2L * maxCharPerPage; }
-	
-	public int getCharBufferSize() { return charBufferSize; }
-
-	public int getMaxCharPerPage() { return maxCharPerPage; }
-
-	public void startNewRead(LinkedBlockingQueue<Page> fileContentQueue2) {
+	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
 		this.fileContentQueue = fileContentQueue2;
 		readTaskFuture = readingThread.submit(this::readTask);
@@ -91,7 +84,7 @@ public class SelectedFileHandler {
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(getSinglePageFileSizeLimit()));
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
@@ -140,7 +133,7 @@ public class SelectedFileHandler {
 
 				int totalRead = 0;
 				
-				int nextRead = Math.min(arr.length, maxCharPerPage);
+				int nextRead = Math.min(arr.length, setting.charPerPage);
 				while (true) {
 					int read = readArray(nextRead);
 					if (read == -1) {
@@ -154,9 +147,9 @@ public class SelectedFileHandler {
 
 					strBuf.append(arr, 0, read);
 					totalRead += read;
-					if(totalRead == maxCharPerPage) break;
+					if(totalRead == setting.charPerPage) break;
 					
-					nextRead = Math.min(arr.length, maxCharPerPage - totalRead); //TODO: "Use line separator for page delimiter"
+					nextRead = Math.min(arr.length, setting.charPerPage - totalRead); //TODO: "Use line separator for page delimiter"
 				}
 				
 				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
@@ -322,7 +315,7 @@ public class SelectedFileHandler {
 //		}
 //	}
 
-	public void reRead(LinkedBlockingQueue<Page> fileContentQueue2) {
+	public void reRead(BlockingQueue<Page> fileContentQueue2) {
 		reReading = true;
 		readTaskFuture.cancel(true);
 		startNewRead(fileContentQueue2);

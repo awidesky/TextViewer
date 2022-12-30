@@ -52,7 +52,7 @@ public class SettingDialog extends JDialog {
 		
 		label1.setBounds(5, 8, label1.getPreferredSize().width, label1.getPreferredSize().height);
 		tf1.setBounds(8 + label1.getPreferredSize().width, 5, 60, tf1.getPreferredSize().height);
-		tf1.setText("" + setting.get().bufSize);
+		tf1.setText("" + setting.get().charBufSize);
 		
 		label2.setBounds(5, 38, label2.getPreferredSize().width, label2.getPreferredSize().height);
 		tf2.setBounds(8 + label2.getPreferredSize().width, 35, 80, tf2.getPreferredSize().height);
@@ -70,7 +70,7 @@ public class SettingDialog extends JDialog {
 		
 		label5.setBounds(5, 128, label5.getPreferredSize().width, label5.getPreferredSize().height);
 		tf5.setBounds(8 + label5.getPreferredSize().width, 125, 20, tf5.getPreferredSize().height);
-		tf5.setText("" + setting.get().contentQueueLength);
+		tf5.setText("" + setting.get().loadedPagesBufferLength);
 		page.setBounds(35 + label5.getPreferredSize().width, 124, page.getPreferredSize().width, 22);
 		
 		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2 - 10, getSize().height - done.getPreferredSize().height - 45, done.getPreferredSize().width, done.getPreferredSize().height);

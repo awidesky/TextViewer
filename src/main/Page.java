@@ -1,6 +1,6 @@
 package main;
 
-public class Page {
+public class Page { //TODO : are we using this?
 
 	public String text;
 	public final long pageNum;
