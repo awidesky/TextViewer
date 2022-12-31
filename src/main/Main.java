@@ -36,7 +36,6 @@ public class Main {
 		
 		//TODO : known bugs/problems below
 		/**
-		 * showSaveDialog does not show "save" dialog
 		 * very small buffer/pagelimit size
 		 * */
 	 

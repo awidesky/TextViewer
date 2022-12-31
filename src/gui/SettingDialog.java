@@ -43,7 +43,7 @@ public class SettingDialog extends JDialog {
 	
 	private JButton done = new JButton("done");
 	
-	public SettingDialog(SettingData setting) { //TODO : just set it SettingData
+	public SettingDialog(SettingData setting) {
 		
 		super((Window)null);
 		
