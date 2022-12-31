@@ -20,23 +20,25 @@ public class TextFilechooser extends JFileChooser{
 	private final ArrayList<String> charsetNameList = Charset.availableCharsets().keySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	private final JComboBox<String> comboBox = new JComboBox<>(new DefaultComboBoxModel<String>(charsetNameList.toArray(new String[] {})));
 	
+	public static final FileFilter TEXTFILEFILTER = new FileFilter() {
+		public boolean accept(File f) {
+			if (f.isDirectory()	|| f.getName().endsWith(".txt"))
+				return true;
+			else
+				return false;
+		}
+		public String getDescription() {
+			return "Text files (*.txt)";
+		}
+	};
+	
     public TextFilechooser() {
         
     	comboBox.setSelectedIndex(charsetNameList.indexOf("UTF-8"));
     	
     	setMultiSelectionEnabled(false);
     	setFileSelectionMode(JFileChooser.FILES_ONLY);
-    	addChoosableFileFilter(new FileFilter() {
-			public boolean accept(File f) {
-				if (f.isDirectory()	|| f.getName().endsWith(".txt"))
-					return true;
-				else
-					return false;
-			}
-			public String getDescription() {
-				return "Text files (*.txt)";
-			}
-		});
+    	addChoosableFileFilter(TEXTFILEFILTER);
 
         JPanel panel2 = (JPanel) ((JPanel) this.getComponent(3)).getComponent(3);
 

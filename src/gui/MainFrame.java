@@ -410,12 +410,17 @@ public class MainFrame extends JFrame {
 	    	return false;
 		
 		lastSaved = fileChooser.getSelectedFile();
+		if(fileChooser.getFileFilter().equals(TextFilechooser.TEXTFILEFILTER) && !lastSaved.getName().endsWith(".txt")) {
+		    lastSaved = new File(lastSaved.getParentFile(), lastSaved.getName() + ".txt");
+		}
+		
 		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			return false;
 		}
 		
+		
 		TitleGeneartor.edited(false);
-		if(fileHandle == null) fileHandle =new SelectedFileHandler();
+		if(fileHandle == null) fileHandle = new SelectedFileHandler();
 		return fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
 			
 	}
