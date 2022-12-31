@@ -401,7 +401,7 @@ public class MainFrame extends JFrame {
 	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 *  
 	 *  */
-	private boolean saveFile() { //TODO: Untitled after saving
+	private boolean saveFile() {
 		
 		fileChooser.setDialogTitle("Save file at...");
 		fileChooser.setSelectedFile(lastOpened);
@@ -418,10 +418,11 @@ public class MainFrame extends JFrame {
 			return false;
 		}
 		
-		
 		TitleGeneartor.edited(false);
 		if(fileHandle == null) fileHandle = new SelectedFileHandler();
-		return fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
+		boolean ret = fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
+		TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L);
+		return ret;
 			
 	}
 	
