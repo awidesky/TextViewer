@@ -150,6 +150,7 @@ public class MainFrame extends JFrame {
 	        	if(!getTitle().startsWith("*")) {
 	        		logger.log("File Edited! : " + e.getType().toString());
 	        		closeFile.setEnabled(true);
+	        		saveFile.setEnabled(true);
 	        		TitleGeneartor.edited(true);
 	        	}
 	        }
@@ -260,6 +261,7 @@ public class MainFrame extends JFrame {
 				if(fileHandle != null) fileHandle.close();
 				fileHandle = null;
 				fileContentQueue = null;
+				lastOpened = new File("");
 				disableNextPageMenu();
 				setting.setEnabled(true);
 				saveFile.setEnabled(false);
