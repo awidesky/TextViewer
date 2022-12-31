@@ -401,12 +401,12 @@ public class MainFrame extends JFrame {
 	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 *  
 	 *  */
-	private boolean saveFile() {
+	private boolean saveFile() { //TODO: Untitled after saving
 		
 		fileChooser.setDialogTitle("Save file at...");
 		fileChooser.setSelectedFile(lastOpened);
 		fileChooser.setCurrentDirectory(lastSaved.getParentFile());
-		if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) 
+		if (fileChooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) 
 	    	return false;
 		
 		lastSaved = fileChooser.getSelectedFile();
