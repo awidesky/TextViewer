@@ -13,20 +13,24 @@ public class SettingData {
 	/** if a file is larger than <code>singlePageFileSizeLimit</code> byte, read it as multi-paged file */
 	public long singlePageFileSizeLimit;
 	/**
-	 * How many page will be stored in memory(except for one page that is placed in <code>TextViewer</code>)?
-	 * if 1, use <code>SynchronousQueue</code> not <code>LinkedBlockingQueue</code>  
+	 * <pre>
+	 * How many page will be stored in memory(include one that displayed in <code>TextViewer</code>)
+	 * At least one page should loaded, so this must be positive number
+	 * if value is 2, use <code>SynchronousQueue</code> not <code>LinkedBlockingQueue</code>
+	 * if value is 1, use <code>SynchronousQueue</code>, AND <code>SelectedFileHandler</code> will wait until <code>TextViewer</code> requests new page
+	 * </pre> 
 	 *  */
-	public int loadedPagesBufferLength;
+	public int loadedPagesNumber;
 	
 	
 	
-	public SettingData(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesBufferLength) {
-		if(!set(bufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesBufferLength)) {
+	public SettingData(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
+		if(!set(bufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesNumber)) {
 			this.charBufSize = -1;
 			this.charPerPage = -1;
 			this.pageEndsWithNewline = false;
 			this.singlePageFileSizeLimit = -1;
-			this.loadedPagesBufferLength = -1;
+			this.loadedPagesNumber = -1;
 		}
 	}
 	
@@ -34,29 +38,32 @@ public class SettingData {
 	 * Copy constructor
 	 * */
 	public SettingData(SettingData setting) {
-		this(setting.charBufSize, setting.charPerPage, setting.pageEndsWithNewline, setting.singlePageFileSizeLimit, setting.loadedPagesBufferLength);
+		this(setting.charBufSize, setting.charPerPage, setting.pageEndsWithNewline, setting.singlePageFileSizeLimit, setting.loadedPagesNumber);
 	}
 	
 	
-	public boolean set(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesBufferLength) {
+	public boolean set(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
 
 		String errContent = null;
 		
 		if(bufSize < 1) errContent = "Buffer size must be bigger than zero!"; //TODO : bug when 1? 
 		if(charPerPage < 1) errContent = "There should be more than zero characters per page!"; 
 		if(singlePageFileSizeLimit < 1) errContent = "Single-paged file limit must be bigger than zero!"; 
-		if(loadedPagesBufferLength < 1) errContent = "Page buffer size must be positive!";
-		
-		this.charBufSize = bufSize;
-		this.charPerPage = charPerPage;
-		this.pageEndsWithNewline = pageEndsWithNewline;
-		this.singlePageFileSizeLimit = singlePageFileSizeLimit;
-		this.loadedPagesBufferLength = loadedPagesBufferLength;
+		if(loadedPagesNumber < 1) errContent = "Number of loaded page must be positive number!";
 
 		if(errContent != null) {
 			SwingDialogs.error("Invalid input!", errContent, null, false);
 			return false;
-		} else { return true; }
+		} else {
+			
+			this.charBufSize = bufSize;
+			this.charPerPage = charPerPage;
+			this.pageEndsWithNewline = pageEndsWithNewline;
+			this.singlePageFileSizeLimit = singlePageFileSizeLimit;
+			this.loadedPagesNumber = loadedPagesNumber;
+			
+			return true;
+		}
 	}
 	
 	

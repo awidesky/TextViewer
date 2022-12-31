@@ -289,7 +289,7 @@ public class MainFrame extends JFrame {
 		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
 		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		bufSetting.addActionListener((e) -> {
-			new SettingDialog(new ReferenceDTO<>(Main.setting));
+			new SettingDialog(Main.setting);
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -345,10 +345,10 @@ public class MainFrame extends JFrame {
 	}
 	
 	private void makeNewQueue() {
-		if(Main.setting.loadedPagesBufferLength == 1) {
+		if(Main.setting.loadedPagesNumber < 3) {
 			fileContentQueue = new SynchronousQueue<>();
 		} else {
-			fileContentQueue = new LinkedBlockingQueue<>(Main.setting.loadedPagesBufferLength - 1);
+			fileContentQueue = new LinkedBlockingQueue<>(Main.setting.loadedPagesNumber - 1);
 		}
 	}
 	
@@ -433,7 +433,17 @@ public class MainFrame extends JFrame {
 		TitleGeneartor.loading(true);
 		boolean originVal = ta.isEditable();
 		editable(false);
+		newPageReading.set(true);
 		try {
+			/**
+			 * only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
+			 * */
+			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
+				ta.setText(null);
+				synchronized (fileHandle) {
+					fileHandle.notify();
+				}
+			}
 			content = fileContentQueue.take();
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, false);
@@ -447,18 +457,17 @@ public class MainFrame extends JFrame {
 		}
 		
 		if (content != null) {
-			newPageReading.set(true);
 			ta.setText(content.text);
 			ta.setCaretPosition(0);
 			sp.getVerticalScrollBar().setValue(0);
 			undoManager.discardAllEdits();
 			TitleGeneartor.loading(false);
-			newPageReading.set(false);
 			editable(originVal);
 		} else {
 			disableNextPageMenu();
 			bufSetting.setEnabled(true);
 		}
+		newPageReading.set(false);
 		
 	}
 

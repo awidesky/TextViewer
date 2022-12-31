@@ -30,12 +30,13 @@ public class Main {
 	 *  */
 	public static SettingData setting = new SettingData(1024 * 16, 1800, true, 55 * 1024, 3);
 	
-	public static LoggerThread logger;
+	public static LoggerThread logger = null;
 	
 	public static void main(String[] args) { 
 		
 		//TODO : known bugs/problems below
 		/**
+		 * close file
 		 * very small buffer/pagelimit size
 		 * */
 	 
@@ -46,6 +47,8 @@ public class Main {
 				FontDialog.showAll = true;
 			} else if(args[i].equals("--Verbose")) {
 				verbose = true;
+			} else if(args[i].equals("--Logconsole")) {
+				logger = new LoggerThread();
 			} else {
 				System.out.println("Usage : java -jar TextViewer.jar [options]");
 				System.out.println("Options : ");
@@ -61,7 +64,7 @@ public class Main {
 			logFolder.mkdirs();
 			logFile.createNewFile();
 			
-			logger = new LoggerThread(new FileOutputStream(logFile));
+			if(logger == null) logger = new LoggerThread(new FileOutputStream(logFile));
 			
 		} catch (IOException e) {
 
@@ -110,7 +113,7 @@ public class Main {
 		
 		double result;
 		
-		if(lengthText.endsWith("byte") || lengthText.endsWith("B"))
+		if(lengthText.endsWith("byte"))
 			result = (Double.parseDouble(lengthText.replace("byte", "")));
 		else if(lengthText.endsWith("KB"))
 			result = (Double.parseDouble(lengthText.replace("KB", "")) * 1024);
@@ -118,10 +121,10 @@ public class Main {
 			result = (Double.parseDouble(lengthText.replace("MB", "")) * 1024 * 1024);
 		else if(lengthText.endsWith("GB"))
 			result = (Double.parseDouble(lengthText.replace("GB", "")) * 1024 * 1024 * 1024);
+		else if(lengthText.endsWith("B"))
+			result = (Double.parseDouble(lengthText.replace("B", "")));
 		else
 			throw new NumberFormatException("\"" + lengthText + "\" is invalid!");
-		
-		if((int)result <= 0) throw new NumberFormatException("Buffer size should be positive!");
 		
 		return (int)result;
 		

@@ -62,6 +62,7 @@ public class SelectedFileHandler {
 	public boolean isPaged() { return paged; }
 	
 	public long getPageNum() { return pageNum; }
+	public long getLoadedPagesNumber() { return setting.loadedPagesNumber; }
 	
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
@@ -89,7 +90,7 @@ public class SelectedFileHandler {
 		long startTime = System.currentTimeMillis();
 		
 		if(paged) {
-			leftOver = new StringBuilder(arr.length);
+			if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(arr.length); }
 			pagedFileReadLoop();
 		} else {
 			StringBuilder sb = new StringBuilder((int) readFile.length());
@@ -149,14 +150,18 @@ public class SelectedFileHandler {
 					totalRead += read;
 					if(totalRead == setting.charPerPage) break;
 					
-					nextRead = Math.min(arr.length, setting.charPerPage - totalRead); //TODO: "Use line separator for page delimiter"
+					nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
 				}
 				
-				int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
-				
-				result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
-				leftOver = new StringBuilder("");
-				leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
+				if (setting.pageEndsWithNewline) {
+					int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
+
+					result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
+					leftOver = new StringBuilder("");
+					leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
+				} else {
+					result = strBuf.toString();
+				}
 
 			}
 
@@ -164,6 +169,14 @@ public class SelectedFileHandler {
 			startTime = System.currentTimeMillis();
 			try {
 				fileContentQueue.put(new Page(result, pageNum));
+				/**
+				 * only one page can be loaded in memory, wait until GUI requests new page
+				 * */
+				if(setting.loadedPagesNumber == 1) {
+					synchronized (this) {
+						wait();
+					}
+				}
 			} catch (InterruptedException e) {
 				if(reReading) {
 					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");

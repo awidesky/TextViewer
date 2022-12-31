@@ -12,11 +12,16 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import main.Main;
-import main.ReferenceDTO;
 import main.SettingData;
 
 public class SettingDialog extends JDialog {
 
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2127297466348994156L;
+	
 	
 	private JLabel label1 = new JLabel("Prefered Buffer size :");
 	private JTextField tf1 = new JTextField();
@@ -38,7 +43,7 @@ public class SettingDialog extends JDialog {
 	
 	private JButton done = new JButton("done");
 	
-	public SettingDialog(ReferenceDTO<SettingData> setting) {
+	public SettingDialog(SettingData setting) { //TODO : just set it SettingData
 		
 		super((Window)null);
 		
@@ -52,32 +57,37 @@ public class SettingDialog extends JDialog {
 		
 		label1.setBounds(5, 8, label1.getPreferredSize().width, label1.getPreferredSize().height);
 		tf1.setBounds(8 + label1.getPreferredSize().width, 5, 60, tf1.getPreferredSize().height);
-		tf1.setText("" + setting.get().charBufSize);
+		tf1.setText("" + setting.charBufSize);
 		
 		label2.setBounds(5, 38, label2.getPreferredSize().width, label2.getPreferredSize().height);
 		tf2.setBounds(8 + label2.getPreferredSize().width, 35, 80, tf2.getPreferredSize().height);
-		tf2.setText("" + setting.get().charPerPage);
+		tf2.setText("" + setting.charPerPage);
 		chars.setBounds(70 + label1.getPreferredSize().width, 5, chars.getPreferredSize().width, 22);
 		
 		label3.setBounds(5, 68, label3.getPreferredSize().width, label3.getPreferredSize().height);
 		chb.setBounds(8 + label3.getPreferredSize().width, 65, chb.getPreferredSize().width, chb.getPreferredSize().height);
-		chb.setSelected(setting.get().pageEndsWithNewline);
+		chb.setSelected(setting.pageEndsWithNewline);
 		
 		label4.setBounds(5, 98, label4.getPreferredSize().width, label4.getPreferredSize().height);
 		tf4.setBounds(8 + label4.getPreferredSize().width, 95, 40, tf4.getPreferredSize().height);
-		cb.setSelectedIndex(0);// TODO : set proper suffix
+		tf4.setText("" + setting.singlePageFileSizeLimit);
+		cb.setSelectedIndex(0);
 		cb.setBounds(51 + label4.getPreferredSize().width, 95, cb.getPreferredSize().width, 22);
 		
 		label5.setBounds(5, 128, label5.getPreferredSize().width, label5.getPreferredSize().height);
 		tf5.setBounds(8 + label5.getPreferredSize().width, 125, 20, tf5.getPreferredSize().height);
-		tf5.setText("" + setting.get().loadedPagesBufferLength);
+		tf5.setText("" + setting.loadedPagesNumber);
 		page.setBounds(35 + label5.getPreferredSize().width, 124, page.getPreferredSize().width, 22);
 		
 		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2 - 10, getSize().height - done.getPreferredSize().height - 45, done.getPreferredSize().width, done.getPreferredSize().height);
 		done.addActionListener((e) -> {
-			if(!setting.get().set(Integer.valueOf(tf1.getText()), Integer.valueOf(tf2.getText()), chb.isSelected(), Long.valueOf(Main.getByteSize(tf4.getText() + cb.getSelectedItem())), Integer.valueOf(tf5.getText())))
+			try {
+				if(!setting.set(Integer.valueOf(tf1.getText()), Integer.valueOf(tf2.getText()), chb.isSelected(), Long.valueOf(Main.getByteSize(tf4.getText() + cb.getSelectedItem())), Integer.valueOf(tf5.getText())))
+					return;
+			} catch(NumberFormatException ex) {
+				SwingDialogs.error("Invalid input!", "%e%", ex, false);
 				return;
-		
+			}
 			setVisible(false);
 			dispose();
 		});
