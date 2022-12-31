@@ -339,7 +339,7 @@ public class SelectedFileHandler {
 
 	public void close() {
 		closed = true;
-		readTaskFuture.cancel(true);
+		if(readTaskFuture != null) readTaskFuture.cancel(true);
 	}
 }
 
