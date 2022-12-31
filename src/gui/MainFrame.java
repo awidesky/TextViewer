@@ -415,6 +415,7 @@ public class MainFrame extends JFrame {
 		}
 		
 		TitleGeneartor.edited(false);
+		if(fileHandle == null) fileHandle =new SelectedFileHandler();
 		return fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
 			
 	}

@@ -45,7 +45,10 @@ public class SelectedFileHandler {
 	private char[] arr;
 	
 
-	public SelectedFileHandler() { //write-only instance
+	/**
+	 *  write-only instance
+	 * */
+	public SelectedFileHandler() {
 		this.paged = false;
 		this.arr = new char[setting.charBufSize];
 	}
