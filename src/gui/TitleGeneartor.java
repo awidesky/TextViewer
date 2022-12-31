@@ -30,6 +30,10 @@ public class TitleGeneartor {
 		TitleGeneartor.edited = b;
 		generate();
 	}
+	
+	public static void fileClosed() {
+		filePath = null;
+	}
 
 	public static void reset(String filePath, String fileSize, boolean paged, String charset, boolean edited, boolean loading, long pageNum) {
 		TitleGeneartor.filePath = filePath;

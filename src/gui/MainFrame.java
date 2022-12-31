@@ -68,11 +68,12 @@ public class MainFrame extends JFrame {
 	private JMenu fileMenu;
 	private JMenuItem openFile;
 	private JMenuItem saveFile;
+	private JMenuItem closeFile;
 	private JMenu editMenu;
 	private JMenuItem undo;
 	private JMenuItem redo;
 	private JMenu formatMenu;
-	private JMenuItem bufSetting;
+	private JMenuItem setting;
 	private JMenuItem font;
 	private JCheckBoxMenuItem editable;
 	private JMenu pageMenu;
@@ -148,6 +149,7 @@ public class MainFrame extends JFrame {
   				redo.setEnabled(undoManager.canRedo());
 	        	if(!getTitle().startsWith("*")) {
 	        		logger.log("File Edited! : " + e.getType().toString());
+	        		closeFile.setEnabled(true);
 	        		TitleGeneartor.edited(true);
 	        	}
 	        }
@@ -236,6 +238,7 @@ public class MainFrame extends JFrame {
 			//open chosen file
 			openFile(null);
 			saveFile.setEnabled(true);
+			closeFile.setEnabled(true);
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -248,8 +251,29 @@ public class MainFrame extends JFrame {
 			
 		});
 		saveFile.setEnabled(false);
+		closeFile = new JMenuItem("Close current file");
+		closeFile.getAccessibleContext().setAccessibleDescription("Close current reading file and make TextViewer empty");
+		closeFile.addActionListener((e) -> {
+			
+			if(saveBeforeClose()) {
+				ta.setText(null);
+				if(fileHandle != null) fileHandle.close();
+				fileHandle = null;
+				fileContentQueue = null;
+				disableNextPageMenu();
+				setting.setEnabled(true);
+				saveFile.setEnabled(false);
+				closeFile.setEnabled(false);
+				undoManager.discardAllEdits();
+				setTitle(Main.VERSION);
+				TitleGeneartor.fileClosed();
+			}
+			
+		});
+		closeFile.setEnabled(false);
 		fileMenu.add(openFile);
 		fileMenu.add(saveFile);
+		fileMenu.add(closeFile);
 
 		
 		
@@ -285,10 +309,10 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
-		bufSetting = new JMenuItem("Setting", KeyEvent.VK_B);
-		bufSetting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
-		bufSetting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
-		bufSetting.addActionListener((e) -> {
+		setting = new JMenuItem("Setting", KeyEvent.VK_B);
+		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
+		setting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
+		setting.addActionListener((e) -> {
 			new SettingDialog(Main.setting);
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
@@ -308,7 +332,7 @@ public class MainFrame extends JFrame {
 			editable(!ta.isEditable());
 			
 		});
-		formatMenu.add(bufSetting);
+		formatMenu.add(setting);
 		formatMenu.add(font);
 		formatMenu.add(editable);
 		
@@ -381,10 +405,10 @@ public class MainFrame extends JFrame {
 		
 		if(fileHandle.isPaged()) {
 			enableNextPageMenu();
-			bufSetting.setEnabled(false);
+			setting.setEnabled(false);
 		} else {
 			disableNextPageMenu();
-			bufSetting.setEnabled(true);
+			setting.setEnabled(true);
 		}
 		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 		
@@ -472,7 +496,7 @@ public class MainFrame extends JFrame {
 			editable(originVal);
 		} else {
 			disableNextPageMenu();
-			bufSetting.setEnabled(true);
+			setting.setEnabled(true);
 		}
 		newPageReading.set(false);
 		
