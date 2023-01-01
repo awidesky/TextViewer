@@ -106,6 +106,7 @@ public class MainFrame extends JFrame {
 
 				if(!saveBeforeClose()) return; 
 
+				if(fileHandle != null) fileHandle.close();
 				e.getWindow().dispose();
 				Main.kill(0);
 

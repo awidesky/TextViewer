@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import gui.SwingDialogs;
 
@@ -86,7 +87,7 @@ public class SelectedFileHandler {
 		}
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
-		Main.logger.log(taskID + "Task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
+		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
@@ -96,12 +97,14 @@ public class SelectedFileHandler {
 			if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(arr.length); }
 			pagedFileReadLoop();
 		} else {
+			Main.logger.log(taskID + "start reading the file until reach EOF");
 			StringBuilder sb = new StringBuilder((int) readFile.length());
 			int read = 0;
 			while (true) {
 				if ((read = readArray()) == -1) break;
 				sb.append(arr, 0, read);
 			}
+			Main.logger.log(taskID + "Reached EOF");
 			try {
 				fileContentQueue.put(new Page(sb.toString(), -1));
 			} catch (InterruptedException e) {
@@ -116,7 +119,7 @@ public class SelectedFileHandler {
 			SwingDialogs.error(taskID + "unable to close file in " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId(), "%e%", e, false);
 		}
 		
-		Main.logger.log(taskID + "Task completed in " + (System.currentTimeMillis()- startTime) + "ms");
+		Main.logger.log(taskID + "Read task completed in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
 	
@@ -196,12 +199,13 @@ public class SelectedFileHandler {
 			pageNum++;
 		} //readFile:
 		
+		Main.logger.log(taskID + "No more page to read!");
 		try {
 			fileContentQueue.put(null);
 		} catch (InterruptedException e) {
 			SwingDialogs.error("cannot read file!", "%e%", e, false);
 		}
-		
+		Main.logger.log(taskID + "File reading completed");
 
 	}
 	
@@ -211,20 +215,30 @@ public class SelectedFileHandler {
 	 * */
 	public boolean write(File writeTo, Charset writeAs, String text) { //TODO : log
 		
+		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
+		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
+		Main.logger.log(taskID + "Writing file " + writeTo.getAbsolutePath() + " as encoding : " + writeAs.name());
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
+		long startTime = System.currentTimeMillis();
+		
+		boolean ret;
 		if(paged) {
-			return pagedFileWriteLoop(writeTo, writeAs);
+			ret = pagedFileWriteLoop(writeTo, writeAs);
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
 				bw.write(text.replaceAll("\\R", System.lineSeparator()));
 				bw.close();
-				return true;
+				ret = true;
 			} catch (IOException e) {
 				SwingDialogs.error("unable to write file!", "%e%", e, false);
 				e.printStackTrace();
-				return false;
+				ret = false;
 			}
 		}
+		
+		Main.logger.log(taskID + "Write task completed in " + (System.currentTimeMillis()- startTime) + "ms");
+		return ret;
 		
 	}
 	
@@ -337,9 +351,19 @@ public class SelectedFileHandler {
 		startNewRead(fileContentQueue2);
 	}
 
+	/**
+	 * close the handle, shutting down Worker Thread.
+	 * waits 5000ms for Worker to shutdown
+	 * */
 	public void close() {
 		closed = true;
 		if(readTaskFuture != null) readTaskFuture.cancel(true);
+		readingThread.shutdownNow();
+		try {
+			readingThread.awaitTermination(5000, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			Main.logger.log(e);
+		}
 	}
 }
 
