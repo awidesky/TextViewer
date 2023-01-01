@@ -82,7 +82,7 @@ public class LoggerThread extends Thread {
 		
 	}
 	
-	public void log(Exception e) { // TODO : if verbose, printstackTrace, else, print message
+	public void log(Exception e) {
 		
 		loggerQueue.offer(() -> {
 			e.printStackTrace(logTo);
