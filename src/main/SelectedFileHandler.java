@@ -37,8 +37,8 @@ public class SelectedFileHandler {
 	private String taskID = null;
 	/** are we re-reading file now? */
 	private boolean reReading = false;
-	/** Is this SelectedFileHandler closed?? */
-	private boolean closed = false;
+	/** Is reading task of this SelectedFileHandler closed?? */
+	private boolean readingClosed = false;
 	
 	/** Even if <code>Main.setting</code> changes, current instance of <code>setting</code> will not affected. */
 	private final SettingData setting = new SettingData(Main.setting);
@@ -128,7 +128,6 @@ public class SelectedFileHandler {
 		readFile:
 		while (true) {
 
-			StringBuilder strBuf = new StringBuilder("");
 			String result;
 			
 			Main.logger.newLine();
@@ -137,47 +136,15 @@ public class SelectedFileHandler {
 			if (changes.containsKey(pageNum)) {
 				result = changes.get(pageNum);
 			} else {
-
-				int totalRead = 0;
-				
-				int nextRead = Math.min(arr.length, setting.charPerPage);
-				while (true) {
-					int read = readArray(nextRead);
-					if (read == -1) {
-						if(totalRead == 0) {
-							SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-							break readFile;
-						} else { break; }
-					} else if(read == -2) { //Exception
-						break readFile;
-					}
-
-					strBuf.append(arr, 0, read);
-					totalRead += read;
-					if(totalRead == setting.charPerPage) break;
-					
-					nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
-				}
-				
-				if (setting.pageEndsWithNewline) {
-					int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
-
-					result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
-					leftOver = new StringBuilder("");
-					leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
-				} else {
-					result = strBuf.toString();
-				}
-
+				if((result = readOnePage()) == null) break readFile;
 			}
 
 			Main.logger.log(taskID + "reading page #" + pageNum + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
 				fileContentQueue.put(new Page(result, pageNum));
-				/**
-				 * only one page can be loaded in memory, wait until GUI requests new page
-				 * */
+				
+				/** if only one page can be loaded in memory, wait until GUI requests new page */
 				if(setting.loadedPagesNumber == 1) {
 					synchronized (this) {
 						wait();
@@ -188,7 +155,7 @@ public class SelectedFileHandler {
 					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");
 					reReading = false;
 					return;
-				} else if(closed) {
+				} else if(readingClosed) {
 					Main.logger.log(taskID + "File reading task has canceled.");
 					return;
 				} else {
@@ -210,8 +177,49 @@ public class SelectedFileHandler {
 	}
 	
 
+	private String readOnePage() {
+
+		int totalRead = 0;
+		
+		StringBuilder strBuf = new StringBuilder("");
+		String result = null;
+		
+		int nextRead = Math.min(arr.length, setting.charPerPage);
+		while (true) {
+			int read = readArray(nextRead);
+			if (read == -1) {
+				if(totalRead == 0) {
+					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
+					return null;
+				} else { break; }
+			} else if(read == -2) { //Exception
+				return null; //TODO : Throw empty RuntimeException
+			}
+
+			strBuf.append(arr, 0, read);
+			totalRead += read;
+			if(totalRead == setting.charPerPage) break;
+			
+			nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
+		}
+		
+		if (setting.pageEndsWithNewline) {
+			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
+
+			result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
+			leftOver = new StringBuilder("");
+			leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
+		} else {
+			result = strBuf.toString();
+		}
+
+		return result;
+	}
+	
+	
 	/**
-	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used. 
+	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used.
+	 * @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 * */
 	public boolean write(File writeTo, Charset writeAs, String text) { //TODO : log
 		
@@ -219,6 +227,7 @@ public class SelectedFileHandler {
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Writing file " + writeTo.getAbsolutePath() + " as encoding : " + writeAs.name());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
+		
 		long startTime = System.currentTimeMillis();
 		
 		boolean ret;
@@ -242,11 +251,14 @@ public class SelectedFileHandler {
 		
 	}
 	
-	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) {
+	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { //TODO : 쓰기용 fr은 따로여야 함 - 읽던 도중에 저장하고, 다음 페이지 읽으면???
 		
 		try {
-			this.fr = new FileReader(readFile, readAs);
-			this.fw = new FileWriter(writeTo, writeAs);
+			if(fr != null) fr.close();
+			if(fw != null) fw.close();
+			
+			fr = new FileReader(readFile, readAs);
+			fw = new FileWriter(writeTo, writeAs);
 			
 			if(changes.isEmpty()) {
 		        int nRead;
@@ -254,16 +266,13 @@ public class SelectedFileHandler {
 		            fw.write(arr, 0, nRead);
 		        }
 			} else {
-				for (long i = 0L; true; i++) {
-					int read = readArray();
-
-					if (read == -1)
-						break;
-
+				for (long i = 1L; true; i++) {
+					String page = readOnePage();
+					if(page == null) break;
 					if (changes.containsKey(i)) {
 						fw.write(changes.get(i).replaceAll("\\R", System.lineSeparator()));
 					} else {
-						fw.write(arr, 0, read);
+						fw.write(page);
 					}
 				}
 			}
@@ -273,14 +282,14 @@ public class SelectedFileHandler {
 			return true;
 			
 		} catch (IOException e) {
-			SwingDialogs.error("unable to open&write I/O stream!", "%e%", e, false);
+			SwingDialogs.error("Unable to open&write I/O stream!", "%e%", e, false);
 			return false;
 		}
 		
 	}
 	
 	
-	public void pageEdited(String edited) {
+	public void pageEdited(String edited) { //TODO : use this in nextpage!!
 		changes.put(pageNum, edited);
 	}
 	
@@ -356,13 +365,25 @@ public class SelectedFileHandler {
 	 * waits 5000ms for Worker to shutdown
 	 * */
 	public void close() {
-		closed = true;
-		if(readTaskFuture != null) readTaskFuture.cancel(true);
+		
+		closeReading();
 		readingThread.shutdownNow();
 		try {
 			readingThread.awaitTermination(5000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			Main.logger.log(e);
+		}
+	}
+	
+	private void closeReading() {
+		readingClosed = true;
+		if(readTaskFuture != null) readTaskFuture.cancel(true);
+		if(fr != null) {
+			try {
+				fr.close();
+			} catch (IOException e) {
+				SwingDialogs.error("Exception while closing FileReader!", "%e%", e, false);
+			}
 		}
 	}
 }
