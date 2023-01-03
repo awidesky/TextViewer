@@ -78,13 +78,8 @@ public class SelectedFileHandler {
 	private void readTask() {
 		
 		pageNum = 1L;
-		
-		try {
-			this.fr = new FileReader(readFile, readAs);
-		} catch (IOException e) {
-			SwingDialogs.error("unable to read the file!", "%e%", e, false);
-			return;
-		}
+
+		TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
@@ -94,19 +89,10 @@ public class SelectedFileHandler {
 		long startTime = System.currentTimeMillis();
 		
 		if(paged) {
-			if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(arr.length); }
-			pagedFileReadLoop();
+			pagedFileReadLoop(reader);
 		} else {
-			Main.logger.log(taskID + "start reading the file until reach EOF");
-			StringBuilder sb = new StringBuilder((int) readFile.length());
-			int read = 0;
-			while (true) {
-				if ((read = readArray()) == -1) break;
-				sb.append(arr, 0, read);
-			}
-			Main.logger.log(taskID + "Reached EOF");
 			try {
-				fileContentQueue.put(new Page(sb.toString(), -1));
+				fileContentQueue.put(new Page(reader.readAll(), -1));
 			} catch (InterruptedException e) {
 				SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, false);
 			}
@@ -114,7 +100,7 @@ public class SelectedFileHandler {
 		}
 		
 		try {
-			fr.close();
+			reader.close();
 		} catch (IOException e) {
 			SwingDialogs.error(taskID + "unable to close file in " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId(), "%e%", e, false);
 		}
@@ -123,7 +109,7 @@ public class SelectedFileHandler {
 
 	}
 	
-	private void pagedFileReadLoop() {
+	private void pagedFileReadLoop(TextReader reader) {
 
 		readFile:
 		while (true) {
@@ -136,7 +122,7 @@ public class SelectedFileHandler {
 			if (changes.containsKey(pageNum)) {
 				result = changes.get(pageNum);
 			} else {
-				if((result = readOnePage()) == null) break readFile;
+				if((result = reader.readOnePage()) == null) break readFile;
 			}
 
 			Main.logger.log(taskID + "reading page #" + pageNum + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
@@ -175,47 +161,7 @@ public class SelectedFileHandler {
 		Main.logger.log(taskID + "File reading completed");
 
 	}
-	
 
-	private String readOnePage() {
-
-		int totalRead = 0;
-		
-		StringBuilder strBuf = new StringBuilder("");
-		String result = null;
-		
-		int nextRead = Math.min(arr.length, setting.charPerPage);
-		while (true) {
-			int read = readArray(nextRead);
-			if (read == -1) {
-				if(totalRead == 0) {
-					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-					return null;
-				} else { break; }
-			} else if(read == -2) { //Exception
-				return null; //TODO : Throw empty RuntimeException
-			}
-
-			strBuf.append(arr, 0, read);
-			totalRead += read;
-			if(totalRead == setting.charPerPage) break;
-			
-			nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
-		}
-		
-		if (setting.pageEndsWithNewline) {
-			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
-
-			result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
-			leftOver = new StringBuilder("");
-			leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
-		} else {
-			result = strBuf.toString();
-		}
-
-		return result;
-	}
-	
 	
 	/**
 	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used.
@@ -254,10 +200,10 @@ public class SelectedFileHandler {
 	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { //TODO : 쓰기용 fr은 따로여야 함 - 읽던 도중에 저장하고, 다음 페이지 읽으면???
 		
 		try {
-			if(fr != null) fr.close();
-			if(fw != null) fw.close();
 			
-			fr = new FileReader(readFile, readAs);
+			TextReader reader = new TextReader(setting, readFile, readAs, taskID);
+			
+			if(fw != null) fw.close();
 			fw = new FileWriter(writeTo, writeAs);
 			
 			if(changes.isEmpty()) {
@@ -267,7 +213,7 @@ public class SelectedFileHandler {
 		        }
 			} else {
 				for (long i = 1L; true; i++) {
-					String page = readOnePage();
+					String page = reader.readOnePage();
 					if(page == null) break;
 					if (changes.containsKey(i)) {
 						fw.write(changes.get(i).replaceAll("\\R", System.lineSeparator()));
@@ -276,7 +222,7 @@ public class SelectedFileHandler {
 					}
 				}
 			}
-			fr.close();
+			reader.close();
 			fw.close();
 
 			return true;
@@ -294,56 +240,6 @@ public class SelectedFileHandler {
 	}
 	
 
-	/** Fills the array by reading <code>fr</code>
-	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
-	 * */
-	private int readArray() {
-		return readArray(arr.length);
-	}
-
-	/** Fills the array by reading <code>fr</code>
-	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading.
-	 *  
-	 *  @param len amount of chars to read
-	 *  
-	 *  @return How many char(s) read<p>-1 when EOF reached<p>-2 when Exception occured
-	 *  
-	 * */
-	private int readArray(int len) {
-
-		Main.logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
-		try {
-			int totalRead = fr.read(arr, 0, len);
-			Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
-			if (totalRead == -1) {
-				Main.logger.logVerbose(taskID + "File pointer position is at EOF");
-				return -1;
-			}
-			
-			if (totalRead != len) {
-				Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
-				int read;
-				while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
-					Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
-					totalRead += read;
-					if (totalRead == len) {
-						Main.logger.logVerbose(taskID + "Buffer is full!");						
-						break;
-					}
-				}
-				if (read == -1) Main.logger.logVerbose(taskID + "EOF reached!");
-			}
-			
-			Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
-			return totalRead;
-		} catch (IOException e) {
-			SwingDialogs.error("unable to read the file!", "%e%", e, false);
-			e.printStackTrace();
-			return -2;
-		}
-		
-	}
-	
 //	public void killNow() {
 //		worker.interrupt();
 //		try {
