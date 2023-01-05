@@ -63,7 +63,8 @@ public class MainFrame extends JFrame {
 	private BlockingQueue<Page> fileContentQueue = null;
 	
 	private SelectedFileHandler fileHandle = null;
-
+	private Page nowDisplayed;
+	
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openFile;
@@ -463,7 +464,7 @@ public class MainFrame extends JFrame {
 
 	private void displyNewPage() {
 		
-		Page content = null;
+		nowDisplayed = null;
 		TitleGeneartor.loading(true);
 		boolean originVal = ta.isEditable();
 		editable(false);
@@ -478,20 +479,20 @@ public class MainFrame extends JFrame {
 					fileHandle.notify();
 				}
 			}
-			content = fileContentQueue.take();
+			nowDisplayed = fileContentQueue.take();
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, false);
-			content = new Page("", -1);
+			nowDisplayed = new Page("", -1);
 		}
 
 
 		if(fileHandle.isPaged()) {
-			Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + content.pageNum + " is consumed and displayed");
-			TitleGeneartor.pageNum(content.pageNum);
+			Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
+			TitleGeneartor.pageNum(nowDisplayed.pageNum);
 		}
 		
-		if (content != null) {
-			ta.setText(content.text);
+		if (nowDisplayed != null) {
+			ta.setText(nowDisplayed.text);
 			ta.setCaretPosition(0);
 			sp.getVerticalScrollBar().setValue(0);
 			undoManager.discardAllEdits();

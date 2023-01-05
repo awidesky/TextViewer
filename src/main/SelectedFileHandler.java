@@ -2,20 +2,20 @@ package main;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import gui.SwingDialogs;
 
@@ -23,15 +23,10 @@ public class SelectedFileHandler {
 
 	private File readFile;
 	private Charset readAs;
-	private FileReader fr;
-	private FileWriter fw;
 	private boolean paged;
 	private BlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
-	private StringBuilder leftOver = null;
 	
-	private ConcurrentMap<Long, String> changes = new ConcurrentHashMap<>();
-	/** page number starts from 1, not 0! */
-	private long pageNum = 1L;
+	private ArrayList<Page> changes = new ArrayList<>();
 	private ExecutorService readingThread = Executors.newSingleThreadExecutor();
 	private Future<?> readTaskFuture = null;
 	private String taskID = null;
@@ -65,7 +60,6 @@ public class SelectedFileHandler {
 	
 	public boolean isPaged() { return paged; }
 	
-	public long getPageNum() { return pageNum; }
 	public long getLoadedPagesNumber() { return setting.loadedPagesNumber; }
 	
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
@@ -77,8 +71,6 @@ public class SelectedFileHandler {
 	
 	private void readTask() {
 		
-		pageNum = 1L;
-
 		TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
@@ -114,21 +106,23 @@ public class SelectedFileHandler {
 		readFile:
 		while (true) {
 
-			String result;
-			
 			Main.logger.newLine();
-			Main.logger.log(taskID + "start reading a page #" + pageNum);
+			Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 			long startTime = System.currentTimeMillis();
-			if (changes.containsKey(pageNum)) {
-				result = changes.get(pageNum);
-			} else {
-				if((result = reader.readOnePage()) == null) break readFile;
+			
+			Page result = Optional.of(getIfEditedPage(reader.getNextPageNum())).orElse(reader.readOnePage());
+			if(result == Page.EOF) {
+				Main.logger.log(taskID + "No more page to read!");
+				break readFile; //EOF
+			} else if(result == null) {
+				Main.logger.log(taskID + "Cannot read page #" + reader.getNextPageNum() + " of file : " + readFile.getAbsolutePath());
+				break readFile; //error
 			}
 
-			Main.logger.log(taskID + "reading page #" + pageNum + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
+			Main.logger.log(taskID + "reading page #" + reader.getNextPageNum() + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
-				fileContentQueue.put(new Page(result, pageNum));
+				fileContentQueue.put(result);
 				
 				/** if only one page can be loaded in memory, wait until GUI requests new page */
 				if(setting.loadedPagesNumber == 1) {
@@ -149,10 +143,8 @@ public class SelectedFileHandler {
 				}
 			}
 
-			pageNum++;
 		} //readFile:
 		
-		Main.logger.log(taskID + "No more page to read!");
 		try {
 			fileContentQueue.put(null);
 		} catch (InterruptedException e) {
@@ -199,56 +191,51 @@ public class SelectedFileHandler {
 	
 	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { //TODO : 쓰기용 fr은 따로여야 함 - 읽던 도중에 저장하고, 다음 페이지 읽으면???
 		
-		try {
-			
-			TextReader reader = new TextReader(setting, readFile, readAs, taskID);
-			
-			if(fw != null) fw.close();
-			fw = new FileWriter(writeTo, writeAs);
+		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
+				FileWriter fw = new FileWriter(writeTo, writeAs);) {
 			
 			if(changes.isEmpty()) {
-		        int nRead;
-		        while ((nRead = fr.read(arr, 0, arr.length)) >= 0) {
-		            fw.write(arr, 0, nRead);
-		        }
+		        Stream.generate(reader::readOnePage).forEach(t -> { //TODO : re-write this logic
+					try {
+						fw.write(t.text);
+					} catch (IOException e) {
+						SwingDialogs.error("Unable to write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
+					}
+				});
 			} else {
 				for (long i = 1L; true; i++) {
-					String page = reader.readOnePage();
-					if(page == null) break;
-					if (changes.containsKey(i)) {
-						fw.write(changes.get(i).replaceAll("\\R", System.lineSeparator()));
-					} else {
-						fw.write(page);
+					Page page = reader.readOnePage();
+					if(page == Page.EOF) {
+						Main.logger.log(taskID + "No more page to read!");
+						break; //EOF
 					}
+					if(page == null) {
+						Main.logger.log(taskID + "Cannot read page #" + reader.getNextPageNum() + " of file : " + readFile.getAbsolutePath());
+						return false; //error
+					}
+					
+					fw.write(Optional.of(getIfEditedPage(i)).orElse(page).text);
 				}
 			}
-			reader.close();
-			fw.close();
-
 			return true;
-			
 		} catch (IOException e) {
-			SwingDialogs.error("Unable to open&write I/O stream!", "%e%", e, false);
+			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
 			return false;
 		}
 		
 	}
 	
 	
-	public void pageEdited(String edited) { //TODO : use this in nextpage!!
-		changes.put(pageNum, edited);
+	public void pageEdited(Page newPage) { //TODO : call this method this in nextpage!! text에는 .replaceAll("\\R", System.lineSeparator())
+		changes.add(newPage);
 	}
-	
 
-//	public void killNow() {
-//		worker.interrupt();
-//		try {
-//			if(fr != null) fr.close();
-//			if(fw != null) fw.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+	public Page getIfEditedPage(long pageNum) {
+		for(Page p : changes) {
+			if(p.pageNum == pageNum) return p;
+		}
+		return null;
+	}
 
 	public void reRead(BlockingQueue<Page> fileContentQueue2) {
 		reReading = true;
@@ -274,13 +261,6 @@ public class SelectedFileHandler {
 	private void closeReading() {
 		readingClosed = true;
 		if(readTaskFuture != null) readTaskFuture.cancel(true);
-		if(fr != null) {
-			try {
-				fr.close();
-			} catch (IOException e) {
-				SwingDialogs.error("Exception while closing FileReader!", "%e%", e, false);
-			}
-		}
 	}
 }
 

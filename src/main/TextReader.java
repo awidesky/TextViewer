@@ -7,13 +7,13 @@ import java.nio.charset.Charset;
 
 import gui.SwingDialogs;
 
-public class TextReader {
+public class TextReader implements AutoCloseable{
 
 	private File readFile;
 	private FileReader fr;
 	private StringBuilder leftOver = null;
 	private SettingData setting;
-	
+	private long nextPageNum = 1L;
 	private String taskID = null;
 	
 	private char[] arr;
@@ -35,6 +35,10 @@ public class TextReader {
 		
 	}
 	
+	
+	public long getNextPageNum() { return nextPageNum; }
+	
+	
 	public String readAll() {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
 		StringBuilder sb = new StringBuilder((int) readFile.length());
@@ -48,7 +52,11 @@ public class TextReader {
 	}
 	
 
-	public String readOnePage() {
+	/**
+	 * Read a <code>Page</code>.
+	 * @return <code>Page.EOF</code> when EOF reached, <code>null</code> if Exception occurred 
+	 * */
+	public Page readOnePage() {
 
 		int totalRead = 0;
 		
@@ -61,10 +69,10 @@ public class TextReader {
 			if (read == -1) {
 				if(totalRead == 0) {
 					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-					return null;
+					return Page.EOF;
 				} else { break; }
 			} else if(read == -2) { //Exception
-				return null; //TODO : Throw empty RuntimeException
+				return null;
 			}
 
 			strBuf.append(arr, 0, read);
@@ -84,7 +92,7 @@ public class TextReader {
 			result = strBuf.toString();
 		}
 
-		return result;
+		return new Page(result, nextPageNum++);
 	}
 	
 	
@@ -139,9 +147,9 @@ public class TextReader {
 		
 	}
 
-	public void close() {
-		// TODO Auto-generated method stub
-		
+	@Override
+	public void close() throws IOException {
+		if(fr != null) fr.close();
 	}
 	
 	
