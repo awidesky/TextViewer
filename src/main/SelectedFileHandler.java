@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import gui.SwingDialogs;
 
@@ -71,8 +70,6 @@ public class SelectedFileHandler {
 	
 	private void readTask() {
 		
-		TextReader reader = new TextReader(setting, readFile, readAs, taskID);
-		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
@@ -80,28 +77,23 @@ public class SelectedFileHandler {
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
-		if(paged) {
-			pagedFileReadLoop(reader);
-		} else {
-			try {
-				fileContentQueue.put(new Page(reader.readAll(), -1));
-			} catch (InterruptedException e) {
-				SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, false);
+		try(TextReader reader = new TextReader(setting, readFile, readAs, taskID)) {
+			if (paged) {
+				pagedFileReadLoop(reader);
+			} else {
+				fileContentQueue.put(reader.readAll());
 			}
-
-		}
-		
-		try {
-			reader.close();
+		} catch (InterruptedException e) {
+			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, false);
 		} catch (IOException e) {
-			SwingDialogs.error(taskID + "unable to close file in " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId(), "%e%", e, false);
+			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.getAbsolutePath(), e, false);
 		}
 		
 		Main.logger.log(taskID + "Read task completed in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
 	
-	private void pagedFileReadLoop(TextReader reader) {
+	private void pagedFileReadLoop(TextReader reader) throws IOException {
 
 		readFile:
 		while (true) {
@@ -111,14 +103,11 @@ public class SelectedFileHandler {
 			long startTime = System.currentTimeMillis();
 			
 			Page result = Optional.of(getIfEditedPage(reader.getNextPageNum())).orElse(reader.readOnePage());
-			if(result == Page.EOF) {
+			if(result == null) {
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
-			} else if(result == null) {
-				Main.logger.log(taskID + "Cannot read page #" + reader.getNextPageNum() + " of file : " + readFile.getAbsolutePath());
-				break readFile; //error
 			}
-
+			
 			Main.logger.log(taskID + "reading page #" + reader.getNextPageNum() + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
@@ -178,7 +167,7 @@ public class SelectedFileHandler {
 				bw.close();
 				ret = true;
 			} catch (IOException e) {
-				SwingDialogs.error("unable to write file!", "%e%", e, false);
+				SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
 				e.printStackTrace();
 				ret = false;
 			}
@@ -189,34 +178,22 @@ public class SelectedFileHandler {
 		
 	}
 	
-	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { //TODO : 쓰기용 fr은 따로여야 함 - 읽던 도중에 저장하고, 다음 페이지 읽으면???
+	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { 
+
+		Main.logger.newLine();
 		
 		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 				FileWriter fw = new FileWriter(writeTo, writeAs);) {
-			
-			if(changes.isEmpty()) {
-		        Stream.generate(reader::readOnePage).forEach(t -> { //TODO : re-write this logic
-					try {
-						fw.write(t.text);
-					} catch (IOException e) {
-						SwingDialogs.error("Unable to write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
-					}
-				});
-			} else {
-				for (long i = 1L; true; i++) {
-					Page page = reader.readOnePage();
-					if(page == Page.EOF) {
-						Main.logger.log(taskID + "No more page to read!");
-						break; //EOF
-					}
-					if(page == null) {
-						Main.logger.log(taskID + "Cannot read page #" + reader.getNextPageNum() + " of file : " + readFile.getAbsolutePath());
-						return false; //error
-					}
-					
-					fw.write(Optional.of(getIfEditedPage(i)).orElse(page).text);
-				}
-			}
+
+			Page page = reader.readOnePage();
+			do {
+				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
+				page = reader.readOnePage();
+				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
+				fw.write(Optional.of(getIfEditedPage(page.pageNum)).orElse(page).text);
+			} while (page != null);
+
+			Main.logger.log(taskID + "Reached EOF!");
 			return true;
 		} catch (IOException e) {
 			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
@@ -231,6 +208,7 @@ public class SelectedFileHandler {
 	}
 
 	public Page getIfEditedPage(long pageNum) {
+		if(changes.isEmpty()) return null;
 		for(Page p : changes) {
 			if(p.pageNum == pageNum) return p;
 		}

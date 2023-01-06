@@ -39,7 +39,7 @@ public class TextReader implements AutoCloseable{
 	public long getNextPageNum() { return nextPageNum; }
 	
 	
-	public String readAll() {
+	public Page readAll() throws IOException {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
 		StringBuilder sb = new StringBuilder((int) readFile.length());
 		int read = 0;
@@ -48,15 +48,16 @@ public class TextReader implements AutoCloseable{
 			sb.append(arr, 0, read);
 		}
 		Main.logger.log(taskID + "Reached EOF");
-		return sb.toString();
+		return new Page(sb.toString(), -1);
 	}
 	
 
 	/**
 	 * Read a <code>Page</code>.
-	 * @return <code>Page.EOF</code> when EOF reached, <code>null</code> if Exception occurred 
+	 * @return <code>Page.EOF</code> when EOF reached, <code>null</code> if the end of the stream has been reached without reading any characters
+	 * @throws IOException 
 	 * */
-	public Page readOnePage() {
+	public Page readOnePage() throws IOException {
 
 		int totalRead = 0;
 		
@@ -69,12 +70,9 @@ public class TextReader implements AutoCloseable{
 			if (read == -1) {
 				if(totalRead == 0) {
 					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
-					return Page.EOF;
+					return null;
 				} else { break; }
-			} else if(read == -2) { //Exception
-				return null;
 			}
-
 			strBuf.append(arr, 0, read);
 			totalRead += read;
 			if(totalRead == setting.charPerPage) break;
@@ -99,8 +97,9 @@ public class TextReader implements AutoCloseable{
 
 	/** Fills the array by reading <code>fr</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
+	 *  @throws IOException 
 	 * */
-	private int readArray() {
+	private int readArray() throws IOException {
 		return readArray(arr.length);
 	}
 
@@ -110,41 +109,37 @@ public class TextReader implements AutoCloseable{
 	 *  @param len amount of chars to read
 	 *  
 	 *  @return How many char(s) read<p>-1 when EOF reached<p>-2 when Exception occured
+	 *  @throws IOException 
 	 *  
 	 * */
-	private int readArray(int len) {
+	private int readArray(int len) throws IOException {
 
 		Main.logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
-		try {
-			int totalRead = fr.read(arr, 0, len);
-			Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
-			if (totalRead == -1) {
-				Main.logger.logVerbose(taskID + "File pointer position is at EOF");
-				return -1;
-			}
-			
-			if (totalRead != len) {
-				Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
-				int read;
-				while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
-					Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
-					totalRead += read;
-					if (totalRead == len) {
-						Main.logger.logVerbose(taskID + "Buffer is full!");						
-						break;
-					}
-				}
-				if (read == -1) Main.logger.logVerbose(taskID + "EOF reached!");
-			}
-			
-			Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
-			return totalRead;
-		} catch (IOException e) {
-			SwingDialogs.error("unable to read the file!", "%e%", e, false);
-			e.printStackTrace();
-			return -2;
+		int totalRead = fr.read(arr, 0, len);
+		Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
+		if (totalRead == -1) {
+			Main.logger.logVerbose(taskID + "File pointer position is at EOF");
+			return -1;
 		}
-		
+
+		if (totalRead != len) {
+			Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
+			int read;
+			while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
+				Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
+				totalRead += read;
+				if (totalRead == len) {
+					Main.logger.logVerbose(taskID + "Buffer is full!");
+					break;
+				}
+			}
+			if (read == -1)
+				Main.logger.logVerbose(taskID + "EOF reached!");
+		}
+
+		Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
+		return totalRead;
+
 	}
 
 	@Override
