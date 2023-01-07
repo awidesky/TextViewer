@@ -81,7 +81,7 @@ public class TextReader implements AutoCloseable{
 		}
 		
 		if (setting.pageEndsWithNewline) {
-			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator());
+			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator()); // TODO : 문자열이 너무 작아서 newLine 없으면
 
 			result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
 			leftOver = new StringBuilder("");
