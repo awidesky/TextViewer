@@ -64,7 +64,7 @@ public class SelectedFileHandler {
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
 		this.fileContentQueue = fileContentQueue2;
-		readTaskFuture = readingThread.submit(this::readTask);
+		readTaskFuture = readingThread.submit(this::readTask); //TODO : why hang??
 		
 	}
 	
@@ -84,9 +84,9 @@ public class SelectedFileHandler {
 				fileContentQueue.put(reader.readAll());
 			}
 		} catch (InterruptedException e) {
-			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, false);
+			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, true);
 		} catch (IOException e) {
-			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.getAbsolutePath(), e, false);
+			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.getAbsolutePath(), e, true);
 		}
 		
 		Main.logger.log(taskID + "Read task completed in " + (System.currentTimeMillis()- startTime) + "ms");
@@ -128,7 +128,7 @@ public class SelectedFileHandler {
 					Main.logger.log(taskID + "File reading task has canceled.");
 					return;
 				} else {
-					SwingDialogs.error(taskID + "cannot read file!", "%e%", e, false);
+					SwingDialogs.error(taskID + "cannot read file!", "%e%", e, true);
 				}
 			}
 
@@ -137,7 +137,7 @@ public class SelectedFileHandler {
 		try {
 			fileContentQueue.put(null);
 		} catch (InterruptedException e) {
-			SwingDialogs.error("cannot read file!", "%e%", e, false);
+			SwingDialogs.error("cannot read file!", "%e%", e, true);
 		}
 		Main.logger.log(taskID + "File reading completed");
 
@@ -167,7 +167,7 @@ public class SelectedFileHandler {
 				bw.close();
 				ret = true;
 			} catch (IOException e) {
-				SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
+				SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, true);
 				e.printStackTrace();
 				ret = false;
 			}
@@ -196,7 +196,7 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "Reached EOF!");
 			return true;
 		} catch (IOException e) {
-			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, false);
+			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, true);
 			return false;
 		}
 		

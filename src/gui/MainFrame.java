@@ -183,7 +183,7 @@ public class MainFrame extends JFrame {
 						List<File> list = (List<File>) tr.getTransferData(flavors[0]);
 
 						if(list.size() > 1) {
-							SwingDialogs.error("Drag & Drop error!", "Do not drag & drop more than one file!", null, false);
+							SwingDialogs.error("Drag & Drop error!", "Do not drag & drop more than one file!", null, true);
 							return;
 						}
 						 
@@ -489,7 +489,7 @@ public class MainFrame extends JFrame {
 			}
 			nowDisplayed = fileContentQueue.take();
 		} catch (InterruptedException e1) {
-			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, false);
+			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1);
 		}
 

@@ -90,7 +90,7 @@ public class FontDialog extends JDialog {
 			try {
 				ref.set(new Font(Optional.ofNullable(fontName.getSelectedItem()).orElseGet(() -> new JLabel().getFont()).toString(), fontStyle, Integer.parseInt(fontSize.getText())));
 			} catch (NumberFormatException err) {
-				SwingDialogs.error("Invalid font size!!", "%e%", err, false);
+				SwingDialogs.error("Invalid font size!!", "%e%", err, true);
 				return;
 			}
 			setVisible(false);

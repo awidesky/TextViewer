@@ -85,7 +85,7 @@ public class SettingDialog extends JDialog {
 				if(!setting.set(Integer.valueOf(tf1.getText()), Integer.valueOf(tf2.getText()), chb.isSelected(), Long.valueOf(Main.getByteSize(tf4.getText() + cb.getSelectedItem())), Integer.valueOf(tf5.getText())))
 					return;
 			} catch(NumberFormatException ex) {
-				SwingDialogs.error("Invalid input!", "%e%", ex, false);
+				SwingDialogs.error("Invalid input!", "%e%", ex, true);
 				return;
 			}
 			setVisible(false);

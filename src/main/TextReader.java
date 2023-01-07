@@ -29,7 +29,7 @@ public class TextReader implements AutoCloseable{
 		try {
 			this.fr = new FileReader(readFile, readAs);
 		} catch (IOException e) {
-			SwingDialogs.error("unable to read the file!", "%e%", e, false);
+			SwingDialogs.error("unable to read the file!", "%e%", e, true);
 			return;
 		}
 		

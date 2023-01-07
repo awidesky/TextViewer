@@ -52,7 +52,7 @@ public class SettingData {
 		if(loadedPagesNumber < 1) errContent = "Number of loaded page must be positive number!";
 
 		if(errContent != null) {
-			SwingDialogs.error("Invalid input!", errContent, null, false);
+			SwingDialogs.error("Invalid input!", errContent, null, true);
 			return false;
 		} else {
 			
