@@ -102,7 +102,7 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 			long startTime = System.currentTimeMillis();
 			
-			Page result = Optional.of(getIfEditedPage(reader.getNextPageNum())).orElse(reader.readOnePage());
+			Page result = Optional.ofNullable(getIfEditedPage(reader.getNextPageNum())).orElse(reader.readOnePage());
 			if(result == null) {
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
@@ -190,7 +190,7 @@ public class SelectedFileHandler {
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 				page = reader.readOnePage();
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				fw.write(Optional.of(getIfEditedPage(page.pageNum)).orElse(page).text);
+				fw.write(Optional.ofNullable(getIfEditedPage(page.pageNum)).orElse(page).text);
 			} while (page != null);
 
 			Main.logger.log(taskID + "Reached EOF!");
