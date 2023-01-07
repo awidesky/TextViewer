@@ -203,7 +203,7 @@ public class SelectedFileHandler {
 	}
 	
 	
-	public void pageEdited(Page newPage) { //TODO : call this method this in nextpage!! text에는 .replaceAll("\\R", System.lineSeparator())
+	public void pageEdited(Page newPage) { 
 		changes.add(newPage);
 	}
 

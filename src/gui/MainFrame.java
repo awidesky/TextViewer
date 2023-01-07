@@ -63,7 +63,8 @@ public class MainFrame extends JFrame {
 	private BlockingQueue<Page> fileContentQueue = null;
 	
 	private SelectedFileHandler fileHandle = null;
-	private Page nowDisplayed;
+	private long pageNum = 1L;
+	private boolean isEdited = false;
 	
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
@@ -138,8 +139,8 @@ public class MainFrame extends JFrame {
 	        }
 
 	        @Override
-	        public void changedUpdate(DocumentEvent arg0) {
-	        	changed(arg0);
+	        public void changedUpdate(DocumentEvent e) {
+	        	changed(e);
 	        }
 	        
 	        private void changed(DocumentEvent e) {
@@ -149,8 +150,10 @@ public class MainFrame extends JFrame {
   	        	
   	        	undo.setEnabled(undoManager.canUndo());
   				redo.setEnabled(undoManager.canRedo());
-	        	if(!getTitle().startsWith("*")) {
-	        		logger.log("File Edited! : " + e.getType().toString());
+  				logger.log("File Edited! : " + e.getType().toString());
+
+  				if(!getTitle().startsWith("*")) {
+	        		isEdited = true;
 	        		closeFile.setEnabled(true);
 	        		saveFile.setEnabled(true);
 	        		TitleGeneartor.edited(true);
@@ -291,7 +294,10 @@ public class MainFrame extends JFrame {
 			undoManager.undo();
 			undo.setEnabled(undoManager.canUndo());
 			redo.setEnabled(undoManager.canRedo());
-			if(!undoManager.canUndo()) TitleGeneartor.edited(false);
+			if(!undoManager.canUndo()) {
+				isEdited = false;
+				TitleGeneartor.edited(false);
+			}
 		});
 		undo.setEnabled(false);
 		redo = new JMenuItem("Redo", KeyEvent.VK_Y);
@@ -458,16 +464,18 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled()) return;
+		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum));
 		displyNewPage();
 		
 	}
 
 	private void displyNewPage() {
 		
-		nowDisplayed = null;
+		Page nowDisplayed = null;
 		TitleGeneartor.loading(true);
 		boolean originVal = ta.isEditable();
 		editable(false);
+		isEdited = false;
 		newPageReading.set(true);
 		try {
 			/**
@@ -488,7 +496,7 @@ public class MainFrame extends JFrame {
 
 		if(fileHandle.isPaged()) {
 			Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
-			TitleGeneartor.pageNum(nowDisplayed.pageNum);
+			TitleGeneartor.pageNum((pageNum = nowDisplayed.pageNum));
 		}
 		
 		if (nowDisplayed != null) {
