@@ -478,10 +478,11 @@ public class MainFrame extends JFrame {
 		isEdited = false;
 		newPageReading.set(true);
 		try {
+			
+			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
 			/**
 			 * only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
 			 * */
-			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
 				ta.setText(null);
 				synchronized (fileHandle) {
 					fileHandle.notify();
