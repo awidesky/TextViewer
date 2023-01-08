@@ -361,6 +361,7 @@ public class MainFrame extends JFrame {
 		reRead.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		reRead.getAccessibleContext().setAccessibleDescription("Re-read from first page");
 		reRead.addActionListener((e) -> {
+			next.setEnabled(true);
 			makeNewQueue();
 			fileHandle.reRead(fileContentQueue);
 			nextPage();
@@ -463,7 +464,7 @@ public class MainFrame extends JFrame {
 	
 	private void nextPage() {
 		
-		if (!pageMenu.isEnabled()) return;
+		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
 		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum));
 		displyNewPage();
 		
@@ -504,8 +505,8 @@ public class MainFrame extends JFrame {
 			sp.getVerticalScrollBar().setValue(0);
 			undoManager.discardAllEdits();
 		} else {
-			SwingDialogs.information("No more page to read!", "Reached EOF!", false); //TODO : test(verbose)
-			disableNextPageMenu();
+			SwingDialogs.information("No more page to read!", "Reached EOF!", false);
+			next.setEnabled(false);
 		}
 		
 		TitleGeneartor.loading(false);
@@ -516,10 +517,12 @@ public class MainFrame extends JFrame {
 
 	private void enableNextPageMenu() {
 		pageMenu.setEnabled(true);
+		next.setEnabled(true);
 	}
 	
 	private void disableNextPageMenu() {
 		pageMenu.setEnabled(false);
+		next.setEnabled(false);
 	}
 
 

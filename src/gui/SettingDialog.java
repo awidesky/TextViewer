@@ -71,7 +71,7 @@ public class SettingDialog extends JDialog {
 		label4.setBounds(5, 98, label4.getPreferredSize().width, label4.getPreferredSize().height);
 		tf4.setBounds(8 + label4.getPreferredSize().width, 95, 40, tf4.getPreferredSize().height);
 		tf4.setText("" + setting.singlePageFileSizeLimit);
-		cb.setSelectedIndex(0);
+		cb.setSelectedIndex(0); // 1024로 계속 나눠 보면서 딱 떨어질 때까지만 하고 정수로 해서 KB 등으로 표시
 		cb.setBounds(51 + label4.getPreferredSize().width, 95, cb.getPreferredSize().width, 22);
 		
 		label5.setBounds(5, 128, label5.getPreferredSize().width, label5.getPreferredSize().height);

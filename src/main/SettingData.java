@@ -11,7 +11,7 @@ public class SettingData {
 	/** if<code>true</code>, every page is ended as a whole line even if number of characters of the page is less than <code>charPerPage</code> */
 	public boolean pageEndsWithNewline;
 	/** if a file is larger than <code>singlePageFileSizeLimit</code> byte, read it as multi-paged file */
-	public long singlePageFileSizeLimit;
+	public long singlePageFileSizeLimit; //TODO : just delete it. file larger than a page could be paged file. maybe set if file is paged AFTER reading a page?(1800이상인지 미리 알 길이 없으니까. handle에 isReachedEOF 메소드..??)
 	/**
 	 * <pre>
 	 * How many page will be stored in memory(include one that displayed in <code>TextViewer</code>)
@@ -24,8 +24,8 @@ public class SettingData {
 	
 	
 	
-	public SettingData(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
-		if(!set(bufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesNumber)) {
+	public SettingData(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
+		if(!set(charBufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesNumber)) {
 			this.charBufSize = -1;
 			this.charPerPage = -1;
 			this.pageEndsWithNewline = false;
@@ -42,11 +42,11 @@ public class SettingData {
 	}
 	
 	
-	public boolean set(int bufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
+	public boolean set(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
 
 		String errContent = null;
 		
-		if(bufSize < 1) errContent = "Buffer size must be bigger than zero!"; //TODO : bug when 1? 
+		if(charBufSize < 1) errContent = "Buffer size must be bigger than zero!"; //TODO : bug when 1? 
 		if(charPerPage < 1) errContent = "There should be more than zero characters per page!"; 
 		if(singlePageFileSizeLimit < 1) errContent = "Single-paged file limit must be bigger than zero!"; 
 		if(loadedPagesNumber < 1) errContent = "Number of loaded page must be positive number!";
@@ -56,7 +56,7 @@ public class SettingData {
 			return false;
 		} else {
 			
-			this.charBufSize = bufSize;
+			this.charBufSize = charBufSize;
 			this.charPerPage = charPerPage;
 			this.pageEndsWithNewline = pageEndsWithNewline;
 			this.singlePageFileSizeLimit = singlePageFileSizeLimit;

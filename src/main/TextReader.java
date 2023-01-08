@@ -11,7 +11,7 @@ public class TextReader implements AutoCloseable{
 
 	private File readFile;
 	private FileReader fr;
-	private StringBuilder leftOver = null;
+	private StringBuilder leftOver = new StringBuilder();
 	private SettingData setting;
 	private long nextPageNum = 1L;
 	private String taskID = null;
@@ -68,8 +68,8 @@ public class TextReader implements AutoCloseable{
 		while (true) {
 			int read = readArray(nextRead);
 			if (read == -1) {
-				if(totalRead == 0) {
-					Main.logger.log("Reached EOF, No more page to read!");
+				if(totalRead == 0 && leftOver.length() == 0) {
+					Main.logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
 					return null;
 				} else { break; }
 			}
@@ -84,7 +84,7 @@ public class TextReader implements AutoCloseable{
 			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator()); // TODO : 문자열이 너무 작아서 newLine 없으면
 
 			result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
-			leftOver = new StringBuilder("");
+			leftOver = new StringBuilder();
 			leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
 		} else {
 			result = strBuf.toString();

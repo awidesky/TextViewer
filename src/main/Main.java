@@ -19,16 +19,15 @@ public class Main {
 	 * <pre>
 	 *  Default constants explanations
 	 *  
-	 *  <code>bufSize</code> : 16KB
+	 *  <code>bufSize</code> : same as <code>charPerPage</code>
 	 *  <code>charPerPage</code> : 1 page of A4 sheet can contain roughly 3000 chars(10pt) at most. 2/3 of that will do
 	 *  <code>pageEndsWithNewline</code> : true is usually expected by normal users
 	 *  <code>singlePageFileSizeLimit</code> : <code>Windows notepad</code> seems it can't handle files larger than 45 or 55KB. that might be a good limit for paged file
-	 *  <code>contentQueueLength</code> : 1 makes at most 3 pages read in memory
-	 *  (one is displaying, one is on the queue, one is read by SelectedFileHandler and ready to be put)
-	 *  triple buffering(48KB) won't be considered a huge RAM , and will avoid lag
+	 *  <code>loadedPagesNumber</code> : 1 makes at most 1 pages read in memory(include one that <code>TextViewer</code> is holding for display
+	 *  triple buffering(a few KB) won't be considered a huge RAM , and will avoid lag
 	 *  </pre> 
 	 *  */
-	public static SettingData setting = new SettingData(1024 * 16, 1800, true, 55 * 1024, 3);
+	public static SettingData setting = new SettingData(1800, 1800, true, 55 * 1024, 3);
 	
 	public static LoggerThread logger = null;
 	
@@ -37,6 +36,9 @@ public class Main {
 		//TODO : known bugs/problems below
 		/**
 		 * very small buffer/pagelimit size
+		 * 다시 열 때 파일 위치 바뀜?
+		 * SettingDialog pre-read in "buffer" 바꿔야 함... loadedPagesNumber로
+		 * loadedPagesNumber가 1일때 hang(특히 EDF일때)
 		 * */
 	 
 		boolean verbose = false;
