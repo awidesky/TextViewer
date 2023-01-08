@@ -1,8 +1,12 @@
 package main;
 
+
+/**
+ * Read-only immutable object that represents a Page.
+ * */
 public class Page {
 
-	public String text;
+	public final String text;
 	/** page number starts from 1, not 0! */
 	public final long pageNum;
 	
