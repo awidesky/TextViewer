@@ -57,14 +57,15 @@ public class Main {
 		}
 		
 		try {
-			
-			File logFolder = new File("." + File.separator + "logs");
-			File logFile = new File(logFolder.getAbsolutePath() + File.separator + "log-" + new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss").format(new Date()) + ".txt");
-			logFolder.mkdirs();
-			logFile.createNewFile();
-			
-			if(logger == null) logger = new LoggerThread(new FileOutputStream(logFile));
-			
+			if (logger == null) {
+				File logFolder = new File("." + File.separator + "logs");
+				File logFile = new File(logFolder.getAbsolutePath() + File.separator + "log-"
+						+ new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss").format(new Date()) + ".txt");
+				logFolder.mkdirs();
+				logFile.createNewFile();
+
+				logger = new LoggerThread(new FileOutputStream(logFile));
+			}
 		} catch (IOException e) {
 
 			logger = new LoggerThread();
