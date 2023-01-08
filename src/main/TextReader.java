@@ -69,7 +69,7 @@ public class TextReader implements AutoCloseable{
 			int read = readArray(nextRead);
 			if (read == -1) {
 				if(totalRead == 0) {
-					SwingDialogs.information("No more page to read!", "Reached EOF!", false);
+					Main.logger.log("Reached EOF, No more page to read!");
 					return null;
 				} else { break; }
 			}

@@ -135,7 +135,7 @@ public class SelectedFileHandler {
 		} //readFile:
 		
 		try {
-			fileContentQueue.put(null);
+			fileContentQueue.put(Page.EOF);
 		} catch (InterruptedException e) {
 			SwingDialogs.error("cannot read file!", "%e%", e, true);
 		}

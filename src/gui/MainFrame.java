@@ -493,24 +493,23 @@ public class MainFrame extends JFrame {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1);
 		}
-
-
-		if(fileHandle.isPaged()) {
-			Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
-			TitleGeneartor.pageNum((pageNum = nowDisplayed.pageNum));
-		}
 		
-		if (nowDisplayed != null) {
+		if (nowDisplayed != Page.EOF) {
+			if(fileHandle.isPaged()) {
+				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
+				TitleGeneartor.pageNum((pageNum = nowDisplayed.pageNum));
+			}
 			ta.setText(nowDisplayed.text);
 			ta.setCaretPosition(0);
 			sp.getVerticalScrollBar().setValue(0);
 			undoManager.discardAllEdits();
-			TitleGeneartor.loading(false);
-			editable(originVal);
 		} else {
+			SwingDialogs.information("No more page to read!", "Reached EOF!", false); //TODO : test(verbose)
 			disableNextPageMenu();
-			setting.setEnabled(true);
 		}
+		
+		TitleGeneartor.loading(false);
+		editable(originVal);
 		newPageReading.set(false);
 		
 	}
