@@ -98,17 +98,18 @@ public class SelectedFileHandler {
 		readFile:
 		while (true) {
 
+			long nowPage = reader.getNextPageNum();
 			Main.logger.newLine();
-			Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
+			Main.logger.log(taskID + "start reading a page #" + nowPage);
 			long startTime = System.currentTimeMillis();
 			
-			Page result = Optional.ofNullable(getIfEditedPage(reader.getNextPageNum())).orElse(reader.readOnePage());
+			Page result = Optional.ofNullable(getIfEditedPage(nowPage)).orElse(reader.readOnePage());
 			if(result == null) {
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
 			}
 			
-			Main.logger.log(taskID + "reading page #" + reader.getNextPageNum() + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
+			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
 				/** if only one page can be loaded in memory, wait until GUI requests new page */
