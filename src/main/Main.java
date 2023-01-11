@@ -35,9 +35,6 @@ public class Main {
 		
 		//TODO : known bugs/problems below
 		/**
-		 * very small buffer/pagelimit size
-		 * 다시 열 때 파일 위치 바뀜?
-		 * SettingDialog pre-read in "buffer" 바꿔야 함... loadedPagesNumber로
 		 * loadedPagesNumber가 1일때 hang(특히 EDF일때)
 		 * */
 	 
