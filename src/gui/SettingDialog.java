@@ -37,9 +37,8 @@ public class SettingDialog extends JDialog {
 	private JTextField tf4 = new JTextField();
 	private JComboBox<String> cb = new JComboBox<String>(new String[] { "B", "KB", "MB", "GB" });
 	
-	private JLabel label5 = new JLabel("Pre-read ");
+	private JLabel label5 = new JLabel("Loaded page(s) in memory :");
 	private JTextField tf5 = new JTextField();
-	private JLabel page = new JLabel("page(s) in buffer");
 	
 	private JButton done = new JButton("done");
 	
@@ -77,7 +76,6 @@ public class SettingDialog extends JDialog {
 		label5.setBounds(5, 128, label5.getPreferredSize().width, label5.getPreferredSize().height);
 		tf5.setBounds(8 + label5.getPreferredSize().width, 125, 20, tf5.getPreferredSize().height);
 		tf5.setText("" + setting.loadedPagesNumber);
-		page.setBounds(35 + label5.getPreferredSize().width, 124, page.getPreferredSize().width, 22);
 		
 		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2 - 10, getSize().height - done.getPreferredSize().height - 45, done.getPreferredSize().width, done.getPreferredSize().height);
 		done.addActionListener((e) -> {
@@ -105,7 +103,6 @@ public class SettingDialog extends JDialog {
 		add(cb);
 		add(label5);
 		add(tf5);
-		add(page);
 		add(done);
 		
 		setVisible(true);
