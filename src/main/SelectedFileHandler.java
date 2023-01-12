@@ -64,7 +64,7 @@ public class SelectedFileHandler {
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
 		this.fileContentQueue = fileContentQueue2;
-		readTaskFuture = readingThread.submit(this::readTask); //TODO : why hang??
+		readTaskFuture = readingThread.submit(this::readTask);
 		
 	}
 	
@@ -112,14 +112,14 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			startTime = System.currentTimeMillis();
 			try {
+				fileContentQueue.put(result);
 				/** if only one page can be loaded in memory, wait until GUI requests new page */
 				if(setting.loadedPagesNumber == 1) {
+					result = null;
 					synchronized (this) {
 						wait();
 					}
 				}
-				
-				fileContentQueue.put(result);
 			} catch (InterruptedException e) {
 				if(reReading) {
 					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");

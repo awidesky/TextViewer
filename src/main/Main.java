@@ -35,7 +35,7 @@ public class Main {
 		
 		//TODO : known bugs/problems below
 		/**
-		 * loadedPagesNumber가 1일때 hang(특히 EDF일때)
+		 * when reached EOF, ta is emptied
 		 * */
 	 
 		boolean verbose = false;

@@ -466,6 +466,7 @@ public class MainFrame extends JFrame {
 		
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
 		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum));
+
 		displyNewPage();
 		
 	}
@@ -481,9 +482,9 @@ public class MainFrame extends JFrame {
 		try {
 			
 			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
-			/**
-			 * only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
-			 * */
+				/**
+			 	* only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
+			 	* */
 				ta.setText(null);
 				synchronized (fileHandle) {
 					fileHandle.notify();
