@@ -84,6 +84,8 @@ public class MainFrame extends JFrame {
 
 	/** <code>true</code> if new content is being written in TextArea */
 	private AtomicBoolean newPageReading = new AtomicBoolean(false);
+
+	private boolean noNextPage = false;
 	
 	
 	public MainFrame() {
@@ -423,6 +425,7 @@ public class MainFrame extends JFrame {
 		}
 		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
 		
+		noNextPage = false;
 		fileHandle.startNewRead(fileContentQueue);
 		displyNewPage();
 		
@@ -465,7 +468,7 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
-		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum));
+		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum, false));
 
 		displyNewPage();
 		
@@ -481,11 +484,13 @@ public class MainFrame extends JFrame {
 		newPageReading.set(true);
 		try {
 			
+			/**
+			 * only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
+			 * */
 			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
-				/**
-			 	* only one page can be loaded in memory, so <code>fileHandle</code> is waiting, now we wake it up.
-			 	* */
-				ta.setText(null);
+				
+				if(!noNextPage && !fileHandle.isReachedEOF()) ta.setText(null); /** next page is EOF */
+				
 				synchronized (fileHandle) {
 					fileHandle.notify();
 				}
@@ -493,10 +498,11 @@ public class MainFrame extends JFrame {
 			nowDisplayed = fileContentQueue.take();
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
-			nowDisplayed = new Page("", -1);
+			nowDisplayed = new Page("", -1, true);
 		}
 		
 		if (nowDisplayed != Page.EOF) {
+			if(nowDisplayed.isLastPage) noNextPage = true;
 			if(fileHandle.isPaged()) {
 				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
 				TitleGeneartor.pageNum((pageNum = nowDisplayed.pageNum));

@@ -48,7 +48,7 @@ public class TextReader implements AutoCloseable{
 			sb.append(arr, 0, read);
 		}
 		Main.logger.log(taskID + "Reached EOF");
-		return new Page(sb.toString(), -1);
+		return new Page(sb.toString(), -1, true);
 	}
 	
 
@@ -60,6 +60,7 @@ public class TextReader implements AutoCloseable{
 	public Page readOnePage() throws IOException {
 
 		int totalRead = 0;
+		boolean isLastPage = false;
 		
 		StringBuilder strBuf = new StringBuilder("");
 		String result = null;
@@ -71,7 +72,10 @@ public class TextReader implements AutoCloseable{
 				if(totalRead == 0 && leftOver.length() == 0) {
 					Main.logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
 					return null;
-				} else { break; }
+				} else {
+					isLastPage = true;
+					break;
+				}
 			}
 			strBuf.append(arr, 0, read);
 			totalRead += read;
@@ -90,7 +94,7 @@ public class TextReader implements AutoCloseable{
 			result = strBuf.toString();
 		}
 
-		return new Page(result, nextPageNum++);
+		return new Page(result, nextPageNum++, isLastPage);
 	}
 	
 	
@@ -118,7 +122,7 @@ public class TextReader implements AutoCloseable{
 		int totalRead = fr.read(arr, 0, len);
 		Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
 		if (totalRead == -1) {
-			Main.logger.logVerbose(taskID + "File pointer position is at EOF");
+			Main.logger.logVerbose(taskID + "File pointer position was at EOF");
 			return -1;
 		}
 

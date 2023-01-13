@@ -6,7 +6,7 @@ package main;
  * */
 public class Page {
 	
-	public static final Page EOF = new Page(null, -2) {
+	public static final Page EOF = new Page(null, -2, true) {
 		@Override
 		public boolean equals(Object other) {
 			return other != null && other == this; 
@@ -16,9 +16,12 @@ public class Page {
 	public final String text;
 	/** page number starts from 1, not 0! */
 	public final long pageNum;
+	/** Is it guaranteed that this is the last page of the file? */
+	public final boolean isLastPage;
 	
-	public Page(String text, long pageNum) {
+	public Page(String text, long pageNum, boolean isLastPage) {
 		this.text = text;
 		this.pageNum = pageNum;
+		this.isLastPage = isLastPage;
 	}
 }

@@ -33,11 +33,6 @@ public class Main {
 	
 	public static void main(String[] args) { 
 		
-		//TODO : known bugs/problems below
-		/**
-		 * when reached EOF, ta is emptied
-		 * */
-	 
 		boolean verbose = false;
 		
 		for(int i = 0; i < args.length; i++) {

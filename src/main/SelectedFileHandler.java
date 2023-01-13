@@ -33,6 +33,7 @@ public class SelectedFileHandler {
 	private boolean reReading = false;
 	/** Is reading task of this SelectedFileHandler closed?? */
 	private boolean readingClosed = false;
+	private boolean reachedEOF = false;
 	
 	/** Even if <code>Main.setting</code> changes, current instance of <code>setting</code> will not affected. */
 	private final SettingData setting = new SettingData(Main.setting);
@@ -59,6 +60,8 @@ public class SelectedFileHandler {
 	
 	public boolean isPaged() { return paged; }
 	
+	public boolean isReachedEOF() { return reachedEOF; }
+	
 	public long getLoadedPagesNumber() { return setting.loadedPagesNumber; }
 	
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
@@ -69,6 +72,8 @@ public class SelectedFileHandler {
 	}
 	
 	private void readTask() {
+		
+		reachedEOF = false;
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
@@ -105,8 +110,11 @@ public class SelectedFileHandler {
 			
 			Page result = Optional.ofNullable(getIfEditedPage(nowPage)).orElse(reader.readOnePage());
 			if(result == null) {
+				reachedEOF = true;
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
+			} else if(result.isLastPage) {
+				reachedEOF = true;
 			}
 			
 			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
