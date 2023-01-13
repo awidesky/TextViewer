@@ -149,7 +149,7 @@ public class SelectedFileHandler {
 	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used.
 	 * @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 * */
-	public boolean write(File writeTo, Charset writeAs, String text) { //TODO : log
+	public boolean write(File writeTo, Charset writeAs, String text) {
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));

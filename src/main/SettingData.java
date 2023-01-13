@@ -11,7 +11,7 @@ public class SettingData {
 	/** if<code>true</code>, every page is ended as a whole line even if number of characters of the page is less than <code>charPerPage</code> */
 	public boolean pageEndsWithNewline;
 	/** if a file is larger than <code>singlePageFileSizeLimit</code> byte, read it as multi-paged file */
-	public long singlePageFileSizeLimit; //TODO : just delete it. file larger than a page could be paged file. maybe set if file is paged AFTER reading a page?(1800이상인지 미리 알 길이 없으니까. handle에 isReachedEOF 메소드..??)
+	public long singlePageFileSizeLimit;
 	/**
 	 * <pre>
 	 * How many page will be stored in memory(include one that displayed in <code>TextViewer</code>)
@@ -46,7 +46,7 @@ public class SettingData {
 
 		String errContent = null;
 		
-		if(charBufSize < 1) errContent = "Buffer size must be bigger than zero!"; //TODO : bug when 1? 
+		if(charBufSize < 1) errContent = "Buffer size must be bigger than zero!";
 		if(charPerPage < 1) errContent = "There should be more than zero characters per page!"; 
 		if(singlePageFileSizeLimit < 1) errContent = "Single-paged file limit must be bigger than zero!"; 
 		if(loadedPagesNumber < 1) errContent = "Number of loaded page must be positive number!";
