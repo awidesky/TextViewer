@@ -81,46 +81,65 @@ public class Main {
     }
 	
 
-	public static String formatFileSize(long length) {
+	public static String formatFileSize(long fileSize) {
 		
-		if(length == 0L) return "0.00byte";
+		if(fileSize == 0L) return "0.00byte";
 		
-		switch ((int)(Math.log(length) / Math.log(1024))) {
+		switch ((int)(Math.log(fileSize) / Math.log(1024))) {
 		
 		case 0:
-			return String.format("%d", length) + "byte";
+			return String.format("%d", fileSize) + "byte";
 		case 1:
-			return String.format("%.2f", length / 1024.0) + "KB";
+			return String.format("%.2f", fileSize / 1024.0) + "KB";
 		case 2:
-			return String.format("%.2f", length / (1024.0 * 1024)) + "MB";
+			return String.format("%.2f", fileSize / (1024.0 * 1024)) + "MB";
 		case 3:
-			return String.format("%.2f", length / (1024.0 * 1024 * 1024)) + "GB";
+			return String.format("%.2f", fileSize / (1024.0 * 1024 * 1024)) + "GB";
 		}
-		return String.format("%.2f", length / (1024.0 * 1024 * 1024 * 1024)) + "TB";
+		return String.format("%.2f", fileSize / (1024.0 * 1024 * 1024 * 1024)) + "TB";
 		
 	}
 	
+	/**
+	 * Result will be integer number only
+	 * */
+	public static String formatExactFileSize(long fileSize) {
+		
+		if(fileSize == 0L) return "0byte";
+		
+		
+		String arr[] = {"B", "KB", "MB", "GB"};
+		
+		for(String prefix : arr) {
+			if(fileSize % 1024 != 0) {
+				return fileSize + prefix;
+			} else { fileSize /= 1024; }
+		}
+		
+		return fileSize + "TB";
+		
+	}
 	
-	public static int getByteSize(String lengthText) {
+	public static long getExactByteSize(String lengthText) {
 		
-		if(lengthText.matches("[0-9]+(\\.[0-9]+)?")) return 0;
+		if(lengthText.matches("[0-9]+")) return 0;
 		
-		double result;
+		long result;
 		
-		if(lengthText.endsWith("byte"))
-			result = (Double.parseDouble(lengthText.replace("byte", "")));
-		else if(lengthText.endsWith("KB"))
-			result = (Double.parseDouble(lengthText.replace("KB", "")) * 1024);
+		if(lengthText.endsWith("KB"))
+			result = (Long.parseLong(lengthText.replace("KB", "")) * 1024);
 		else if(lengthText.endsWith("MB"))
-			result = (Double.parseDouble(lengthText.replace("MB", "")) * 1024 * 1024);
+			result = (Long.parseLong(lengthText.replace("MB", "")) * 1024 * 1024);
 		else if(lengthText.endsWith("GB"))
-			result = (Double.parseDouble(lengthText.replace("GB", "")) * 1024 * 1024 * 1024);
+			result = (Long.parseLong(lengthText.replace("GB", "")) * 1024 * 1024 * 1024);
+		else if(lengthText.endsWith("TB"))
+			result = (Long.parseLong(lengthText.replace("TB", "")) * 1024 * 1024 * 1024 * 1024);
 		else if(lengthText.endsWith("B"))
-			result = (Double.parseDouble(lengthText.replace("B", "")));
+			result = (Long.parseLong(lengthText.replace("B", "")));
 		else
 			throw new NumberFormatException("\"" + lengthText + "\" is invalid!");
 		
-		return (int)result;
+		return result;
 		
 	}
 
