@@ -3,6 +3,8 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -23,24 +25,24 @@ public class SettingDialog extends JDialog {
 	private static final long serialVersionUID = 2127297466348994156L;
 	
 	
-	private JLabel label1 = new JLabel("Prefered Buffer size :");
-	private JTextField tf1 = new JTextField();
-	
-	private JLabel label2 = new JLabel("Characters per page :");
-	private JTextField tf2 = new JTextField();
-	private JLabel chars = new JLabel("char(s)");
-	
-	private JLabel label3 = new JLabel("Page always ends with newline");
-	private JCheckBox chb = new JCheckBox();
+	private JLabel lb_bufSize = new JLabel("Prefered Buffer size :");
+	private JTextField tf_bufSize = new JTextField();
 
-	private JLabel label4= new JLabel("Single-paged file limit :");
-	private JTextField tf4 = new JTextField();
-	private JComboBox<String> cb = new JComboBox<String>(new String[] { "B", "KB", "MB", "GB" });
+	private JLabel lb_limit = new JLabel("Single-paged file limit :");
+	private JTextField tf_limit = new JTextField();
+	private JComboBox<String> cmb_limit = new JComboBox<String>(new String[] { "B", "KB", "MB", "GB" });
 	
-	private JLabel label5 = new JLabel("Loaded page(s) in memory :");
-	private JTextField tf5 = new JTextField();
+	private JLabel lb_charPerPage = new JLabel("Characters per page :");
+	private JTextField tf_charPerPage = new JTextField();
+	private JLabel lb_chars = new JLabel("char(s)");
 	
-	private JButton done = new JButton("done");
+	private JLabel lb_newLine = new JLabel("Page always ends with newline");
+	private JCheckBox chb_newLine = new JCheckBox();
+	
+	private JLabel lb_Queue = new JLabel("Loaded page(s) in memory :");
+	private JTextField tf__Queue = new JTextField();
+	
+	private JButton btn_done = new JButton("done");
 	
 	public SettingDialog(SettingData setting) {
 		
@@ -54,33 +56,37 @@ public class SettingDialog extends JDialog {
 		setResizable(false);
 		setLayout(null);
 		
-		label1.setBounds(5, 8, label1.getPreferredSize().width, label1.getPreferredSize().height);
-		tf1.setBounds(8 + label1.getPreferredSize().width, 5, 60, tf1.getPreferredSize().height);
-		tf1.setText("" + setting.charBufSize);
+		lb_bufSize.setBounds(5, 8, lb_bufSize.getPreferredSize().width, lb_bufSize.getPreferredSize().height);
+		tf_bufSize.setBounds(8 + lb_bufSize.getPreferredSize().width, 5, 60, tf_bufSize.getPreferredSize().height);
+		tf_bufSize.setText("" + setting.charBufSize);
 		
-		label2.setBounds(5, 38, label2.getPreferredSize().width, label2.getPreferredSize().height);
-		tf2.setBounds(8 + label2.getPreferredSize().width, 35, 80, tf2.getPreferredSize().height);
-		tf2.setText("" + setting.charPerPage);
-		chars.setBounds(70 + label1.getPreferredSize().width, 5, chars.getPreferredSize().width, 22);
+		lb_limit.setBounds(5, 38, lb_limit.getPreferredSize().width, lb_limit.getPreferredSize().height);
+		tf_limit.setBounds(8 + lb_limit.getPreferredSize().width, 35, 40, tf_limit.getPreferredSize().height);
+		Scanner sc = new Scanner(Main.formatExactFileSize(setting.singlePageFileSizeLimit));
+		sc.useDelimiter(Pattern.compile("\\D+"));
+		tf_limit.setText(String.valueOf(sc.nextLong()));
+		sc.useDelimiter(Pattern.compile("\\d+"));
+		cmb_limit.setSelectedItem(sc.next());
+		sc.close();
+		cmb_limit.setBounds(51 + lb_limit.getPreferredSize().width, 35, cmb_limit.getPreferredSize().width, 22);
 		
-		label3.setBounds(5, 68, label3.getPreferredSize().width, label3.getPreferredSize().height);
-		chb.setBounds(8 + label3.getPreferredSize().width, 65, chb.getPreferredSize().width, chb.getPreferredSize().height);
-		chb.setSelected(setting.pageEndsWithNewline);
+		lb_charPerPage.setBounds(5, 68, lb_charPerPage.getPreferredSize().width, lb_charPerPage.getPreferredSize().height);
+		tf_charPerPage.setBounds(8 + lb_charPerPage.getPreferredSize().width, 65, 50, tf_charPerPage.getPreferredSize().height);
+		tf_charPerPage.setText("" + setting.charPerPage);
+		lb_chars.setBounds(70 + lb_bufSize.getPreferredSize().width, 65, lb_chars.getPreferredSize().width, 22);
 		
-		label4.setBounds(5, 98, label4.getPreferredSize().width, label4.getPreferredSize().height);
-		tf4.setBounds(8 + label4.getPreferredSize().width, 95, 40, tf4.getPreferredSize().height);
-		tf4.setText("" + setting.singlePageFileSizeLimit);
-		cb.setSelectedIndex(0); // 1024로 계속 나눠 보면서 딱 떨어질 때까지만 하고 정수로 해서 KB 등으로 표시
-		cb.setBounds(51 + label4.getPreferredSize().width, 95, cb.getPreferredSize().width, 22);
+		lb_newLine.setBounds(5, 98, lb_newLine.getPreferredSize().width, lb_newLine.getPreferredSize().height);
+		chb_newLine.setBounds(8 + lb_newLine.getPreferredSize().width, 95, chb_newLine.getPreferredSize().width, chb_newLine.getPreferredSize().height);
+		chb_newLine.setSelected(setting.pageEndsWithNewline);
 		
-		label5.setBounds(5, 128, label5.getPreferredSize().width, label5.getPreferredSize().height);
-		tf5.setBounds(8 + label5.getPreferredSize().width, 125, 20, tf5.getPreferredSize().height);
-		tf5.setText("" + setting.loadedPagesNumber);
+		lb_Queue.setBounds(5, 128, lb_Queue.getPreferredSize().width, lb_Queue.getPreferredSize().height);
+		tf__Queue.setBounds(8 + lb_Queue.getPreferredSize().width, 125, 20, tf__Queue.getPreferredSize().height);
+		tf__Queue.setText("" + setting.loadedPagesNumber);
 		
-		done.setBounds(getSize().width/2 - done.getPreferredSize().width/2 - 10, getSize().height - done.getPreferredSize().height - 45, done.getPreferredSize().width, done.getPreferredSize().height);
-		done.addActionListener((e) -> {
+		btn_done.setBounds(getSize().width/2 - btn_done.getPreferredSize().width/2 - 10, getSize().height - btn_done.getPreferredSize().height - 45, btn_done.getPreferredSize().width, btn_done.getPreferredSize().height);
+		btn_done.addActionListener((e) -> {
 			try {
-				if(!setting.set(Integer.valueOf(tf1.getText()), Integer.valueOf(tf2.getText()), chb.isSelected(), Long.valueOf(Main.getByteSize(tf4.getText() + cb.getSelectedItem())), Integer.valueOf(tf5.getText())))
+				if(!setting.set(Integer.valueOf(tf_bufSize.getText()), Integer.valueOf(tf_charPerPage.getText()), chb_newLine.isSelected(), Main.getExactByteSize(tf_limit.getText() + cmb_limit.getSelectedItem()), Integer.valueOf(tf__Queue.getText())))
 					return;
 			} catch(NumberFormatException ex) {
 				SwingDialogs.error("Invalid input!", "%e%", ex, true);
@@ -91,19 +97,19 @@ public class SettingDialog extends JDialog {
 		});
 		
 		
-		add(label1);
-		add(tf1);
-		add(label2);
-		add(tf2);
-		add(chars);
-		add(label3);
-		add(chb);
-		add(label4);
-		add(tf4);
-		add(cb);
-		add(label5);
-		add(tf5);
-		add(done);
+		add(lb_bufSize);
+		add(tf_bufSize);
+		add(lb_charPerPage);
+		add(tf_charPerPage);
+		add(lb_chars);
+		add(lb_newLine);
+		add(chb_newLine);
+		add(lb_limit);
+		add(tf_limit);
+		add(cmb_limit);
+		add(lb_Queue);
+		add(tf__Queue);
+		add(btn_done);
 		
 		setVisible(true);
 		
