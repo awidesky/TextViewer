@@ -153,9 +153,9 @@ public class MainFrame extends JFrame {
   	        	undo.setEnabled(undoManager.canUndo());
   				redo.setEnabled(undoManager.canRedo());
   				logger.log("File Edited! : " + e.getType().toString());
+  				isEdited = true;
 
   				if(!getTitle().startsWith("*")) {
-	        		isEdited = true;
 	        		closeFile.setEnabled(true);
 	        		saveFile.setEnabled(true);
 	        		TitleGeneartor.edited(true);
@@ -459,7 +459,7 @@ public class MainFrame extends JFrame {
 		TitleGeneartor.edited(false);
 		if(fileHandle == null) fileHandle = new SelectedFileHandler();
 		boolean ret = fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
-		TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L);
+		TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L); //TODO : filename not changed??
 		return ret;
 			
 	}
@@ -468,7 +468,7 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
-		if(isEdited) fileHandle.pageEdited(new Page(ta.getText().replaceAll("\\R", System.lineSeparator()), pageNum, false));
+		if(isEdited) fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
 
 		displyNewPage();
 		

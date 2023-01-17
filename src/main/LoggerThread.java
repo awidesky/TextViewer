@@ -71,7 +71,7 @@ public class LoggerThread extends Thread {
 	public void log(String data) {
 
 		loggerQueue.offer(() -> {
-			logTo.println((verbose ? "[" + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + "] " : "") +data.replaceAll("\\R", System.lineSeparator()));
+			logTo.println((verbose ? "[" + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + "] " : "") + data);
 		});
 		
 	}

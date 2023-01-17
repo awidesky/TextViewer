@@ -54,7 +54,7 @@ public class TextReader implements AutoCloseable{
 
 	/**
 	 * Read a <code>Page</code>.
-	 * @return <code>Page.EOF</code> when EOF reached, <code>null</code> if the end of the stream has been reached without reading any characters
+	 * @return <code>Page.EOF</code> when EOF reached
 	 * @throws IOException 
 	 * */
 	public Page readOnePage() throws IOException {
@@ -71,7 +71,7 @@ public class TextReader implements AutoCloseable{
 			if (read == -1) {
 				if(totalRead == 0 && leftOver.length() == 0) {
 					Main.logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
-					return null;
+					return Page.EOF;
 				} else {
 					isLastPage = true;
 					break;

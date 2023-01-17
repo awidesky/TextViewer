@@ -172,7 +172,7 @@ public class SelectedFileHandler {
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
-				bw.write(text.replaceAll("\\R", System.lineSeparator()));
+				bw.write(text);
 				bw.close();
 				ret = true;
 			} catch (IOException e) {
@@ -195,12 +195,12 @@ public class SelectedFileHandler {
 				FileWriter fw = new FileWriter(writeTo, writeAs);) {
 
 			Page page = reader.readOnePage();
-			do {
+			do { //TODO : fix logic 
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 				page = reader.readOnePage();
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
 				fw.write(Optional.ofNullable(getIfEditedPage(page.pageNum)).orElse(page).text);
-			} while (page != null);
+			} while (page != Page.EOF);
 
 			Main.logger.log(taskID + "Reached EOF!");
 			return true;
