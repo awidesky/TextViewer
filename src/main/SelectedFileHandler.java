@@ -194,13 +194,16 @@ public class SelectedFileHandler {
 		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 				FileWriter fw = new FileWriter(writeTo, writeAs);) {
 
-			Page page = reader.readOnePage();
-			do { //TODO : fix logic 
+			 while (true) {
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
-				page = reader.readOnePage();
+				Page page = reader.readOnePage();
+				if (page != Page.EOF) {
+					Main.logger.log(taskID + "page #" + (reader.getNextPageNum() - 1) + " is EOF!");
+					break;
+				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
 				fw.write(Optional.ofNullable(getIfEditedPage(page.pageNum)).orElse(page).text);
-			} while (page != Page.EOF);
+			}
 
 			Main.logger.log(taskID + "Reached EOF!");
 			return true;

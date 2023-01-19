@@ -458,9 +458,16 @@ public class MainFrame extends JFrame {
 		
 		TitleGeneartor.edited(false);
 		if(fileHandle == null) fileHandle = new SelectedFileHandler();
-		boolean ret = fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText());
-		TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L); //TODO : filename not changed??
-		return ret;
+		
+		if (fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText())) {
+			TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L);
+			return true;
+		} else {
+			setTitle(Main.VERSION);
+			TitleGeneartor.fileClosed();
+			TitleGeneartor.edited(true);
+			return false;
+		}
 			
 	}
 	
