@@ -32,7 +32,7 @@ public class Main {
 	public static LoggerThread logger = null;
 	
 	public static void main(String[] args) { 
-		
+
 		boolean verbose = false;
 		
 		for(int i = 0; i < args.length; i++) {
@@ -77,7 +77,6 @@ public class Main {
 			new MainFrame();
 			logger.log("Mainframe loaded!");
 		});
-	 
     }
 	
 

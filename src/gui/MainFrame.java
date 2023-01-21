@@ -477,6 +477,10 @@ public class MainFrame extends JFrame {
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
 		if(isEdited) fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
 
+		undoManager.discardAllEdits();
+		undo.setEnabled(undoManager.canUndo());
+		redo.setEnabled(undoManager.canRedo());
+		
 		displyNewPage();
 		
 	}
