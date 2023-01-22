@@ -444,8 +444,17 @@ public class MainFrame extends JFrame {
 		fileChooser.setDialogTitle("Save file at...");
 		fileChooser.setSelectedFile(lastOpened);
 		fileChooser.setCurrentDirectory(lastSaved.getParentFile());
-		if (fileChooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) 
-	    	return false;
+		switch (fileChooser.showSaveDialog(null)) {
+
+		case JFileChooser.CANCEL_OPTION:
+			Main.logger.log("JFileChooser canceled!");
+			return false;
+		case JFileChooser.ERROR_OPTION:
+			Main.logger.log("JFileChooser error occured!"); // Exception
+			return false;
+		case JFileChooser.APPROVE_OPTION: 
+			break;
+		}
 		
 		lastSaved = fileChooser.getSelectedFile();
 		if(fileChooser.getFileFilter().equals(TextFilechooser.TEXTFILEFILTER) && !lastSaved.getName().endsWith(".txt")) {
@@ -453,6 +462,7 @@ public class MainFrame extends JFrame {
 		}
 		
 		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+			Main.logger.log("User refuesed to overwrite existing file!");
 			return false;
 		}
 		
@@ -466,6 +476,7 @@ public class MainFrame extends JFrame {
 			setTitle(Main.VERSION);
 			TitleGeneartor.fileClosed();
 			TitleGeneartor.edited(true);
+			Main.logger.log("File write failed!"); // Exception
 			return false;
 		}
 			

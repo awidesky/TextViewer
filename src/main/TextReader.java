@@ -32,7 +32,7 @@ public class TextReader implements AutoCloseable{
 			SwingDialogs.error("unable to read the file!", "%e%", e, true);
 			return;
 		}
-		
+		Main.logger.log("");
 	}
 	
 	
@@ -68,10 +68,12 @@ public class TextReader implements AutoCloseable{
 		int nextRead = Math.min(arr.length, setting.charPerPage);
 		while (true) {
 			int read = readArray(nextRead);
-			if (read == -1) {
+			if (read == -1) { // no more chars to read
 				if(totalRead == 0 && leftOver.length() == 0) {
 					Main.logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
-					return Page.EOF;
+					//Does not close this TextReader until close() is explicitly called.
+					//Just like InputStream behaves.
+					return Page.EOF; 
 				} else {
 					isLastPage = true;
 					break;
@@ -79,7 +81,7 @@ public class TextReader implements AutoCloseable{
 			}
 			strBuf.append(arr, 0, read);
 			totalRead += read;
-			if(totalRead == setting.charPerPage) break;
+			if(totalRead >= setting.charPerPage) break;
 			
 			nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
 		}

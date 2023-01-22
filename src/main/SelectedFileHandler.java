@@ -75,7 +75,7 @@ public class SelectedFileHandler {
 		
 		reachedEOF = false;
 		
-		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
+		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - reader - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.singlePageFileSizeLimit));
@@ -109,7 +109,7 @@ public class SelectedFileHandler {
 			long startTime = System.currentTimeMillis();
 			
 			Page result = Optional.ofNullable(getIfEditedPage(nowPage)).orElse(reader.readOnePage());
-			if(result == null) {
+			if(result == Page.EOF) {
 				reachedEOF = true;
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
@@ -159,7 +159,7 @@ public class SelectedFileHandler {
 	 * */
 	public boolean write(File writeTo, Charset writeAs, String text) {
 		
-		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - " + (int)(Math.random()*100) + "] ";
+		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Writing file " + writeTo.getAbsolutePath() + " as encoding : " + writeAs.name());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
@@ -177,12 +177,11 @@ public class SelectedFileHandler {
 				ret = true;
 			} catch (IOException e) {
 				SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, true);
-				e.printStackTrace();
 				ret = false;
 			}
 		}
 		
-		Main.logger.log(taskID + "Write task completed in " + (System.currentTimeMillis()- startTime) + "ms");
+		Main.logger.log(taskID + "Write task " + (ret ? "completed" : "failed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
 		return ret;
 		
 	}
@@ -190,6 +189,7 @@ public class SelectedFileHandler {
 	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { 
 
 		Main.logger.newLine();
+		Main.logger.log(taskID + "Original file " + readFile.getAbsolutePath() + " as encoding : " + readAs.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 				FileWriter fw = new FileWriter(writeTo, writeAs);) {
@@ -197,7 +197,7 @@ public class SelectedFileHandler {
 			 while (true) {
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 				Page page = reader.readOnePage();
-				if (page != Page.EOF) {
+				if (page == Page.EOF) {
 					Main.logger.log(taskID + "page #" + (reader.getNextPageNum() - 1) + " is EOF!");
 					break;
 				}
