@@ -3,13 +3,18 @@ package main;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.zip.Adler32;
+import java.util.zip.CRC32;
 
 import javax.swing.SwingUtilities;
 
 import gui.FontDialog;
 import gui.MainFrame;
+import gui.SwingDialogs;
 
 public class Main {
 
@@ -31,21 +36,39 @@ public class Main {
 	
 	public static LoggerThread logger = null;
 	
+	private static HashGenerator hasher = HashGenerator.getChecksumHashInstance(new CRC32());
+	
 	public static void main(String[] args) { 
 
 		boolean verbose = false;
 		
 		for(int i = 0; i < args.length; i++) {
-			if(args[i].equals("--ShowAllFont")) {
+			if(args[i].equals("--showAllFont")) {
 				FontDialog.showAll = true;
-			} else if(args[i].equals("--Verbose")) {
+			} else if(args[i].equals("--verbose")) {
 				verbose = true;
-			} else if(args[i].equals("--Logconsole")) {
+			} else if(args[i].equals("--logConsole")) {
 				logger = new LoggerThread();
+			} else if (args[i].startsWith("--pageHash=")) {
+				String hashAlgo = args[i].split("=")[1];
+				if ("Adler32".equalsIgnoreCase(hashAlgo)) {
+					hasher = HashGenerator.getChecksumHashInstance(new Adler32());
+				} else if ("CRC32".equalsIgnoreCase(hashAlgo)) {
+					hasher = HashGenerator.getChecksumHashInstance(new CRC32());
+				} else if ("RAW".equalsIgnoreCase(hashAlgo)) {
+					hasher = HashGenerator.getRawCompareInstance();
+				} else {
+					try {
+						hasher = HashGenerator.getCryptoHashInstance(MessageDigest.getInstance(hashAlgo));
+					} catch (NoSuchAlgorithmException e) {
+						SwingDialogs.error("Error while initiating!", "Hash algorithm : " + hashAlgo + " is not available!\n%e%", e, true);
+						kill(-1);
+					}
+				}
 			} else {
 				System.out.println("Usage : java -jar TextViewer.jar [options]");
 				System.out.println("Options : ");
-				System.out.println("\t--ShowAllFont\tShow whole font in font list in Change font Dialog");
+				System.out.println("\t--showAllFont\tShow whole font in font list in Change font Dialog"); //TODO : help for all options
 				return;
 			}
 		}
@@ -141,6 +164,17 @@ public class Main {
 		return result;
 		
 	}
+	
+	/**
+	 * Get a hash of <code>String</code> object.
+	 * in default, this method will use <code>CRC32</code>
+	 * if <code>pageHash</code> option is set to <code>original</code>, whole page Text will be used as the "hash".
+	 * This may cause high memory usage, but if you're overly paranoid about hash collision, this would be a way.
+	 * */
+	public static String getHash(String src) {
+		return hasher.getHash(src);
+	}
+	
 
 	public static void kill(int errCode) {
 		

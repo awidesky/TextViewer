@@ -19,7 +19,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
@@ -50,7 +52,7 @@ import main.SelectedFileHandler;
 
 public class MainFrame extends JFrame {
 
-	private static final long serialVersionUID = 4096788492544078810L;
+	private static final long serialVersionUID = -6166008890392172380L;
 	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
@@ -61,6 +63,8 @@ public class MainFrame extends JFrame {
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
 	private BlockingQueue<Page> fileContentQueue = null;
+	
+	private Set<Long> editedPage = new HashSet<>();
 	
 	private SelectedFileHandler fileHandle = null;
 	private long pageNum = 1L;
@@ -254,7 +258,11 @@ public class MainFrame extends JFrame {
 		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
 		saveFile.addActionListener((e) -> {
 			
-			/** Read file in EDT */
+			/** Write file in EDT */
+			if(isEdited && fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
+				fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
+				if(!editedPage.contains(pageNum)) editedPage.add(pageNum);
+			}
 			saveFile();
 			
 		});
@@ -296,9 +304,15 @@ public class MainFrame extends JFrame {
 			undoManager.undo();
 			undo.setEnabled(undoManager.canUndo());
 			redo.setEnabled(undoManager.canRedo());
-			if(!undoManager.canUndo()) {
-				isEdited = false;
-				TitleGeneartor.edited(false);
+			
+			if (!undoManager.canUndo()) {
+				if (fileHandle.isPaged() && !fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
+					editedPage.remove(pageNum);
+				}
+				if(editedPage.isEmpty()) {
+					isEdited = false;
+					TitleGeneartor.edited(false);
+				}
 			}
 		});
 		undo.setEnabled(false);
@@ -321,8 +335,8 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 		
-		setting = new JMenuItem("Setting", KeyEvent.VK_B);
-		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK));
+		setting = new JMenuItem("Setting Dialog", KeyEvent.VK_D);
+		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.ALT_MASK));
 		setting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		setting.addActionListener((e) -> {
 			new SettingDialog(Main.setting);
@@ -461,7 +475,7 @@ public class MainFrame extends JFrame {
 		    lastSaved = new File(lastSaved.getParentFile(), lastSaved.getName() + ".txt");
 		}
 		
-		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {// TODO : Replace paged source file itself?
 			Main.logger.log("User refuesed to overwrite existing file!");
 			return false;
 		}
@@ -486,12 +500,22 @@ public class MainFrame extends JFrame {
 	private void nextPage() {
 		
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
-		if(isEdited) fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
-
+		
+		if(fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
+			if(!editedPage.contains(pageNum)) editedPage.add(pageNum);
+		} else {
+			editedPage.remove(pageNum);
+			fileHandle.pageNotChanged(pageNum);
+		}
+		
+		if(editedPage.contains(pageNum) || isEdited) {
+			fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
+		}
+		
 		undoManager.discardAllEdits();
 		undo.setEnabled(undoManager.canUndo());
 		redo.setEnabled(undoManager.canRedo());
-		
+
 		displyNewPage();
 		
 	}
@@ -517,7 +541,7 @@ public class MainFrame extends JFrame {
 					fileHandle.notify();
 				}
 			}
-			nowDisplayed = fileContentQueue.take();
+			nowDisplayed = fileContentQueue.take(); //TODO : when error occurs while waiting, it hangs...
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1, true);

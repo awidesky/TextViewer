@@ -48,7 +48,7 @@ public class TextReader implements AutoCloseable{
 			sb.append(arr, 0, read);
 		}
 		Main.logger.log(taskID + "Reached EOF");
-		return new Page(sb.toString(), -1, true);
+		return new Page(sb.toString().replaceAll("\\R", "\n"), -1, true);
 	}
 	
 
@@ -86,19 +86,30 @@ public class TextReader implements AutoCloseable{
 			nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
 		}
 		
+		String res = strBuf.toString();
+		/**
+		 * <code>lastLittlePortion</code> Exist only because of following case may exist.
+		 * in Windows, Line break(\R) is \r\n. if TextReader only reads \r and buffer got full, following \n(which should be considered as a pair with preceding \r)
+		 * will considered as separate line break in next page reading.
+		 * to avoid that, I used a punt : trim off last 3~5 chars, since it contains unfinished line break.
+		 * unless I find a line break sequence longer than 3~4 characters, 3 will (hopefully) work fine.   
+		 * */
+		String lastLittlePortion = res.substring(res.length()-3);
+		res = res.substring(0, res.length()-3).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline
+		
 		if (setting.pageEndsWithNewline) {
-			int lastLineFeedIndex = strBuf.lastIndexOf(System.lineSeparator()); 
+			int lastLineFeedIndex = res.lastIndexOf("\n"); 
 
-			if (lastLineFeedIndex == -1) {
-				result = leftOver.append(strBuf.substring(0, lastLineFeedIndex)).toString();
+			if (lastLineFeedIndex != -1) {
+				result = leftOver.append(res.substring(0, lastLineFeedIndex)).toString().replaceAll("\\R", "\n");// system-dependent \\R might be exist in leftOver because lastLittlePortion
 				leftOver = new StringBuilder();
-				leftOver.append(strBuf.substring(lastLineFeedIndex + System.lineSeparator().length()));
+				leftOver.append(res.substring(lastLineFeedIndex + "\n".length())).append(lastLittlePortion);
 			} else {
-				result = leftOver.append(strBuf).toString();
+				result = leftOver.append(res).toString();
 				leftOver = new StringBuilder();
 			}
 		} else {
-			result = strBuf.toString();
+			result = res;
 		}
 
 		return new Page(result, nextPageNum++, isLastPage);

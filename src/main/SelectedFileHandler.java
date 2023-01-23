@@ -8,7 +8,8 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +26,8 @@ public class SelectedFileHandler {
 	private boolean paged;
 	private BlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
 	
-	private ArrayList<Page> changes = new ArrayList<>();
+	private Map<Long, Page> changes = new HashMap<>();
+	private ArrayList<String> hashes = new ArrayList<>();
 	private ExecutorService readingThread = Executors.newSingleThreadExecutor();
 	private Future<?> readTaskFuture = null;
 	private String taskID = null;
@@ -108,7 +110,7 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "start reading a page #" + nowPage);
 			long startTime = System.currentTimeMillis();
 			
-			Page result = Optional.ofNullable(getIfEditedPage(nowPage)).orElse(reader.readOnePage());
+			Page result = changes.getOrDefault(nowPage, reader.readOnePage());
 			if(result == Page.EOF) {
 				reachedEOF = true;
 				Main.logger.log(taskID + "No more page to read!");
@@ -118,7 +120,9 @@ public class SelectedFileHandler {
 			}
 			
 			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
-			startTime = System.currentTimeMillis();
+			
+			if(hashes.size() < result.pageNum) hashes.add(Main.getHash(result.text));
+			
 			try {
 				fileContentQueue.put(result);
 				/** if only one page can be loaded in memory, wait until GUI requests new page */
@@ -172,7 +176,7 @@ public class SelectedFileHandler {
 		} else {
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
-				bw.write(text);
+				bw.write(text.replaceAll("\\R", System.lineSeparator()));
 				bw.close();
 				ret = true;
 			} catch (IOException e) {
@@ -189,7 +193,7 @@ public class SelectedFileHandler {
 	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { 
 
 		Main.logger.newLine();
-		Main.logger.log(taskID + "Original file " + readFile.getAbsolutePath() + " as encoding : " + readAs.name());
+		Main.logger.log(taskID + "Original file is  : " + readFile.getAbsolutePath() + " as encoding : " + readAs.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
 				FileWriter fw = new FileWriter(writeTo, writeAs);) {
@@ -202,7 +206,7 @@ public class SelectedFileHandler {
 					break;
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				fw.write(Optional.ofNullable(getIfEditedPage(page.pageNum)).orElse(page).text);
+				fw.write(changes.getOrDefault(page.pageNum, page).text.replaceAll("\\R", System.lineSeparator()));
 			}
 
 			Main.logger.log(taskID + "Reached EOF!");
@@ -216,15 +220,29 @@ public class SelectedFileHandler {
 	
 	
 	public void pageEdited(Page newPage) { 
-		changes.add(newPage);
+		changes.put(newPage.pageNum, newPage);
 	}
 
-	public Page getIfEditedPage(long pageNum) {
-		if(changes.isEmpty()) return null;
-		for(Page p : changes) {
-			if(p.pageNum == pageNum) return p;
+	/** This method is called when content in TextArea is identical with original text from file (happens when user discarded change manually) */
+	public void pageNotChanged(long pageNum) {
+		changes.remove(pageNum);
+	}
+	
+	public boolean isPageEdited(long pageNum, String hash) {
+		try {
+			String read = hashes.get((int) (pageNum - 1));
+			boolean ret = !read.equals(hash);
+
+			Main.logger.log("\nComparing hashes of page #" + pageNum);
+			Main.logger.log("Original hash : " + read);
+			Main.logger.log("TextArea hash : " + hash);
+			Main.logger.log("Edited : " + ret + "\n");
+
+			return ret;
+		} catch (IndexOutOfBoundsException e) {
+			SwingDialogs.error("wrong index!", "Page #" + pageNum + " does not exist or read yet!\nOnly " + hashes.size() + "page(s) have read\n\n%e%", e, true);
+			return true;
 		}
-		return null;
 	}
 
 	public void reRead(BlockingQueue<Page> fileContentQueue2) {
@@ -252,5 +270,6 @@ public class SelectedFileHandler {
 		readingClosed = true;
 		if(readTaskFuture != null) readTaskFuture.cancel(true);
 	}
+
 }
 
