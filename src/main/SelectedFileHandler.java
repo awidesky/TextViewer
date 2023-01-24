@@ -207,6 +207,7 @@ public class SelectedFileHandler {
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
 				fw.write(changes.getOrDefault(page.pageNum, page).text.replaceAll("\\R", System.lineSeparator()));
+				if (setting.pageEndsWithNewline) fw.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 
 			Main.logger.log(taskID + "Reached EOF!");

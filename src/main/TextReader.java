@@ -87,6 +87,7 @@ public class TextReader implements AutoCloseable{
 		}
 		
 		String res = strBuf.toString();
+		
 		/**
 		 * <code>lastLittlePortion</code> Exist only because of following case may exist.
 		 * in Windows, Line break(\R) is \r\n. if TextReader only reads \r and buffer got full, following \n(which should be considered as a pair with preceding \r)
@@ -94,9 +95,13 @@ public class TextReader implements AutoCloseable{
 		 * to avoid that, I used a punt : trim off last 3~5 chars, since it contains unfinished line break.
 		 * unless I find a line break sequence longer than 3~4 characters, 3 will (hopefully) work fine.   
 		 * */
-		String lastLittlePortion = res.substring(res.length()-3);
-		res = res.substring(0, res.length()-3).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline
-		
+		final int LASTLITTLEPORTIONMARGIN = 3;
+		int lastLittlePortionStartsAt = TextReader.lastLineBreak(res) - LASTLITTLEPORTIONMARGIN;
+		String lastLittlePortion = "";
+		if(lastLittlePortionStartsAt > 0) { 
+			lastLittlePortion = res.substring(lastLittlePortionStartsAt);
+			res = res.substring(0, lastLittlePortionStartsAt).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline - 마지막 읽을 때
+		}
 		if (setting.pageEndsWithNewline) {
 			int lastLineFeedIndex = res.lastIndexOf("\n"); 
 
@@ -116,6 +121,14 @@ public class TextReader implements AutoCloseable{
 	}
 	
 	
+
+	private static int lastLineBreak(String res) {
+		for(int i = res.length() - 1; i > -1; i--) {
+			if (res.substring(i, i + 1).matches("\\R")) return i;
+		}
+		return res.length();
+	}
+
 
 	/** Fills the array by reading <code>fr</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
