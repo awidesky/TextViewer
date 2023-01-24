@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -163,6 +165,8 @@ public class SelectedFileHandler {
 	 * */
 	public boolean write(File writeTo, Charset writeAs, String text) {
 		
+		boolean ret = true;
+		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Writing file " + writeTo.getAbsolutePath() + " as encoding : " + writeAs.name());
@@ -170,18 +174,45 @@ public class SelectedFileHandler {
 		
 		long startTime = System.currentTimeMillis();
 		
-		boolean ret;
-		if(paged) {
-			ret = pagedFileWriteLoop(writeTo, writeAs);
-		} else {
+		boolean overWriteSameFile = writeTo.equals(readFile);
+		File outputFile = writeTo;
+		if (overWriteSameFile) {
+			Main.logger.log(taskID + "Output file is same as original file! creating temporary file....");
 			try {
-				BufferedWriter bw = new BufferedWriter(new FileWriter(writeTo, writeAs));
-				bw.write(text.replaceAll("\\R", System.lineSeparator()));
-				bw.close();
-				ret = true;
+				outputFile = File.createTempFile(writeTo.getName(), ".txt");
+				Main.logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
 			} catch (IOException e) {
-				SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, true);
+				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
 				ret = false;
+			}
+		}
+
+		if (ret) { //if not already failed, write
+			if (paged) {
+				ret = pagedFileWriteLoop(outputFile, writeAs);
+			} else {
+				try {
+					BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, writeAs));
+					bw.write(text.replaceAll("\\R", System.lineSeparator()));
+					bw.close();
+					ret = true;
+				} catch (IOException e) {
+					SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + outputFile.getAbsolutePath(), e, false);
+					ret = false;
+				}
+			}
+
+			if (overWriteSameFile) {
+				try {
+					Files.copy(outputFile.toPath(), writeTo.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if (!outputFile.delete())
+						outputFile.deleteOnExit();
+				} catch (IOException e) {
+					SwingDialogs.error("Failed to move temp file do destination!",
+							"%e%\nTemp file that (probably) holding the text you tried to save is in : "
+									+ outputFile.getAbsolutePath(), e, false);
+					ret = false;
+				}
 			}
 		}
 		

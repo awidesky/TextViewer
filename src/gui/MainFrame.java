@@ -475,7 +475,7 @@ public class MainFrame extends JFrame {
 		    lastSaved = new File(lastSaved.getParentFile(), lastSaved.getName() + ".txt");
 		}
 		
-		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {// TODO : Replace paged source file itself?
+		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			Main.logger.log("User refuesed to overwrite existing file!");
 			return false;
 		}
