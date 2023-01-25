@@ -73,7 +73,7 @@ public class MainFrame extends JFrame {
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openFile;
-	private JMenuItem saveFile;
+	private JMenuItem saveFile; //TODO : add quick save(save at current file in same encoding, ctrl + s)
 	private JMenuItem closeFile;
 	private JMenu editMenu;
 	private JMenuItem undo;
@@ -249,8 +249,6 @@ public class MainFrame extends JFrame {
 			
 			//open chosen file
 			openFile(null);
-			saveFile.setEnabled(true);
-			closeFile.setEnabled(true);
 			
 		});
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
@@ -264,7 +262,7 @@ public class MainFrame extends JFrame {
 				if(!editedPage.contains(pageNum)) editedPage.add(pageNum);
 			}
 			saveFile();
-			
+			openFile(lastSaved);
 		});
 		saveFile.setEnabled(false);
 		closeFile = new JMenuItem("Close current file");
@@ -414,6 +412,9 @@ public class MainFrame extends JFrame {
 			return;
 		}
 		
+		saveFile.setEnabled(true);
+		closeFile.setEnabled(true);
+		
 		if (file != null) {
 			lastOpened = file;
 		} else {
@@ -484,7 +485,6 @@ public class MainFrame extends JFrame {
 		if(fileHandle == null) fileHandle = new SelectedFileHandler();
 		
 		if (fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText())) {
-			TitleGeneartor.reset(lastSaved.getAbsolutePath(), Main.formatFileSize(lastSaved.length()), false, fileChooser.getSelectedCharset().name(), false, false, 1L);
 			return true;
 		} else {
 			setTitle(Main.VERSION);
