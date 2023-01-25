@@ -18,10 +18,17 @@ public class Page {
 	public final long pageNum;
 	/** Is it guaranteed that this is the last page of the file? */
 	public final boolean isLastPage;
+	/** is trailing newline of the page removed? */
+	public final boolean lastNewlineRemoved;
 	
 	public Page(String text, long pageNum, boolean isLastPage) {
+		this(text, pageNum, isLastPage, false);
+	}
+
+	public Page(String text, long pageNum, boolean isLastPage, boolean lastNewlineRemoved) {
 		this.text = text;
 		this.pageNum = pageNum;
 		this.isLastPage = isLastPage;
+		this.lastNewlineRemoved = lastNewlineRemoved;
 	}
 }

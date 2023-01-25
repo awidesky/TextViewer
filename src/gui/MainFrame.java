@@ -68,6 +68,7 @@ public class MainFrame extends JFrame {
 	
 	private SelectedFileHandler fileHandle = null;
 	private long pageNum = 1L;
+	private boolean lastNewlineRemoved = false;
 	private boolean isEdited = false;
 	
 	private JMenuBar menuBar;
@@ -509,7 +510,7 @@ public class MainFrame extends JFrame {
 		}
 		
 		if(editedPage.contains(pageNum) || isEdited) {
-			fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
+			fileHandle.pageEdited(new Page(ta.getText(), pageNum, false, lastNewlineRemoved));
 		}
 		
 		undoManager.discardAllEdits();
@@ -542,6 +543,7 @@ public class MainFrame extends JFrame {
 				}
 			}
 			nowDisplayed = fileContentQueue.take(); //TODO : when error occurs while waiting, it hangs...
+			lastNewlineRemoved = nowDisplayed.lastNewlineRemoved;
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1, true);

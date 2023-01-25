@@ -61,6 +61,7 @@ public class TextReader implements AutoCloseable{
 
 		int totalRead = 0;
 		boolean isLastPage = false;
+		boolean lastNewlineRemoved = false;
 		
 		StringBuilder strBuf = new StringBuilder("");
 		String result = null;
@@ -100,15 +101,20 @@ public class TextReader implements AutoCloseable{
 		String lastLittlePortion = "";
 		if(lastLittlePortionStartsAt > 0) { 
 			lastLittlePortion = res.substring(lastLittlePortionStartsAt);
-			res = res.substring(0, lastLittlePortionStartsAt).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline - 마지막 읽을 때
+		} else {
+			lastLittlePortionStartsAt = res.length();
 		}
+		
+		res = res.substring(0, lastLittlePortionStartsAt).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline - 마지막 읽을 때
+		
 		if (setting.pageEndsWithNewline) {
 			int lastLineFeedIndex = res.lastIndexOf("\n"); 
 
 			if (lastLineFeedIndex != -1) {
 				result = leftOver.append(res.substring(0, lastLineFeedIndex)).toString().replaceAll("\\R", "\n");// system-dependent \\R might be exist in leftOver because lastLittlePortion
 				leftOver = new StringBuilder();
-				leftOver.append(res.substring(lastLineFeedIndex + "\n".length())).append(lastLittlePortion);
+				leftOver.append(res.substring(lastLineFeedIndex + "\n".length())).append(lastLittlePortion); // remove trailing \n so that next page won't be starting as \n
+				lastNewlineRemoved = true;
 			} else {
 				result = leftOver.append(res).toString();
 				leftOver = new StringBuilder();
@@ -117,7 +123,7 @@ public class TextReader implements AutoCloseable{
 			result = res;
 		}
 
-		return new Page(result, nextPageNum++, isLastPage);
+		return new Page(result, nextPageNum++, isLastPage, lastNewlineRemoved);
 	}
 	
 	
