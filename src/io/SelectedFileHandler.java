@@ -1,4 +1,4 @@
-package main;
+package io;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,6 +20,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import gui.SwingDialogs;
+import main.Main;
+import main.SettingData;
 
 public class SelectedFileHandler {
 

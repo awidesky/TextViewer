@@ -45,10 +45,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
+import io.Page;
+import io.SelectedFileHandler;
 import main.Main;
-import main.Page;
 import main.ReferenceDTO;
-import main.SelectedFileHandler;
 
 public class MainFrame extends JFrame {
 
