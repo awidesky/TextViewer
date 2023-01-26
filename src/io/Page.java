@@ -13,22 +13,47 @@ public class Page {
 		}
 	};
 
+	/** text of this page */
 	public final String text;
-	/** page number starts from 1, not 0! */
-	public final long pageNum;
-	/** Is it guaranteed that this is the last page of the file? */
-	public final boolean isLastPage;
-	/** is trailing newline of the page removed? */
-	public final boolean lastNewlineRemoved;
+	/** metadata of this page */
+	public final Metadata metadata;
 	
 	public Page(String text, long pageNum, boolean isLastPage) {
 		this(text, pageNum, isLastPage, false);
 	}
+	
+	public Page(String text, Metadata nowPageMetadata) {
+		this(text, nowPageMetadata.pageNum, nowPageMetadata.isLastPage, nowPageMetadata.lastNewlineRemoved);
+	}
 
 	public Page(String text, long pageNum, boolean isLastPage, boolean lastNewlineRemoved) {
 		this.text = text;
-		this.pageNum = pageNum;
-		this.isLastPage = isLastPage;
-		this.lastNewlineRemoved = lastNewlineRemoved;
+		this.metadata = new Metadata(pageNum, isLastPage, lastNewlineRemoved);
+	}
+	
+
+	public long pageNum() {
+		return metadata.pageNum;
+	}
+	public boolean isLastPage() {
+		return metadata.isLastPage;
+	}
+	public boolean lastNewlineRemoved() {
+		return metadata.lastNewlineRemoved;
+	}
+	
+	public class Metadata {
+		/** page number starts from 1, not 0! */
+		public final long pageNum;
+		/** Is it guaranteed that this is the last page of the file? */
+		public final boolean isLastPage;
+		/** is trailing newline of the page removed? */
+		public final boolean lastNewlineRemoved;
+		
+		public Metadata(long pageNum, boolean isLastPage, boolean lastNewlineRemoved) {
+			this.pageNum = pageNum;
+			this.isLastPage = isLastPage;
+			this.lastNewlineRemoved = lastNewlineRemoved;
+		}
 	}
 }

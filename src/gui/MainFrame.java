@@ -67,8 +67,7 @@ public class MainFrame extends JFrame {
 	private Set<Long> editedPage = new HashSet<>();
 	
 	private SelectedFileHandler fileHandle = null;
-	private long pageNum = 1L;
-	private boolean lastNewlineRemoved = false;
+	private Page.Metadata nowPageMetadata = null;
 	private boolean isEdited = false;
 	
 	private JMenuBar menuBar;
@@ -258,9 +257,9 @@ public class MainFrame extends JFrame {
 		saveFile.addActionListener((e) -> {
 			
 			/** Write file in EDT */
-			if(isEdited && fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
-				fileHandle.pageEdited(new Page(ta.getText(), pageNum, false));
-				if(!editedPage.contains(pageNum)) editedPage.add(pageNum);
+			if(isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
+				if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
 			}
 			saveFile();
 			openFile(lastSaved);
@@ -305,8 +304,8 @@ public class MainFrame extends JFrame {
 			redo.setEnabled(undoManager.canRedo());
 			
 			if (!undoManager.canUndo()) {
-				if (fileHandle.isPaged() && !fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
-					editedPage.remove(pageNum);
+				if (fileHandle.isPaged() && !fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+					editedPage.remove(nowPageMetadata.pageNum);
 				}
 				if(editedPage.isEmpty()) {
 					isEdited = false;
@@ -502,15 +501,15 @@ public class MainFrame extends JFrame {
 		
 		if (!pageMenu.isEnabled() || !next.isEnabled()) return;
 		
-		if(fileHandle.isPageEdited(pageNum, Main.getHash(ta.getText()))) {
-			if(!editedPage.contains(pageNum)) editedPage.add(pageNum);
+		if(fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+			if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
 		} else {
-			editedPage.remove(pageNum);
-			fileHandle.pageNotChanged(pageNum);
+			editedPage.remove(nowPageMetadata.pageNum);
+			fileHandle.pageNotChanged(nowPageMetadata.pageNum);
 		}
 		
-		if(editedPage.contains(pageNum) || isEdited) {
-			fileHandle.pageEdited(new Page(ta.getText(), pageNum, false, lastNewlineRemoved));
+		if(editedPage.contains(nowPageMetadata.pageNum) || isEdited) {
+			fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata));
 		}
 		
 		undoManager.discardAllEdits();
@@ -543,17 +542,17 @@ public class MainFrame extends JFrame {
 				}
 			}
 			nowDisplayed = fileContentQueue.take(); //TODO : when error occurs while waiting, it hangs...
-			lastNewlineRemoved = nowDisplayed.lastNewlineRemoved;
+			nowPageMetadata = nowDisplayed.metadata;
 		} catch (InterruptedException e1) {
 			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1, true);
 		}
 		
 		if (nowDisplayed != Page.EOF) {
-			if(nowDisplayed.isLastPage) noNextPage = true;
+			if(nowDisplayed.isLastPage()) noNextPage = true;
 			if(fileHandle.isPaged()) {
-				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum + " is consumed and displayed");
-				TitleGeneartor.pageNum((pageNum = nowDisplayed.pageNum));
+				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")] page #" + nowDisplayed.pageNum() + " is consumed and displayed");
+				TitleGeneartor.pageNum(nowDisplayed.pageNum());
 			}
 			ta.setText(nowDisplayed.text);
 			ta.setCaretPosition(0);

@@ -119,13 +119,13 @@ public class SelectedFileHandler {
 				reachedEOF = true;
 				Main.logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
-			} else if(result.isLastPage) {
+			} else if(result.isLastPage()) {
 				reachedEOF = true;
 			}
 			
 			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			
-			if(hashes.size() < result.pageNum) hashes.add(Main.getHash(result.text));
+			if(hashes.size() < result.pageNum()) hashes.add(Main.getHash(result.text));
 			
 			try {
 				fileContentQueue.put(result);
@@ -239,8 +239,8 @@ public class SelectedFileHandler {
 					break;
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				fw.write(changes.getOrDefault(page.pageNum, page).text.replaceAll("\\R", System.lineSeparator()));
-				if (page.lastNewlineRemoved && setting.pageEndsWithNewline) fw.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
+				fw.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));
+				if (page.lastNewlineRemoved() && setting.pageEndsWithNewline) fw.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 
 			Main.logger.log(taskID + "Reached EOF!");
@@ -254,7 +254,7 @@ public class SelectedFileHandler {
 	
 	
 	public void pageEdited(Page newPage) { 
-		changes.put(newPage.pageNum, newPage);
+		changes.put(newPage.pageNum(), newPage);
 	}
 
 	/** This method is called when content in TextArea is identical with original text from file (happens when user discarded change manually) */
