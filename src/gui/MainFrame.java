@@ -19,6 +19,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +48,7 @@ import javax.swing.undo.UndoManager;
 
 import io.Page;
 import io.SelectedFileHandler;
+import io.TextFile;
 import main.Main;
 import main.ReferenceDTO;
 
@@ -57,8 +59,8 @@ public class MainFrame extends JFrame {
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
 	private UndoManager undoManager = new UndoManager();;
-	private File lastOpened = new File(System.getProperty("user.home"));
-	private File lastSaved = new File(System.getProperty("user.home"));
+	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), null);
+	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), null);
 	
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
@@ -73,6 +75,7 @@ public class MainFrame extends JFrame {
 	private JMenuBar menuBar;
 	private JMenu fileMenu;
 	private JMenuItem openFile;
+	private JMenuItem quickSaveFile;
 	private JMenuItem saveFile; //TODO : add quick save(save at current file in same encoding, ctrl + s)
 	private JMenuItem closeFile;
 	private JMenu editMenu;
@@ -162,6 +165,7 @@ public class MainFrame extends JFrame {
   				if(!getTitle().startsWith("*")) {
 	        		closeFile.setEnabled(true);
 	        		saveFile.setEnabled(true);
+	        		quickSaveFile.setEnabled(true);
 	        		TitleGeneartor.edited(true);
 	        	}
 	        }
@@ -198,7 +202,7 @@ public class MainFrame extends JFrame {
 				} catch (Exception ex) {
 					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
 				}
-				openFile(dropped);
+				openFile(new TextFile(dropped, Charset.defaultCharset())); // TODO : CharsetSelectDialog??
 			}
         });
 		
@@ -216,6 +220,7 @@ public class MainFrame extends JFrame {
 	/**
 	 * 
 	 * Ask save the file before closing file.
+	 * If user says yes, save the file;
 	 * 
 	 * @return <code>true</code> if current file is OK to close. <code>false</code> if it's not OK.
 	 * 
@@ -224,7 +229,7 @@ public class MainFrame extends JFrame {
 		if(getTitle().startsWith("*")) {
 			switch(JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?", JOptionPane.YES_NO_CANCEL_OPTION)) {
 			case JOptionPane.YES_OPTION:
-				return saveFile();
+				saveFile(selectSaveFile());
 			case JOptionPane.CANCEL_OPTION:
 			case JOptionPane.CLOSED_OPTION:
 				return false;
@@ -251,6 +256,27 @@ public class MainFrame extends JFrame {
 			openFile(null);
 			
 		});
+		quickSaveFile = new JMenuItem("Save", KeyEvent.VK_S);
+		quickSaveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		quickSaveFile.getAccessibleContext().setAccessibleDescription("Quick save the current file");
+		quickSaveFile.addActionListener((e) -> {
+			
+			TextFile saveTo;
+			if(fileHandle == null) {
+				saveTo = selectSaveFile();
+			} else {
+				saveTo = lastOpened;
+			}
+			
+			System.out.println(saveTo); //TODO : temporary for debug
+			
+			if(saveFile(saveTo)) {
+				lastSaved = saveTo;
+				openFile(lastSaved);
+			} else if(fileHandle.getReadCharset() == null) fileHandle = null; //if fileHandle was null before and write failed, re-set fileHandle to null
+			
+		});
+		quickSaveFile.setEnabled(false);
 		saveFile = new JMenuItem("Save file in another encoding...", KeyEvent.VK_S);
 		saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.ALT_MASK));
 		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
@@ -261,8 +287,10 @@ public class MainFrame extends JFrame {
 				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
 				if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
 			}
-			saveFile();
-			openFile(lastSaved);
+			if(saveFile(selectSaveFile())) {
+				openFile(lastSaved);
+			}
+			
 		});
 		saveFile.setEnabled(false);
 		closeFile = new JMenuItem("Close current file");
@@ -274,10 +302,10 @@ public class MainFrame extends JFrame {
 				if(fileHandle != null) fileHandle.close();
 				fileHandle = null;
 				fileContentQueue = null;
-				lastOpened = new File("");
 				disableNextPageMenu();
 				setting.setEnabled(true);
 				saveFile.setEnabled(false);
+				quickSaveFile.setEnabled(false);
 				closeFile.setEnabled(false);
 				undoManager.discardAllEdits();
 				setTitle(Main.VERSION);
@@ -287,6 +315,7 @@ public class MainFrame extends JFrame {
 		});
 		closeFile.setEnabled(false);
 		fileMenu.add(openFile);
+		fileMenu.add(quickSaveFile);
 		fileMenu.add(saveFile);
 		fileMenu.add(closeFile);
 
@@ -353,6 +382,7 @@ public class MainFrame extends JFrame {
 		editable.addActionListener((e) -> {
 			
 			saveFile.setEnabled(true);
+			quickSaveFile.setEnabled(true);
 			editable(!ta.isEditable());
 			
 		});
@@ -406,29 +436,30 @@ public class MainFrame extends JFrame {
 		editMenu.setEnabled(flag);
 	}
 	
-	private void openFile(File file) {
+	private void openFile(TextFile lastSaved) {
 
 		if(!saveBeforeClose()) {
 			return;
 		}
 		
 		saveFile.setEnabled(true);
+		quickSaveFile.setEnabled(true);
 		closeFile.setEnabled(true);
 		
-		if (file != null) {
-			lastOpened = file;
+		if (lastSaved != null) {
+			lastOpened = lastSaved;
 		} else {
 			fileChooser.setDialogTitle("Select file to read...");
-			fileChooser.setCurrentDirectory(lastOpened.getParentFile());
+			fileChooser.setCurrentDirectory(lastOpened.file.getParentFile());
 			fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
 
-			lastOpened = fileChooser.getSelectedFile();
+			lastOpened = new TextFile(fileChooser.getSelectedFile(), fileChooser.getSelectedCharset());
 		}
 		
 		if(fileHandle != null) fileHandle.close();
-		fileHandle = new SelectedFileHandler(lastOpened, fileChooser.getSelectedCharset());
+		fileHandle = new SelectedFileHandler(lastOpened);
 		makeNewQueue();
 		
 		if(fileHandle.isPaged()) {
@@ -438,7 +469,7 @@ public class MainFrame extends JFrame {
 			disableNextPageMenu();
 			setting.setEnabled(true);
 		}
-		TitleGeneartor.reset(lastOpened.getAbsolutePath(), Main.formatFileSize(lastOpened.length()), fileHandle.isPaged(), fileChooser.getSelectedCharset().name(), false, true, 1L);
+		TitleGeneartor.reset(lastOpened.file.getAbsolutePath(), Main.formatFileSize(lastOpened.file.length()), fileHandle.isPaged(), lastOpened.encoding.name(), false, true, 1L);
 		
 		noNextPage = false;
 		fileHandle.startNewRead(fileContentQueue);
@@ -447,53 +478,66 @@ public class MainFrame extends JFrame {
 	}
 	
 	/**
-	 *  This method saves content to the file.
-	 * 	
-	 * 	File is written in EDT.
+	 *  Select location to save the file
 	 *  
-	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
+	 *  @return Selected <code>File</code>. if canceled/failed, <code>null</code>
 	 *  
 	 *  */
-	private boolean saveFile() {
+	private TextFile selectSaveFile() {
 		
 		fileChooser.setDialogTitle("Save file at...");
-		fileChooser.setSelectedFile(lastOpened);
-		fileChooser.setCurrentDirectory(lastSaved.getParentFile());
+		fileChooser.setSelectedFile(lastOpened.file);
+		fileChooser.setCurrentDirectory(lastSaved.file.getParentFile());
 		switch (fileChooser.showSaveDialog(null)) {
 
 		case JFileChooser.CANCEL_OPTION:
 			Main.logger.log("JFileChooser canceled!");
-			return false;
+			return null;
 		case JFileChooser.ERROR_OPTION:
 			Main.logger.log("JFileChooser error occured!"); // Exception
-			return false;
+			return null;
 		case JFileChooser.APPROVE_OPTION: 
 			break;
 		}
 		
-		lastSaved = fileChooser.getSelectedFile();
-		if(fileChooser.getFileFilter().equals(TextFilechooser.TEXTFILEFILTER) && !lastSaved.getName().endsWith(".txt")) {
-		    lastSaved = new File(lastSaved.getParentFile(), lastSaved.getName() + ".txt");
+		File f= fileChooser.getSelectedFile();
+		if(fileChooser.getFileFilter().equals(TextFilechooser.TEXTFILEFILTER) && !f.getName().endsWith(".txt")) {
+		    f = new File(f.getParentFile(), f.getName() + ".txt");
 		}
 		
-		if(lastSaved.exists() && JOptionPane.showConfirmDialog(null, "replace file?", lastSaved.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+		if(f.exists() && JOptionPane.showConfirmDialog(null, "replace file?", f.getName() + " already exists!", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			Main.logger.log("User refuesed to overwrite existing file!");
-			return false;
+			return null;
 		}
+		return new TextFile(f, fileChooser.getSelectedCharset());
 		
+	}
+	
+	/**
+	 *  This method saves content to the file.
+	 * 	
+	 * 	File is written in EDT.
+	 * @param saveTo 
+	 *  
+	 *  @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
+	 *  
+	 *  */
+	private boolean saveFile(TextFile saveTo) {
+
 		TitleGeneartor.edited(false);
 		if(fileHandle == null) fileHandle = new SelectedFileHandler();
 		
-		if (fileHandle.write(lastSaved, fileChooser.getSelectedCharset(), ta.getText())) {
-			return true;
+		if (fileHandle.write(saveTo, ta.getText())) {
 		} else {
 			setTitle(Main.VERSION);
 			TitleGeneartor.fileClosed();
 			TitleGeneartor.edited(true);
-			Main.logger.log("File write failed!"); // Exception
+			Main.logger.log("File write failed!");
 			return false;
 		}
-			
+		lastSaved = saveTo;
+		return true;
+		
 	}
 	
 	

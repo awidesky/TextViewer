@@ -1,9 +1,7 @@
 package io;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 import gui.SwingDialogs;
 import main.Main;
@@ -11,7 +9,7 @@ import main.SettingData;
 
 public class TextReader implements AutoCloseable{
 
-	private File readFile;
+	private TextFile readFile;
 	private FileReader fr;
 	private StringBuilder leftOver = new StringBuilder();
 	private SettingData setting;
@@ -20,7 +18,7 @@ public class TextReader implements AutoCloseable{
 	
 	private char[] arr;
 	
-	public TextReader(SettingData setting, File readFile, Charset readAs, String taskID) {
+	public TextReader(SettingData setting, TextFile readFile, String taskID) {
 		
 		this.setting = setting;
 		this.readFile = readFile;
@@ -29,7 +27,7 @@ public class TextReader implements AutoCloseable{
 		if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(""); }
 		
 		try {
-			this.fr = new FileReader(readFile, readAs);
+			this.fr = new FileReader(readFile.file, readFile.encoding);
 		} catch (IOException e) {
 			SwingDialogs.error("unable to read the file!", "%e%", e, true);
 			return;
@@ -43,7 +41,7 @@ public class TextReader implements AutoCloseable{
 	
 	public Page readAll() throws IOException {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
-		StringBuilder sb = new StringBuilder((int) readFile.length());
+		StringBuilder sb = new StringBuilder((int) readFile.file.length());
 		int read = 0;
 		while (true) {
 			if ((read = readArray()) == -1) break;

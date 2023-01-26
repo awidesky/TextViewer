@@ -25,8 +25,7 @@ import main.SettingData;
 
 public class SelectedFileHandler {
 
-	private File readFile;
-	private Charset readAs;
+	private TextFile readFile;
 	private boolean paged;
 	private BlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
 	
@@ -55,11 +54,10 @@ public class SelectedFileHandler {
 		this.arr = new char[setting.charBufSize];
 	}
 	
-	public SelectedFileHandler(File readFile, Charset readAs) { 
+	public SelectedFileHandler(TextFile read) { 
 
-		this.readFile = readFile;
-		this.readAs = readAs;
-		this.paged = readFile.length() > setting.singlePageFileSizeLimit; 
+		this.readFile = read;
+		this.paged = readFile.file.length() > setting.singlePageFileSizeLimit; 
 		this.arr = new char[setting.charBufSize];
 		
 	}	
@@ -83,12 +81,12 @@ public class SelectedFileHandler {
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - reader - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
-		Main.logger.log(taskID + "Reading file " + readFile.getAbsolutePath());
+		Main.logger.log(taskID + "Reading file " + readFile.file.getAbsolutePath());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.singlePageFileSizeLimit));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
-		try(TextReader reader = new TextReader(setting, readFile, readAs, taskID)) {
+		try(TextReader reader = new TextReader(setting, readFile, taskID)) {
 			if (paged) {
 				pagedFileReadLoop(reader);
 			} else {
@@ -97,7 +95,7 @@ public class SelectedFileHandler {
 		} catch (InterruptedException e) {
 			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, true);
 		} catch (IOException e) {
-			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.getAbsolutePath(), e, true);
+			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.file.getAbsolutePath(), e, true);
 		}
 		
 		Main.logger.log(taskID + "Read task completed in " + (System.currentTimeMillis()- startTime) + "ms");
@@ -165,23 +163,23 @@ public class SelectedFileHandler {
 	 * @param text Text of the <code>JTextArea</code> if the file is not paged. if the file is paged, this argument is not used.
 	 * @return <code>true</code> if successfully saved. if canceled/failed, <code>false</code>
 	 * */
-	public boolean write(File writeTo, Charset writeAs, String text) {
+	public boolean write(TextFile writeTo, String text) {
 		
 		boolean ret = true;
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
-		Main.logger.log(taskID + "Writing file " + writeTo.getAbsolutePath() + " as encoding : " + writeAs.name());
+		Main.logger.log(taskID + "Writing file " + writeTo.file.getAbsolutePath() + " as encoding : " + writeTo.encoding.name());
 		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
 		
 		long startTime = System.currentTimeMillis();
 		
 		boolean overWriteSameFile = writeTo.equals(readFile);
-		File outputFile = writeTo;
+		File outputFile = writeTo.file;
 		if (overWriteSameFile) {
 			Main.logger.log(taskID + "Output file is same as original file! creating temporary file....");
 			try {
-				outputFile = File.createTempFile(writeTo.getName(), ".txt");
+				outputFile = File.createTempFile(writeTo.file.getName(), ".txt");
 				Main.logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
 			} catch (IOException e) {
 				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
@@ -191,10 +189,10 @@ public class SelectedFileHandler {
 
 		if (ret) { //if not already failed, write
 			if (paged) {
-				ret = pagedFileWriteLoop(outputFile, writeAs);
+				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding));
 			} else {
 				try {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, writeAs));
+					BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, writeTo.encoding));
 					bw.write(text.replaceAll("\\R", System.lineSeparator()));
 					bw.close();
 					ret = true;
@@ -206,7 +204,7 @@ public class SelectedFileHandler {
 
 			if (overWriteSameFile) {
 				try {
-					Files.copy(outputFile.toPath(), writeTo.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(outputFile.toPath(), writeTo.file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					if (!outputFile.delete())
 						outputFile.deleteOnExit();
 				} catch (IOException e) {
@@ -223,13 +221,13 @@ public class SelectedFileHandler {
 		
 	}
 	
-	private boolean pagedFileWriteLoop(File writeTo, Charset writeAs) { 
+	private boolean pagedFileWriteLoop(TextFile writeTo) { 
 
 		Main.logger.newLine();
-		Main.logger.log(taskID + "Original file is  : " + readFile.getAbsolutePath() + " as encoding : " + readAs.name());
+		Main.logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.displayName());
 		
-		try (TextReader reader = new TextReader(setting, readFile, readAs, taskID);
-				FileWriter fw = new FileWriter(writeTo, writeAs);) {
+		try (TextReader reader = new TextReader(setting, readFile, taskID);
+				FileWriter fw = new FileWriter(writeTo.file, writeTo.encoding);) {
 
 			 while (true) {
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
@@ -246,7 +244,7 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "Reached EOF!");
 			return true;
 		} catch (IOException e) {
-			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.getAbsolutePath(), e, true);
+			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.file.getAbsolutePath(), e, true);
 			return false;
 		}
 		
@@ -303,6 +301,10 @@ public class SelectedFileHandler {
 	private void closeReading() {
 		readingClosed = true;
 		if(readTaskFuture != null) readTaskFuture.cancel(true);
+	}
+
+	public Charset getReadCharset() {
+		return readFile.encoding;
 	}
 
 }
