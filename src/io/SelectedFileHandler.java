@@ -71,6 +71,7 @@ public class SelectedFileHandler {
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
 		this.fileContentQueue = fileContentQueue2;
+		if(readingThread == null) readingThread = Executors.newSingleThreadExecutor();
 		readTaskFuture = readingThread.submit(this::readTask);
 		
 	}
@@ -290,12 +291,15 @@ public class SelectedFileHandler {
 	public void close() {
 		
 		closeReading();
+		if(readingThread == null) return;
 		readingThread.shutdownNow();
 		try {
 			readingThread.awaitTermination(5000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			Main.logger.log(e);
 		}
+		readingThread = null;
+		
 	}
 	
 	private void closeReading() {

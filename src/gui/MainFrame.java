@@ -54,7 +54,7 @@ import main.ReferenceDTO;
 
 public class MainFrame extends JFrame {
 
-	private static final long serialVersionUID = -6166008890392172380L;
+	private static final long serialVersionUID = -5689481800496264177L;
 	
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
@@ -261,14 +261,28 @@ public class MainFrame extends JFrame {
 		quickSaveFile.getAccessibleContext().setAccessibleDescription("Quick save the current file");
 		quickSaveFile.addActionListener((e) -> {
 			
+			Main.logger.log("Quicksave!");
 			TextFile saveTo;
+			
+			if(!isEdited && editedPage.isEmpty()) {
+				Main.logger.log("Nothing to save! Page unedited!");
+				return;
+			}
+			
+			if(isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
+				if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
+			}
+			
 			if(fileHandle == null) {
 				saveTo = selectSaveFile();
 			} else {
 				saveTo = lastOpened;
 			}
 			
-			System.out.println(saveTo); //TODO : temporary for debug
+			if(fileHandle != null) {
+				fileHandle.close();
+			}
 			
 			if(saveFile(saveTo)) {
 				lastSaved = saveTo;
@@ -282,6 +296,7 @@ public class MainFrame extends JFrame {
 		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
 		saveFile.addActionListener((e) -> {
 			
+			Main.logger.log("Save in another encoding!");
 			/** Write file in EDT */
 			if(isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
 				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
