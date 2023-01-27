@@ -5,8 +5,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
+import java.security.Provider.Service;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.Adler32;
 import java.util.zip.CRC32;
 
@@ -28,7 +34,7 @@ public class Main {
 	 *  <code>charPerPage</code> : 1 page of A4 sheet can contain roughly 3000 chars(10pt) at most. 2/3 of that will do
 	 *  <code>pageEndsWithNewline</code> : true is usually expected by normal users
 	 *  <code>singlePageFileSizeLimit</code> : 1GB would be a good limit for "big" file
-	 *  <code>loadedPagesNumber</code> : 1 makes at most 1 pages read in memory(include one that <code>TextViewer</code> is holding for display
+	 *  <code>loadedPagesNumber</code	> : 1 makes at most 1 pages read in memory(include one that <code>TextViewer</code> is holding for display
 	 *  triple buffering(a few KB) won't be considered a huge RAM , and will avoid lag
 	 *  </pre> 
 	 *  */
@@ -43,7 +49,10 @@ public class Main {
 		boolean verbose = false;
 		
 		for(int i = 0; i < args.length; i++) {
-			if(args[i].equals("--showAllFont")) {
+			if(args[i].equals("--help")) {
+				printConsoleHelp();
+				return;
+			} else if(args[i].equals("--showAllFont")) {
 				FontDialog.showAll = true;
 			} else if(args[i].equals("--verbose")) {
 				verbose = true;
@@ -66,9 +75,8 @@ public class Main {
 					}
 				}
 			} else {
-				System.out.println("Usage : java -jar TextViewer.jar [options]");
-				System.out.println("Options : ");
-				System.out.println("\t--showAllFont\tShow whole font in font list in Change font Dialog"); //TODO : help for all options
+				System.err.println("Invalid Argument : " + args[i] + "\n");
+				printConsoleHelp();
 				return;
 			}
 		}
@@ -102,6 +110,34 @@ public class Main {
 		});
     }
 	
+
+	private static void printConsoleHelp() {
+
+		System.out.println("Usage : java -jar TextViewer.jar [options]");
+		System.out.println("Options : ");
+		System.out.println("\t--help\tShow this help message\n");
+		System.out.println("\t--showAllFont\tShow all fonts(even if it can't display texts in the editor) in font list in \"Change font\" Dialog\n");
+		System.out.println("\t--verbose\tLog verbose/debugging information\n");
+		System.out.println("\t--logConsole\tLog at system console, not in a file\n");
+		System.out.print("\t--pageHash=<HashAlgorithm>\tUse designated hash algorithm when checking if a page is edited.\n"
+								+ "\t\t\t\t\tIn default, CRC32 checksum will be used. you can use various hash algorithm like SHA,\n"
+								+ "\t\t\t\t\tor you may use whole text value as a \"hash\" by --pageHash=RAW\n"
+								+ "\t\t\t\t\tSince hash values of all read pages are stored in memory, this will cause every page that have read in memory,\n"
+								+ "\t\t\t\t\teventually put whole file in memory.\n" 
+								+ "\t\t\t\t\tAvailable <HashAlgorithm> options are below :\n\n"
+								+ "\t\t\t\t\t\tRAW\n"
+								+ "\t\t\t\t\t\tAdler32\n"
+								+ "\t\t\t\t\t\tCRC32\n"
+								+ "\t\t\t\t\t\t");
+	    System.out.println(Arrays.stream(Security.getProviders())
+	    							.map(Provider::getServices)
+	    							.flatMap(Set::stream)
+	    							.filter(s -> "MessageDigest".equalsIgnoreCase(s.getType()))
+	    							.map(Service::getAlgorithm)
+	    							.collect(Collectors.joining("\n\t\t\t\t\t\t")));
+		
+	}
+
 
 	public static String formatFileSize(long fileSize) {
 		
