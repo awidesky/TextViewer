@@ -179,7 +179,7 @@ public class SelectedFileHandler {
 		if (overWriteSameFile) {
 			Main.logger.log(taskID + "Output file is same as original file! creating temporary file....");
 			try {
-				outputFile = File.createTempFile(writeTo.file.getName(), ".txt");
+				outputFile = File.createTempFile(writeTo.file.getName() + new SimpleDateFormat("yyyyMMddkkmmss").format(new Date()), ".txt");
 				Main.logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
 			} catch (IOException e) {
 				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
