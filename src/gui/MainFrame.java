@@ -76,7 +76,7 @@ public class MainFrame extends JFrame {
 	private JMenu fileMenu;
 	private JMenuItem openFile;
 	private JMenuItem quickSaveFile;
-	private JMenuItem saveFile; //TODO : add quick save(save at current file in same encoding, ctrl + s)
+	private JMenuItem saveFile;
 	private JMenuItem closeFile;
 	private JMenu editMenu;
 	private JMenuItem undo;
