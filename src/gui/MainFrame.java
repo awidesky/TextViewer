@@ -59,8 +59,8 @@ public class MainFrame extends JFrame {
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
 	private UndoManager undoManager = new UndoManager();;
-	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), null);
-	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), null);
+	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset());
+	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset());
 	
 	private TextFilechooser fileChooser = new TextFilechooser();
 	
@@ -202,7 +202,7 @@ public class MainFrame extends JFrame {
 				} catch (Exception ex) {
 					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
 				}
-				openFile(new TextFile(dropped, Charset.defaultCharset())); // TODO : CharsetSelectDialog??
+				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset())); // TODO : CharsetSelectDialog??
 			}
         });
 		
@@ -264,19 +264,19 @@ public class MainFrame extends JFrame {
 			Main.logger.log("Quicksave!");
 			TextFile saveTo;
 			
-			if(!isEdited && editedPage.isEmpty()) {
-				Main.logger.log("Nothing to save! Page unedited!");
-				return;
-			}
-			
-			if(isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
-				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
-				if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
-			}
-			
 			if(fileHandle == null) {
-				saveTo = selectSaveFile();
+				if((saveTo = selectSaveFile()) == null) return;
 			} else {
+				if (!isEdited && editedPage.isEmpty()) {
+					Main.logger.log("Nothing to save! Page unedited!");
+					return;
+				}
+
+				if (fileHandle.isPaged() && isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+					fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
+					if (!editedPage.contains(nowPageMetadata.pageNum))
+						editedPage.add(nowPageMetadata.pageNum);
+				}
 				saveTo = lastOpened;
 			}
 			
@@ -298,11 +298,17 @@ public class MainFrame extends JFrame {
 			
 			Main.logger.log("Save in another encoding!");
 			/** Write file in EDT */
-			if(isEdited && fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
+			if (fileHandle != null && fileHandle.isPaged() && isEdited
+					&& fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
 				fileHandle.pageEdited(new Page(ta.getText(), nowPageMetadata.pageNum, false));
-				if(!editedPage.contains(nowPageMetadata.pageNum)) editedPage.add(nowPageMetadata.pageNum);
+				if (!editedPage.contains(nowPageMetadata.pageNum))
+					editedPage.add(nowPageMetadata.pageNum);
 			}
-			if(saveFile(selectSaveFile())) {
+			
+			TextFile save = selectSaveFile();
+			if(save == null) return;
+			
+			if(saveFile(save)) {
 				openFile(lastSaved);
 			}
 			
@@ -451,7 +457,7 @@ public class MainFrame extends JFrame {
 		editMenu.setEnabled(flag);
 	}
 	
-	private void openFile(TextFile lastSaved) {
+	private void openFile(TextFile openfile) {
 
 		if(!saveBeforeClose()) {
 			return;
@@ -461,11 +467,11 @@ public class MainFrame extends JFrame {
 		quickSaveFile.setEnabled(true);
 		closeFile.setEnabled(true);
 		
-		if (lastSaved != null) {
-			lastOpened = lastSaved;
+		if (openfile != null) {
+			lastOpened = openfile;
 		} else {
 			fileChooser.setDialogTitle("Select file to read...");
-			fileChooser.setCurrentDirectory(lastOpened.file.getParentFile());
+			fileChooser.setLastOpendFile(lastOpened);
 			fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
@@ -509,7 +515,7 @@ public class MainFrame extends JFrame {
 			Main.logger.log("JFileChooser canceled!");
 			return null;
 		case JFileChooser.ERROR_OPTION:
-			Main.logger.log("JFileChooser error occured!"); // Exception
+			SwingDialogs.error("JFileChooser error occured!", "Cancelling save operation...", null, false);
 			return null;
 		case JFileChooser.APPROVE_OPTION: 
 			break;
