@@ -39,6 +39,7 @@ public class SelectedFileHandler {
 	/** Is reading task of this SelectedFileHandler closed?? */
 	private boolean readingClosed = false;
 	private boolean reachedEOF = false;
+	private boolean failed = false;
 	
 	/** Even if <code>Main.setting</code> changes, current instance of <code>setting</code> will not affected. */
 	private final SettingData setting = new SettingData(Main.setting);
@@ -65,6 +66,8 @@ public class SelectedFileHandler {
 	public boolean isPaged() { return paged; }
 	
 	public boolean isReachedEOF() { return reachedEOF; }
+	
+	public boolean isFailed() { return failed; }
 	
 	public long getLoadedPagesNumber() { return setting.loadedPagesNumber; }
 	
@@ -95,15 +98,17 @@ public class SelectedFileHandler {
 			}
 		} catch (InterruptedException e) {
 			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, true);
+			failed = true;
 		} catch (IOException e) {
-			SwingDialogs.error(taskID + "cannot read file!!", "%e%\n\nFile : " + readFile.file.getAbsolutePath(), e, true);
+			SwingDialogs.error(taskID + "Error while closing I/O stream", "%e%\n\nFile : " + readFile.file.getAbsolutePath(), e, true);
+			failed = true;
 		}
 		
-		Main.logger.log(taskID + "Read task completed in " + (System.currentTimeMillis()- startTime) + "ms");
+		Main.logger.log(taskID + "Read task " + (failed ? "failed" : "completed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
 	
-	private void pagedFileReadLoop(TextReader reader) throws IOException {
+	private void pagedFileReadLoop(TextReader reader) {
 
 		readFile:
 		while (true) {
@@ -113,7 +118,15 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "start reading a page #" + nowPage);
 			long startTime = System.currentTimeMillis();
 			
-			Page result = changes.getOrDefault(nowPage, reader.readOnePage());
+			Page result;
+			try {
+				result = changes.getOrDefault(nowPage, reader.readOnePage());
+			} catch (IOException e1) {
+				SwingDialogs.error(taskID + "I/O Failed!", "%e%", e1, true);
+				failed = true;
+				break readFile; //Error
+			}
+			
 			if(result == Page.EOF) {
 				reachedEOF = true;
 				Main.logger.log(taskID + "No more page to read!");
@@ -139,23 +152,26 @@ public class SelectedFileHandler {
 				if(reReading) {
 					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");
 					reReading = false;
-					return;
+					return; // EDT is not waiting for the queue. it's executing ActionListener of reRead
 				} else if(readingClosed) {
 					Main.logger.log(taskID + "File reading task has canceled.");
-					return;
+					return; // EDT is not waiting for the queue. it's executing ActionListener of closeFile
 				} else {
-					SwingDialogs.error(taskID + "cannot read file!", "%e%", e, true);
+					SwingDialogs.error(taskID + "Cannot read file!", "%e%", e, true);
 				}
+				failed = true;
+				break readFile; //Error
 			}
 
 		} //readFile:
 		
 		try {
-			fileContentQueue.put(Page.EOF);
+			fileContentQueue.put(failed ? Page.ERR : Page.EOF);
 		} catch (InterruptedException e) {
-			SwingDialogs.error("cannot read file!", "%e%", e, true);
+			SwingDialogs.error(taskID + "Cannot read file!", "%e%", e, true);
+			for(int i = 0; !fileContentQueue.offer(Page.ERR) && i < 1000; i++);
 		}
-		Main.logger.log(taskID + "File reading completed");
+		Main.logger.log(taskID + "Paged file reading " + (failed ? "failed" : "completed"));
 
 	}
 

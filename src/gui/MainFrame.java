@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
@@ -40,6 +41,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.DocumentEvent;
@@ -202,7 +204,7 @@ public class MainFrame extends JFrame {
 				} catch (Exception ex) {
 					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
 				}
-				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset())); // TODO : CharsetSelectDialog??
+				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset()));
 			}
         });
 		
@@ -581,18 +583,18 @@ public class MainFrame extends JFrame {
 		undo.setEnabled(undoManager.canUndo());
 		redo.setEnabled(undoManager.canRedo());
 
-		displyNewPage();
+		TitleGeneartor.loading(true);
+		isEdited = false;
+		newPageReading.set(true);
+		SwingUtilities.invokeLater(this::displyNewPage);
 		
 	}
 
 	private void displyNewPage() {
-		
+
 		Page nowDisplayed = null;
-		TitleGeneartor.loading(true);
 		boolean originVal = ta.isEditable();
 		editable(false);
-		isEdited = false;
-		newPageReading.set(true);
 		try {
 			
 			/**
@@ -600,16 +602,29 @@ public class MainFrame extends JFrame {
 			 * */
 			if(fileHandle.isPaged() && fileHandle.getLoadedPagesNumber() == 1) {
 				
-				if(!noNextPage && !fileHandle.isReachedEOF()) ta.setText(null); /** next page is EOF */
+				if(!noNextPage && !fileHandle.isReachedEOF()) ta.setText(null); /** If next page is EOF, TextArea shouldn't be cleared */
 				
 				synchronized (fileHandle) {
 					fileHandle.notify();
 				}
 			}
-			nowDisplayed = fileContentQueue.take(); //TODO : when error occurs while waiting, it hangs...
+			nowDisplayed = fileContentQueue.poll(500, TimeUnit.MILLISECONDS);
+			
+			if(nowDisplayed == Page.ERR || fileHandle.isFailed()) {
+				TitleGeneartor.loading(false);
+				editable(originVal);
+				newPageReading.set(false);
+				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ")]Task is failed. abort waiting new page.");
+				return;
+			} else if(nowDisplayed == null) {
+				editable(originVal);
+				SwingUtilities.invokeLater(this::displyNewPage);
+				return;
+			}
+			
 			nowPageMetadata = nowDisplayed.metadata;
 		} catch (InterruptedException e1) {
-			SwingDialogs.error("interrupted while loading this page!!", "%e%", e1, true);
+			SwingDialogs.error("interrupted while waiting worker thread to read thes page!!", "%e%", e1, true);
 			nowDisplayed = new Page("", -1, true);
 		}
 		

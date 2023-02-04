@@ -12,7 +12,13 @@ public class Page {
 			return other != null && other == this; 
 		}
 	};
-
+	public static final Page ERR = new Page(null, -2, true) {
+		@Override
+		public boolean equals(Object other) {
+			return other != null && other == this; 
+		}
+	};
+	
 	/** text of this page */
 	public final String text;
 	/** metadata of this page */
