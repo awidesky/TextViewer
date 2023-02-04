@@ -225,7 +225,7 @@ public class SelectedFileHandler {
 	private boolean pagedFileWriteLoop(TextFile writeTo) { 
 
 		Main.logger.newLine();
-		Main.logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.displayName());
+		Main.logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, taskID);
 				FileWriter fw = new FileWriter(writeTo.file, writeTo.encoding);) {
