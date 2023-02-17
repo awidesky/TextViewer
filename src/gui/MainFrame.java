@@ -207,6 +207,19 @@ public class MainFrame extends JFrame {
 				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset()));
 			}
         });
+		ta.addMouseWheelListener(mouseWheelEvent -> {
+			if (mouseWheelEvent.isControlDown()) {
+				Font font = ta.getFont();
+				int fontSize = font.getSize();
+				int delta = -(mouseWheelEvent.getUnitsToScroll() / 3);
+				if((delta < 0 && fontSize > 1) || (delta > 0 && fontSize < Integer.MAX_VALUE)) fontSize += delta;
+				Font newFont = new Font(font.getFontName(), font.getStyle(), fontSize);
+				ta.setFont(newFont);
+				System.out.println(fontSize);
+			} else {
+				ta.getParent().dispatchEvent(mouseWheelEvent);
+			}
+		});
 		
 		
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
