@@ -53,7 +53,7 @@ public class FontDialog extends JDialog {
 		fontName = new JComboBox<>(
 				Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames())
 							.map((s) -> new Font(s, Font.PLAIN, 20))
-							.filter( (f) -> showAll || (("".equals(content)) ? true : (f.canDisplayUpTo(content) == -1)	) )
+							.filter( (f) -> showAll || (f.canDisplayUpTo("".equals(content) ? "abcdefg" : content) == -1) )
 							.map(Font::getFamily)
 							.toArray(String[]::new));
 		fontName.setSelectedItem(now.getFamily());
@@ -86,9 +86,12 @@ public class FontDialog extends JDialog {
 		fontSize.setBounds(265, 35, 37, 22);
 		
 		done.setBounds(144, 70, done.getPreferredSize().width, done.getPreferredSize().height);
+		done.setMnemonic('d');
 		done.addActionListener((e) -> {
 			try {
-				ref.set(new Font(Optional.ofNullable(fontName.getSelectedItem()).orElseGet(() -> new JLabel().getFont()).toString(), fontStyle, Integer.parseInt(fontSize.getText())));
+				int fontsize = Integer.parseInt(fontSize.getText());
+				if(fontsize < 1) throw new NumberFormatException("No negative number! : " + fontsize);
+				ref.set(new Font(Optional.ofNullable(fontName.getSelectedItem()).orElseGet(() -> new JLabel().getFont()).toString(), fontStyle, fontsize));
 			} catch (NumberFormatException err) {
 				SwingDialogs.error("Invalid font size!!", "%e%", err, true);
 				return;
