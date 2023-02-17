@@ -84,6 +84,7 @@ public class SettingDialog extends JDialog {
 		tf__Queue.setText("" + setting.loadedPagesNumber);
 		
 		btn_done.setBounds(getSize().width/2 - btn_done.getPreferredSize().width/2 - 10, getSize().height - btn_done.getPreferredSize().height - 45, btn_done.getPreferredSize().width, btn_done.getPreferredSize().height);
+		btn_done.setMnemonic('d');
 		btn_done.addActionListener((e) -> {
 			try {
 				if(!setting.set(Integer.valueOf(tf_bufSize.getText()), Integer.valueOf(tf_charPerPage.getText()), chb_newLine.isSelected(), Main.getExactByteSize(tf_limit.getText() + cmb_limit.getSelectedItem()), Integer.valueOf(tf__Queue.getText())))
