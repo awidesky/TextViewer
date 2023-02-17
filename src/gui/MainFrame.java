@@ -598,13 +598,13 @@ public class MainFrame extends JFrame {
 
 		TitleGeneartor.loading(true);
 		isEdited = false;
-		newPageReading.set(true);
 		SwingUtilities.invokeLater(this::displyNewPage);
 		
 	}
 
 	private void displyNewPage() {
 
+		newPageReading.set(true);
 		Page nowDisplayed = null;
 		boolean originVal = ta.isEditable();
 		editable(false);
