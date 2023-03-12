@@ -40,6 +40,7 @@ public class Main {
 	 *  */
 	public static SettingData setting = new SettingData(1800, 1800, true, 1024 * 1024 * 1024, 3);
 	
+	private static MainFrame mf;
 	public static LoggerThread logger = null;
 	
 	private static HashGenerator hasher = HashGenerator.getChecksumHashInstance(new CRC32());
@@ -105,7 +106,7 @@ public class Main {
 		
 		SwingUtilities.invokeLater(() ->{
 			logger.log("Starting Mainframe...");
-			new MainFrame();
+			mf = new MainFrame();
 			logger.log("Mainframe loaded!");
 		});
     }
@@ -212,6 +213,10 @@ public class Main {
 	}
 	
 
+	public static MainFrame getMainFrame() {
+		return mf;
+	}
+	
 	public static void kill(int errCode) {
 		
 		logger.log("Kill application with error code : " + errCode);

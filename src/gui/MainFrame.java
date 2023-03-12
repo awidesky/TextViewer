@@ -333,20 +333,7 @@ public class MainFrame extends JFrame {
 		closeFile.getAccessibleContext().setAccessibleDescription("Close current reading file and make TextViewer empty");
 		closeFile.addActionListener((e) -> {
 			
-			if(saveBeforeClose()) {
-				ta.setText(null);
-				if(fileHandle != null) fileHandle.close();
-				fileHandle = null;
-				fileContentQueue = null;
-				disableNextPageMenu();
-				setting.setEnabled(true);
-				saveFile.setEnabled(false);
-				quickSaveFile.setEnabled(false);
-				closeFile.setEnabled(false);
-				undoManager.discardAllEdits();
-				setTitle(Main.VERSION);
-				TitleGeneartor.fileClosed();
-			}
+			closeFile();
 			
 		});
 		closeFile.setEnabled(false);
@@ -459,6 +446,23 @@ public class MainFrame extends JFrame {
 		
 	}
 	
+	public void closeFile() {
+		if(saveBeforeClose()) {
+			ta.setText(null);
+			if(fileHandle != null) fileHandle.close();
+			fileHandle = null;
+			fileContentQueue = null;
+			disableNextPageMenu();
+			setting.setEnabled(true);
+			saveFile.setEnabled(false);
+			quickSaveFile.setEnabled(false);
+			closeFile.setEnabled(false);
+			undoManager.discardAllEdits();
+			setTitle(Main.VERSION);
+			TitleGeneartor.fileClosed();
+		}
+	}
+
 	private void makeNewQueue() {
 		if(Main.setting.loadedPagesNumber < 3) {
 			fileContentQueue = new SynchronousQueue<>();

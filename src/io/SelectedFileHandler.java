@@ -19,6 +19,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.SwingUtilities;
+
 import gui.SwingDialogs;
 import main.Main;
 import main.SettingData;
@@ -100,10 +102,11 @@ public class SelectedFileHandler {
 			SwingDialogs.error(taskID + "cannot submit text to GUI!", "%e%", e, true);
 			failed = true;
 		} catch (IOException e) {
-			SwingDialogs.error(taskID + "Error while closing I/O stream", "%e%\n\nFile : " + readFile.file.getAbsolutePath(), e, true);
+			SwingDialogs.error(taskID + "Error while closing I/O stream", "%e%\nFile : " + readFile.file.getAbsolutePath(), e, true);
 			failed = true;
 		}
 		
+		if(failed) SwingUtilities.invokeLater(Main.getMainFrame()::closeFile);
 		Main.logger.log(taskID + "Read task " + (failed ? "failed" : "completed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
@@ -261,7 +264,8 @@ public class SelectedFileHandler {
 			Main.logger.log(taskID + "Reached EOF!");
 			return true;
 		} catch (IOException e) {
-			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\n\nFile : " + writeTo.file.getAbsolutePath(), e, true);
+			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\nFile : " + writeTo.file.getAbsolutePath(), e, true);
+			SwingUtilities.invokeLater(Main.getMainFrame()::closeFile);
 			return false;
 		}
 		
