@@ -265,7 +265,6 @@ public class SelectedFileHandler {
 			return true;
 		} catch (IOException e) {
 			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\nFile : " + writeTo.file.getAbsolutePath(), e, true);
-			SwingUtilities.invokeLater(Main.getMainFrame()::closeFile);
 			return false;
 		}
 		
