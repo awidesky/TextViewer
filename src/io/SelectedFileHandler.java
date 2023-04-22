@@ -2,8 +2,9 @@ package io;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -212,7 +213,7 @@ public class SelectedFileHandler {
 				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding));
 			} else {
 				try {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile, writeTo.encoding));
+					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
 					bw.write(text.replaceAll("\\R", System.lineSeparator()));
 					bw.close();
 					ret = true;
@@ -247,7 +248,7 @@ public class SelectedFileHandler {
 		Main.logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, taskID);
-				FileWriter fw = new FileWriter(writeTo.file, writeTo.encoding);) {
+				OutputStreamWriter ow = new OutputStreamWriter(new FileOutputStream(writeTo.file), writeTo.encoding);) {
 
 			 while (true) {
 				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
@@ -257,8 +258,8 @@ public class SelectedFileHandler {
 					break;
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				fw.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));
-				if (page.lastNewlineRemoved() && setting.pageEndsWithNewline) fw.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
+				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));
+				if (page.lastNewlineRemoved() && setting.pageEndsWithNewline) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 
 			Main.logger.log(taskID + "Reached EOF!");

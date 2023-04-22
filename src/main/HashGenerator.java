@@ -30,7 +30,8 @@ public abstract class HashGenerator {
 			@Override
 			public String getHash(String src) {
 				cs.reset();
-				cs.update(src.getBytes());
+				byte[] b = src.getBytes();
+				cs.update(b, 0, b.length);
 				String ret = Long.toHexString(cs.getValue());
 				cs.reset();
 				return ret;

@@ -1,7 +1,8 @@
 package io;
 
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import main.Main;
 import main.SettingData;
@@ -9,7 +10,7 @@ import main.SettingData;
 public class TextReader implements AutoCloseable{
 
 	private TextFile readFile;
-	private FileReader fr;
+	private InputStreamReader ir;
 	private StringBuilder leftOver = new StringBuilder();
 	private SettingData setting;
 	private long nextPageNum = 1L;
@@ -24,8 +25,7 @@ public class TextReader implements AutoCloseable{
 		this.arr = new char[setting.charBufSize];
 		this.taskID = taskID;
 		if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(""); }
-		
-		this.fr = new FileReader(readFile.file, readFile.encoding);
+		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding);
 		Main.logger.log("");
 	}
 	
@@ -130,7 +130,7 @@ public class TextReader implements AutoCloseable{
 	}
 
 
-	/** Fills the array by reading <code>fr</code>
+	/** Fills the array by reading <code>ir</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading. 
 	 *  @throws IOException 
 	 * */
@@ -138,7 +138,7 @@ public class TextReader implements AutoCloseable{
 		return readArray(arr.length);
 	}
 
-	/** Fills the array by reading <code>fr</code>
+	/** Fills the array by reading <code>ir</code>
 	 *  This method makes sure that <code>array</code> is fully filled unless EOF is read during the reading.
 	 *  
 	 *  @param len amount of chars to read
@@ -150,7 +150,7 @@ public class TextReader implements AutoCloseable{
 	private int readArray(int len) throws IOException {
 
 		Main.logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
-		int totalRead = fr.read(arr, 0, len);
+		int totalRead = ir.read(arr, 0, len);
 		Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
 		if (totalRead == -1) {
 			Main.logger.logVerbose(taskID + "File pointer position was at EOF");
@@ -160,7 +160,7 @@ public class TextReader implements AutoCloseable{
 		if (totalRead != len) {
 			Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
 			int read;
-			while ((read = fr.read(arr, totalRead, len - totalRead)) != -1) {
+			while ((read = ir.read(arr, totalRead, len - totalRead)) != -1) {
 				Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
 				totalRead += read;
 				if (totalRead == len) {
@@ -179,7 +179,7 @@ public class TextReader implements AutoCloseable{
 
 	@Override
 	public void close() throws IOException {
-		if(fr != null) fr.close();
+		if(ir != null) ir.close();
 	}
 	
 	
