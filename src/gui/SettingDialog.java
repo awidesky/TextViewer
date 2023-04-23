@@ -3,8 +3,10 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -13,11 +15,12 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
+import main.LineSeparator;
 import main.Main;
 import main.SettingData;
 
 public class SettingDialog extends JDialog {
-
+//TODO : set line feed setter
 	
 	/**
 	 * 
@@ -40,7 +43,10 @@ public class SettingDialog extends JDialog {
 	private JCheckBox chb_newLine = new JCheckBox();
 	
 	private JLabel lb_Queue = new JLabel("Loaded page(s) in memory :");
-	private JTextField tf__Queue = new JTextField();
+	private JTextField tf_Queue = new JTextField();
+	
+	private JLabel lb_lineSep = new JLabel("Line Separator (*system default) :");
+	private JComboBox<String> cmb_lineSep = new JComboBox<String>(Arrays.stream(LineSeparator.values()).map(LineSeparator::getExplain).collect(Collectors.toList()).toArray(new String[] {}));
 	
 	private JButton btn_done = new JButton("done");
 	
@@ -51,7 +57,7 @@ public class SettingDialog extends JDialog {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setModal(true);
 		setTitle("Setting");
-		setSize(250, 220);
+		setSize(250, 300);
 		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setResizable(false);
 		setLayout(null);
@@ -80,14 +86,18 @@ public class SettingDialog extends JDialog {
 		chb_newLine.setSelected(setting.pageEndsWithNewline);
 		
 		lb_Queue.setBounds(5, 128, lb_Queue.getPreferredSize().width, lb_Queue.getPreferredSize().height);
-		tf__Queue.setBounds(8 + lb_Queue.getPreferredSize().width, 125, 20, tf__Queue.getPreferredSize().height);
-		tf__Queue.setText("" + setting.loadedPagesNumber);
+		tf_Queue.setBounds(8 + lb_Queue.getPreferredSize().width, 125, 20, tf_Queue.getPreferredSize().height);
+		tf_Queue.setText("" + setting.loadedPagesNumber);
+		
+		lb_lineSep.setBounds(5, 158, lb_lineSep.getPreferredSize().width, lb_lineSep.getPreferredSize().height);
+		cmb_limit.setSelectedItem(LineSeparator.getDefault().getExplain());
+		cmb_lineSep.setBounds(10, 163 + lb_lineSep.getPreferredSize().height, cmb_lineSep.getPreferredSize().width, cmb_lineSep.getPreferredSize().height);
 		
 		btn_done.setBounds(getSize().width/2 - btn_done.getPreferredSize().width/2 - 10, getSize().height - btn_done.getPreferredSize().height - 45, btn_done.getPreferredSize().width, btn_done.getPreferredSize().height);
 		btn_done.setMnemonic('d');
 		btn_done.addActionListener((e) -> {
 			try {
-				if(!setting.set(Integer.valueOf(tf_bufSize.getText()), Integer.valueOf(tf_charPerPage.getText()), chb_newLine.isSelected(), Main.getExactByteSize(tf_limit.getText() + cmb_limit.getSelectedItem()), Integer.valueOf(tf__Queue.getText())))
+				if(!setting.set(Integer.valueOf(tf_bufSize.getText()), Integer.valueOf(tf_charPerPage.getText()), chb_newLine.isSelected(), Main.getExactByteSize(tf_limit.getText() + cmb_limit.getSelectedItem()), Integer.valueOf(tf_Queue.getText()), LineSeparator.getFromExplain((String)cmb_lineSep.getSelectedItem())))
 					return;
 			} catch(NumberFormatException ex) {
 				SwingDialogs.error("Invalid input!", "%e%", ex, true);
@@ -109,7 +119,9 @@ public class SettingDialog extends JDialog {
 		add(tf_limit);
 		add(cmb_limit);
 		add(lb_Queue);
-		add(tf__Queue);
+		add(tf_Queue);
+		add(lb_lineSep);
+		add(cmb_lineSep);
 		add(btn_done);
 		
 		setVisible(true);

@@ -4,6 +4,7 @@ import gui.SwingDialogs;
 
 public class SettingData {
 
+	//TODO : fields should be private
 	/** how many <strong>"characters"</strong> does buffer have? */
 	public int charBufSize; 
 	/** maximum character per one page */
@@ -21,16 +22,19 @@ public class SettingData {
 	 * </pre> 
 	 *  */
 	public int loadedPagesNumber;
+	/** NewLine character (e.g. CRLF, CR, LF) */
+	public LineSeparator lineSeparator;
 	
 	
 	
-	public SettingData(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
-		if(!set(charBufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesNumber)) {
+	public SettingData(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber, LineSeparator lineSeparator) {
+		if(!set(charBufSize, charPerPage, pageEndsWithNewline, singlePageFileSizeLimit, loadedPagesNumber, lineSeparator)) {
 			this.charBufSize = -1;
 			this.charPerPage = -1;
 			this.pageEndsWithNewline = false;
 			this.singlePageFileSizeLimit = -1;
 			this.loadedPagesNumber = -1;
+			this.lineSeparator = LineSeparator.getDefault();
 		}
 	}
 	
@@ -38,11 +42,11 @@ public class SettingData {
 	 * Copy constructor
 	 * */
 	public SettingData(SettingData setting) {
-		this(setting.charBufSize, setting.charPerPage, setting.pageEndsWithNewline, setting.singlePageFileSizeLimit, setting.loadedPagesNumber);
+		this(setting.charBufSize, setting.charPerPage, setting.pageEndsWithNewline, setting.singlePageFileSizeLimit, setting.loadedPagesNumber, setting.lineSeparator);
 	}
 	
 	
-	public boolean set(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber) {
+	public boolean set(int charBufSize, int charPerPage, boolean pageEndsWithNewline, long singlePageFileSizeLimit, int loadedPagesNumber, LineSeparator lineSeparator) {
 
 		String errContent = null;
 		
@@ -61,6 +65,7 @@ public class SettingData {
 			this.pageEndsWithNewline = pageEndsWithNewline;
 			this.singlePageFileSizeLimit = singlePageFileSizeLimit;
 			this.loadedPagesNumber = loadedPagesNumber;
+			this.lineSeparator = lineSeparator;
 			
 			return true;
 		}

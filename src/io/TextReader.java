@@ -98,7 +98,7 @@ public class TextReader implements AutoCloseable{
 		} else {
 			lastLittlePortionStartsAt = res.length();
 		}
-		
+		//TODO : \\R이 아니라 지정된 lineseparator로 찾기
 		res = res.substring(0, lastLittlePortionStartsAt).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline - 마지막 읽을 때
 		
 		if (setting.pageEndsWithNewline) {

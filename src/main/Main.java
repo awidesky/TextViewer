@@ -38,7 +38,7 @@ public class Main {
 	 *  triple buffering(a few KB) won't be considered a huge RAM , and will avoid lag
 	 *  </pre> 
 	 *  */
-	public static SettingData setting = new SettingData(1800, 1800, true, 1024 * 1024 * 1024, 3);
+	public static SettingData setting = new SettingData(1800, 1800, true, 1024 * 1024 * 1024, 3, LineSeparator.getDefault());
 	
 	private static MainFrame mf;
 	public static LoggerThread logger = null;
