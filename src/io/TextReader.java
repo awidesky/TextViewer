@@ -32,6 +32,7 @@ public class TextReader implements AutoCloseable{
 	
 	public long getNextPageNum() { return nextPageNum; }
 	
+	private static String replaceNewLine(String str) { return str.replaceAll(Main.setting.lineSeparator.getStr(), "\n"); }
 	
 	public Page readAll() throws IOException {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
@@ -42,7 +43,7 @@ public class TextReader implements AutoCloseable{
 			sb.append(arr, 0, read);
 		}
 		Main.logger.log(taskID + "Reached EOF");
-		return new Page(sb.toString().replaceAll("\\R", "\n"), -1, true);
+		return new Page(replaceNewLine(sb.toString()), -1, true);
 	}
 	
 
@@ -98,8 +99,7 @@ public class TextReader implements AutoCloseable{
 		} else {
 			lastLittlePortionStartsAt = res.length();
 		}
-		//TODO : \\R이 아니라 지정된 lineseparator로 찾기
-		res = res.substring(0, lastLittlePortionStartsAt).replaceAll("\\R", "\n"); //Replace \R so that we can easily find newline - 마지막 읽을 때
+		res = replaceNewLine(res.substring(0, lastLittlePortionStartsAt)); //Replace \R so that we can easily find newline
 		
 		if (setting.pageEndsWithNewline) {
 			int lastLineFeedIndex = res.lastIndexOf("\n"); 
@@ -123,8 +123,10 @@ public class TextReader implements AutoCloseable{
 	
 
 	private static int lastLineBreak(String res) {
-		for(int i = res.length() - 1; i > -1; i--) {
-			if (res.substring(i, i + 1).matches("\\R")) return i;
+		String lineSep = Main.setting.lineSeparator.getStr();
+		int lineSepLen = lineSep.length();
+		for(int i = res.length() - lineSepLen; i > -1; i -= lineSepLen) {
+			if (res.substring(i, i + lineSepLen).equals(lineSep)) return i;
 		}
 		return res.length();
 	}
