@@ -62,11 +62,11 @@ public class SettingDialog extends JDialog {
 		
 		lb_bufSize.setBounds(5, 8, lb_bufSize.getPreferredSize().width, lb_bufSize.getPreferredSize().height);
 		tf_bufSize.setBounds(8 + lb_bufSize.getPreferredSize().width, 5, 60, tf_bufSize.getPreferredSize().height);
-		tf_bufSize.setText("" + setting.charBufSize);
+		tf_bufSize.setText("" + setting.getCharBufSize());
 		
 		lb_limit.setBounds(5, 38, lb_limit.getPreferredSize().width, lb_limit.getPreferredSize().height);
 		tf_limit.setBounds(8 + lb_limit.getPreferredSize().width, 35, 40, tf_limit.getPreferredSize().height);
-		Scanner sc = new Scanner(Main.formatExactFileSize(setting.singlePageFileSizeLimit));
+		Scanner sc = new Scanner(Main.formatExactFileSize(setting.getSinglePageFileSizeLimit()));
 		sc.useDelimiter(Pattern.compile("\\D+"));
 		tf_limit.setText(String.valueOf(sc.nextLong()));
 		sc.useDelimiter(Pattern.compile("\\d+"));
@@ -76,19 +76,19 @@ public class SettingDialog extends JDialog {
 		
 		lb_charPerPage.setBounds(5, 68, lb_charPerPage.getPreferredSize().width, lb_charPerPage.getPreferredSize().height);
 		tf_charPerPage.setBounds(8 + lb_charPerPage.getPreferredSize().width, 65, 50, tf_charPerPage.getPreferredSize().height);
-		tf_charPerPage.setText("" + setting.charPerPage);
+		tf_charPerPage.setText("" + setting.getCharPerPage());
 		lb_chars.setBounds(70 + lb_bufSize.getPreferredSize().width, 65, lb_chars.getPreferredSize().width, 22);
 		
 		lb_newLine.setBounds(5, 98, lb_newLine.getPreferredSize().width, lb_newLine.getPreferredSize().height);
 		chb_newLine.setBounds(8 + lb_newLine.getPreferredSize().width, 95, chb_newLine.getPreferredSize().width, chb_newLine.getPreferredSize().height);
-		chb_newLine.setSelected(setting.pageEndsWithNewline);
+		chb_newLine.setSelected(setting.getPageEndsWithNewline());
 		
 		lb_Queue.setBounds(5, 128, lb_Queue.getPreferredSize().width, lb_Queue.getPreferredSize().height);
 		tf_Queue.setBounds(8 + lb_Queue.getPreferredSize().width, 125, 20, tf_Queue.getPreferredSize().height);
-		tf_Queue.setText("" + setting.loadedPagesNumber);
+		tf_Queue.setText("" + setting.getLoadedPagesNumber());
 		
 		lb_lineSep.setBounds(5, 158, lb_lineSep.getPreferredSize().width, lb_lineSep.getPreferredSize().height);
-		cmb_lineSep.setSelectedItem(setting.lineSeparator.getExplain());
+		cmb_lineSep.setSelectedItem(setting.getLineSeparator().getExplain());
 		cmb_lineSep.setBounds(10, 163 + lb_lineSep.getPreferredSize().height, cmb_lineSep.getPreferredSize().width, cmb_lineSep.getPreferredSize().height);
 		
 		btn_done.setBounds(getSize().width/2 - btn_done.getPreferredSize().width/2 - 10, getSize().height - btn_done.getPreferredSize().height - 45, btn_done.getPreferredSize().width, btn_done.getPreferredSize().height);

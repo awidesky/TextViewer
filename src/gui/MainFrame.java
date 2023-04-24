@@ -415,7 +415,7 @@ public class MainFrame extends JFrame {
 		setting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		setting.addActionListener((e) -> {
 			new SettingDialog(Main.setting);
-			newline.setText(Main.setting.lineSeparator.getAbbreviation());
+			newline.setText(Main.setting.getLineSeparator().getAbbreviation());
 			newline.setMaximumSize(new Dimension(newline.getPreferredSize().width, newline.getPreferredSize().height));
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
@@ -538,10 +538,10 @@ public class MainFrame extends JFrame {
 	}
 
 	private void makeNewQueue() {
-		if (Main.setting.loadedPagesNumber < 3) {
+		if (Main.setting.getLoadedPagesNumber() < 3) {
 			fileContentQueue = new SynchronousQueue<>();
 		} else {
-			fileContentQueue = new LinkedBlockingQueue<>(Main.setting.loadedPagesNumber - 1);
+			fileContentQueue = new LinkedBlockingQueue<>(Main.setting.getLoadedPagesNumber() - 1);
 		}
 	}
 

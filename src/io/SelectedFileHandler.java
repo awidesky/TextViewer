@@ -55,24 +55,21 @@ public class SelectedFileHandler {
 	 * */
 	public SelectedFileHandler() {
 		this.paged = false;
-		this.arr = new char[setting.charBufSize];
+		this.arr = new char[setting.getCharBufSize()];
 	}
 	
 	public SelectedFileHandler(TextFile read) { 
 
 		this.readFile = read;
-		this.paged = readFile.file.length() > setting.singlePageFileSizeLimit; 
-		this.arr = new char[setting.charBufSize];
+		this.paged = readFile.file.length() > setting.getSinglePageFileSizeLimit(); 
+		this.arr = new char[setting.getCharBufSize()];
 		
 	}	
 	
 	public boolean isPaged() { return paged; }
-	
 	public boolean isReachedEOF() { return reachedEOF; }
-	
 	public boolean isFailed() { return failed; }
-	
-	public long getLoadedPagesNumber() { return setting.loadedPagesNumber; }
+	public long getLoadedPagesNumber() { return setting.getLoadedPagesNumber(); }
 	
 	public void startNewRead(BlockingQueue<Page> fileContentQueue2) {
 		
@@ -89,7 +86,7 @@ public class SelectedFileHandler {
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - reader - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Reading file " + readFile.file.getAbsolutePath());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.singlePageFileSizeLimit));
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.getSinglePageFileSizeLimit()));
 		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
@@ -146,7 +143,7 @@ public class SelectedFileHandler {
 			try {
 				fileContentQueue.put(result);
 				/** if only one page can be loaded in memory, wait until GUI requests new page */
-				if(setting.loadedPagesNumber == 1) {
+				if(setting.getLoadedPagesNumber() == 1) {
 					result = null;
 					synchronized (this) {
 						wait();
@@ -191,7 +188,7 @@ public class SelectedFileHandler {
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
 		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		Main.logger.log(taskID + "Writing file " + writeTo.file.getAbsolutePath() + " as encoding : " + writeTo.encoding.name());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.singlePageFileSizeLimit));
+		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.getSinglePageFileSizeLimit()));
 		
 		long startTime = System.currentTimeMillis();
 		
@@ -259,7 +256,7 @@ public class SelectedFileHandler {
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
 				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));
-				if (page.lastNewlineRemoved() && setting.pageEndsWithNewline) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
+				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 
 			Main.logger.log(taskID + "Reached EOF!");

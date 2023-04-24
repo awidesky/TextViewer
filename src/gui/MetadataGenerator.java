@@ -54,7 +54,7 @@ public class MetadataGenerator {
 						(file == null) ? " " : file.getAbsolutePath(),
 						(file == null) ? " " : Main.formatFileSize(file.length()),
 						Optional.ofNullable(charset).orElse(" "),
-						Main.setting.lineSeparator.getAbbreviation()));
+						Main.setting.getLineSeparator().getAbbreviation()));
 	}
 
 	public static void pageNum(long l) {

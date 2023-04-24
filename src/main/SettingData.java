@@ -4,15 +4,14 @@ import gui.SwingDialogs;
 
 public class SettingData {
 
-	//TODO : fields should be private
 	/** how many <strong>"characters"</strong> does buffer have? */
-	public int charBufSize; 
+	private int charBufSize; 
 	/** maximum character per one page */
-	public int charPerPage;
+	private int charPerPage;
 	/** if<code>true</code>, every page is ended as a whole line even if number of characters of the page is less than <code>charPerPage</code> */
-	public boolean pageEndsWithNewline;
+	private boolean pageEndsWithNewline;
 	/** if a file is larger than <code>singlePageFileSizeLimit</code> byte, read it as multi-paged file */
-	public long singlePageFileSizeLimit;
+	private long singlePageFileSizeLimit;
 	/**
 	 * <pre>
 	 * How many page will be stored in memory(include one that displayed in <code>TextViewer</code>)
@@ -21,9 +20,9 @@ public class SettingData {
 	 * if value is 1, use <code>SynchronousQueue</code>, AND <code>SelectedFileHandler</code> will wait until <code>TextViewer</code> requests new page
 	 * </pre> 
 	 *  */
-	public int loadedPagesNumber;
+	private int loadedPagesNumber;
 	/** NewLine character (e.g. CRLF, CR, LF) */
-	public LineSeparator lineSeparator;
+	private LineSeparator lineSeparator;
 	
 	
 	
@@ -70,6 +69,13 @@ public class SettingData {
 			return true;
 		}
 	}
+
+	public int getCharBufSize() { return charBufSize; }
+	public int getCharPerPage() { return charPerPage; }
+	public boolean getPageEndsWithNewline() { return pageEndsWithNewline; }
+	public long getSinglePageFileSizeLimit() { return singlePageFileSizeLimit; }
+	public int getLoadedPagesNumber() { return loadedPagesNumber; }
+	public LineSeparator getLineSeparator() { return lineSeparator; }
 	
 	
 }

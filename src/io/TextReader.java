@@ -22,9 +22,9 @@ public class TextReader implements AutoCloseable{
 		
 		this.setting = setting;
 		this.readFile = readFile;
-		this.arr = new char[setting.charBufSize];
+		this.arr = new char[setting.getCharBufSize()];
 		this.taskID = taskID;
-		if (setting.pageEndsWithNewline) { leftOver = new StringBuilder(""); }
+		if (setting.getPageEndsWithNewline()) { leftOver = new StringBuilder(""); }
 		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding);
 		Main.logger.log("");
 	}
@@ -32,7 +32,7 @@ public class TextReader implements AutoCloseable{
 	
 	public long getNextPageNum() { return nextPageNum; }
 	
-	private static String replaceNewLine(String str) { return str.replaceAll(Main.setting.lineSeparator.getStr(), "\n"); }
+	private static String replaceNewLine(String str) { return str.replaceAll(Main.setting.getLineSeparator().getStr(), "\n"); }
 	
 	public Page readAll() throws IOException {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
@@ -61,7 +61,7 @@ public class TextReader implements AutoCloseable{
 		StringBuilder strBuf = new StringBuilder("");
 		String result = null;
 		
-		int nextRead = Math.min(arr.length, setting.charPerPage);
+		int nextRead = Math.min(arr.length, setting.getCharPerPage());
 		while (true) {
 			int read = readArray(nextRead);
 			if (read == -1) { // no more chars to read
@@ -77,9 +77,9 @@ public class TextReader implements AutoCloseable{
 			}
 			strBuf.append(arr, 0, read);
 			totalRead += read;
-			if(totalRead >= setting.charPerPage) break;
+			if(totalRead >= setting.getCharPerPage()) break;
 			
-			nextRead = Math.min(arr.length, setting.charPerPage - totalRead);
+			nextRead = Math.min(arr.length, setting.getCharPerPage() - totalRead);
 		}
 		
 		String res = strBuf.toString();
@@ -101,7 +101,7 @@ public class TextReader implements AutoCloseable{
 		}
 		res = replaceNewLine(res.substring(0, lastLittlePortionStartsAt)); //Replace \R so that we can easily find newline
 		
-		if (setting.pageEndsWithNewline) {
+		if (setting.getPageEndsWithNewline()) {
 			int lastLineFeedIndex = res.lastIndexOf("\n"); 
 
 			if (lastLineFeedIndex != -1) {
@@ -123,7 +123,7 @@ public class TextReader implements AutoCloseable{
 	
 
 	private static int lastLineBreak(String res) {
-		String lineSep = Main.setting.lineSeparator.getStr();
+		String lineSep = Main.setting.getLineSeparator().getStr();
 		int lineSepLen = lineSep.length();
 		for(int i = res.length() - lineSepLen; i > -1; i -= lineSepLen) {
 			if (res.substring(i, i + lineSepLen).equals(lineSep)) return i;
