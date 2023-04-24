@@ -102,6 +102,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem setting;
 	private JMenuItem font;
 	private JCheckBoxMenuItem editable;
+	private JCheckBoxMenuItem wrap;
 	private JMenu pageMenu;
 	private JMenuItem next;
 	private JMenuItem reRead;
@@ -235,16 +236,17 @@ public class MainFrame extends JFrame {
 					fontSize += delta;
 				Font newFont = new Font(font.getFontName(), font.getStyle(), fontSize);
 				ta.setFont(newFont);
-				System.out.println(fontSize);
 			} else {
 				ta.getParent().dispatchEvent(mouseWheelEvent);
 			}
 		});
-
+		ta.setWrapStyleWord(true);
+		ta.setLineWrap(false);
+		
 		setLayout(new BorderLayout(5, 5));
 
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED); // TODO : horizontal scrollbar fix
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
 		sp.setBackground(Color.WHITE);
 
@@ -433,9 +435,23 @@ public class MainFrame extends JFrame {
 			quickSaveFile.setEnabled(true);
 			editable(!ta.isEditable());
 		});
+		wrap = new JCheckBoxMenuItem("Word wrap");
+		wrap.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, ActionEvent.ALT_MASK));
+		wrap.getAccessibleContext().setAccessibleDescription("Automatic line changing(doesn't change file content)");
+		wrap.setSelected(false);
+		wrap.addActionListener((e) -> {
+			if(wrap.isSelected()) {
+				sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+				ta.setLineWrap(true);
+			} else {
+				sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+				ta.setLineWrap(false);
+			}
+		});
 		formatMenu.add(setting);
 		formatMenu.add(font);
 		formatMenu.add(editable);
+		formatMenu.add(wrap);
 
 		pageMenu = new JMenu("Pages");
 		pageMenu.setMnemonic(KeyEvent.VK_P);

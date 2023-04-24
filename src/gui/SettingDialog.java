@@ -20,13 +20,11 @@ import main.Main;
 import main.SettingData;
 
 public class SettingDialog extends JDialog {
-//TODO : set line feed setter
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2127297466348994156L;
-	
+	private static final long serialVersionUID = 7514995941974896916L;
 	
 	private JLabel lb_bufSize = new JLabel("Prefered Buffer size :");
 	private JTextField tf_bufSize = new JTextField();
