@@ -90,7 +90,7 @@ public class SettingDialog extends JDialog {
 		tf_Queue.setText("" + setting.loadedPagesNumber);
 		
 		lb_lineSep.setBounds(5, 158, lb_lineSep.getPreferredSize().width, lb_lineSep.getPreferredSize().height);
-		cmb_limit.setSelectedItem(LineSeparator.getDefault().getExplain());
+		cmb_lineSep.setSelectedItem(setting.lineSeparator.getExplain());
 		cmb_lineSep.setBounds(10, 163 + lb_lineSep.getPreferredSize().height, cmb_lineSep.getPreferredSize().width, cmb_lineSep.getPreferredSize().height);
 		
 		btn_done.setBounds(getSize().width/2 - btn_done.getPreferredSize().width/2 - 10, getSize().height - btn_done.getPreferredSize().height - 45, btn_done.getPreferredSize().width, btn_done.getPreferredSize().height);

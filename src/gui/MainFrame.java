@@ -5,8 +5,8 @@ import static main.Main.logger;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -73,8 +74,8 @@ public class MainFrame extends JFrame {
 
 	private JLabel pathName = new JLabel();
 	private JLabel size = new JLabel();
-	private JLabel encoding = new JLabel(lastOpened.encoding.name());
-	private JLabel newline = new JLabel(LineSeparator.getDefault().getExplain(), SwingConstants.RIGHT);
+	private JLabel encoding = new JLabel();
+	private JLabel newline = new JLabel(LineSeparator.getDefault().getAbbreviation(), SwingConstants.RIGHT);
 
 	private UndoManager undoManager = new UndoManager();
 
@@ -148,7 +149,7 @@ public class MainFrame extends JFrame {
 		addMenubar();
 
 		ta.setBackground(Color.LIGHT_GRAY);
-		ta.setEditable(false);
+		ta.setEditable(true);
 		ta.getDocument().addUndoableEditListener(undoManager);
 		ta.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -244,19 +245,11 @@ public class MainFrame extends JFrame {
 
 		sp = new JScrollPane(ta, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED); // TODO : horizontal scrollbar fix
-		sp.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		sp.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
 		sp.setBackground(Color.WHITE);
 
-		add(sp, BorderLayout.CENTER);
-
-		statusPanel = new JPanel(new GridLayout(1, 3));
-		statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
-
-		statusPanel.add(pathName);
-		statusPanel.add(size);
-		statusPanel.add(encoding);
-		statusPanel.add(newline);
-
+		addstatusPanel();
+		
 		add(sp, BorderLayout.CENTER);
 		add(statusPanel, BorderLayout.SOUTH);
 
@@ -264,38 +257,27 @@ public class MainFrame extends JFrame {
 
 	}
 
-	public void viewMetadata(MetadataGenerator.Metadata mt) {
-		SwingUtilities.invokeLater(() -> {
-			setTitle(mt.title);
-			pathName.setText(mt.path);
-			size.setText(mt.fileSize);
-			encoding.setText(mt.charset);
-			newline.setText(mt.newline);
-		});
+	private void addstatusPanel() {
+		statusPanel = new JPanel(new BorderLayout());
+		statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 1, 1, 1));
+		/*
+		size.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+		encoding.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+		newline.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+		pathName.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+		*/
+		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(size);
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(encoding);
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(newline);
+		statusPanel.add(pathName, BorderLayout.CENTER);
+		statusPanel.add(innerPanel, BorderLayout.EAST);
+		MetadataGenerator.generate();
 	}
-
-	/**
-	 * 
-	 * Ask save the file before closing file. If user says yes, save the file;
-	 * 
-	 * @return <code>true</code> if current file is OK to close. <code>false</code>
-	 *         if it's not OK.
-	 * 
-	 */
-	protected boolean saveBeforeClose() {
-		if (getTitle().startsWith("*")) {
-			switch (JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?",
-					JOptionPane.YES_NO_CANCEL_OPTION)) {
-			case JOptionPane.YES_OPTION:
-				saveFile(selectSaveFile());
-			case JOptionPane.CANCEL_OPTION:
-			case JOptionPane.CLOSED_OPTION:
-				return false;
-			}
-		}
-		return true;
-	}
-
+	
 	private void addMenubar() {
 
 		menuBar = new JMenuBar();
@@ -308,10 +290,8 @@ public class MainFrame extends JFrame {
 		openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.ALT_MASK));
 		openFile.getAccessibleContext().setAccessibleDescription("Open a file");
 		openFile.addActionListener((e) -> {
-
 			// open chosen file
 			openFile(null);
-
 		});
 		quickSaveFile = new JMenuItem("Save", KeyEvent.VK_S);
 		quickSaveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
@@ -379,9 +359,7 @@ public class MainFrame extends JFrame {
 		closeFile.getAccessibleContext()
 				.setAccessibleDescription("Close current reading file and make TextViewer empty");
 		closeFile.addActionListener((e) -> {
-
 			closeFile();
-
 		});
 		closeFile.setEnabled(false);
 		fileMenu.add(openFile);
@@ -423,8 +401,9 @@ public class MainFrame extends JFrame {
 		redo.setEnabled(false);
 		editMenu.add(undo);
 		editMenu.add(redo);
-		editMenu.setEnabled(false);
-
+		editMenu.setEnabled(true);
+		editable(true);
+		
 		formatMenu = new JMenu("Setting");
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
@@ -434,7 +413,8 @@ public class MainFrame extends JFrame {
 		setting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		setting.addActionListener((e) -> {
 			new SettingDialog(Main.setting);
-			newline.setText(Main.setting.lineSeparator.getExplain());
+			newline.setText(Main.setting.lineSeparator.getAbbreviation());
+			newline.setMaximumSize(new Dimension(newline.getPreferredSize().width, newline.getPreferredSize().height));
 		});
 		font = new JMenuItem("Change font", KeyEvent.VK_C);
 		font.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.ALT_MASK));
@@ -447,6 +427,7 @@ public class MainFrame extends JFrame {
 		editable = new JCheckBoxMenuItem("Editable");
 		editable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK));
 		editable.getAccessibleContext().setAccessibleDescription("Set this file editable in viewer");
+		editable.setSelected(true);
 		editable.addActionListener((e) -> {
 			saveFile.setEnabled(true);
 			quickSaveFile.setEnabled(true);
@@ -486,6 +467,40 @@ public class MainFrame extends JFrame {
 
 		setJMenuBar(menuBar);
 
+	}
+
+	/**
+	 * 
+	 * Ask save the file before closing file. If user says yes, save the file;
+	 * 
+	 * @return <code>true</code> if current file is OK to close. <code>false</code>
+	 *         if it's not OK.
+	 * 
+	 */
+	protected boolean saveBeforeClose() {
+		if (getTitle().startsWith("*")) {
+			switch (JOptionPane.showConfirmDialog(null, "Save changed content?", "Save change?",
+					JOptionPane.YES_NO_CANCEL_OPTION)) {
+			case JOptionPane.YES_OPTION:
+				saveFile(selectSaveFile());
+			case JOptionPane.CANCEL_OPTION:
+			case JOptionPane.CLOSED_OPTION:
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public void viewMetadata(MetadataGenerator.Metadata mt) {
+		Runnable task = () -> {
+			setTitle(mt.title);
+			pathName.setText(mt.path);
+			size.setText(mt.fileSize);
+			encoding.setText(mt.charset);
+			newline.setText(mt.newline);
+		};
+		if(SwingUtilities.isEventDispatchThread()) task.run();
+		else SwingUtilities.invokeLater(task);
 	}
 
 	public void closeFile() {

@@ -20,6 +20,7 @@ public class TextFilechooser extends JFileChooser {
 	
 	//private final ArrayList<Entry<String, Charset>> charsetList = Charset.availableCharsets().entrySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	public static final ArrayList<String> charsetNameList = Charset.availableCharsets().keySet().stream().collect(Collectors.toCollection(ArrayList::new));
+	public static final String defaultCharset = "UTF-8";
 	private static final JComboBox<String> comboBox = getCharsetChooseComboBox();
 	
 	public static final FileFilter TEXTFILEFILTER = new FileFilter() {
@@ -36,7 +37,7 @@ public class TextFilechooser extends JFileChooser {
 	
 	public TextFilechooser() {
 
-		comboBox.setSelectedIndex(charsetNameList.indexOf("UTF-8"));
+		comboBox.setSelectedIndex(charsetNameList.indexOf(defaultCharset));
 
 		setMultiSelectionEnabled(false);
 		setFileSelectionMode(JFileChooser.FILES_ONLY);

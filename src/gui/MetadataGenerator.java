@@ -1,6 +1,7 @@
 package gui;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import main.Main;
@@ -11,7 +12,7 @@ public class MetadataGenerator {
 	
 	private static File file = null;
 	private static boolean paged = false;
-	private static String charset = null;
+	private static String charset = TextFilechooser.defaultCharset;
 	private static boolean edited = false;
 	private static boolean loading = false;
 	private static long pageNum = -1L;
@@ -50,7 +51,10 @@ public class MetadataGenerator {
 		if(file == null) fileExplainPart = " - \"Untitled\"";
 		else fileExplainPart = " - " + file.getName() + (paged ? " (page #" + pageNum + ")" : "");
 		metadataConsumer.accept(new Metadata((edited ? "*" : "") + Main.VERSION + fileExplainPart + (loading ? " (loading...)" : ""),
-				file.getAbsolutePath(), Main.formatFileSize(file.length()), charset, Main.setting.lineSeparator.getExplain()));
+						(file == null) ? " " : file.getAbsolutePath(),
+						(file == null) ? " " : Main.formatFileSize(file.length()),
+						Optional.ofNullable(charset).orElse(" "),
+						Main.setting.lineSeparator.getAbbreviation()));
 	}
 
 	public static void pageNum(long l) {

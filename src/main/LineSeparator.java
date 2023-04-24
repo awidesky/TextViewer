@@ -31,12 +31,13 @@ public enum LineSeparator {
 	
 	private LineSeparator(String str, String abbreviation, String explain) {
 		this.str = str;
-		this.abbreviation = (System.lineSeparator().equals(str) ? "*" : "") + abbreviation;
+		this.abbreviation = abbreviation;
 		this.explain = explain;
 	}
 
 	public String getStr() { return str; }
-	public String getExplain() { return abbreviation + " (" + explain + ")"; }
+	public String getAbbreviation() { return abbreviation; }
+	public String getExplain() { return (System.lineSeparator().equals(str) ? "*" : "") + abbreviation + " (" + explain + ")"; }
 
 	public static LineSeparator getFromExplain(String explain) {
 		for(LineSeparator l : values()) {
