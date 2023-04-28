@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="deploy" name="Create Runnable Jar for Project TextViewer">
+	<!--this file was created by Eclipse Runnable JAR Export Wizard-->
+	<!--ANT 1.7 is required                                        -->
+	<!--define folder properties-->
+
+	<property name="version_num" value="1.5"/>
+	<property name="dir.buildfile" value="."/>
+	<property name="dir.workspace" value="${dir.buildfile}/.."/>
+	<property name="dir.jarfile" value="${dir.buildfile}/build"/>
+
+	<macrodef name="jpackage.exec">
+		<sequential>
+			<exec executable="jpackage.exe">
+				<arg value="--input" />
+				<arg value="${dir.jarfile}" />
+				<arg value="--dest" />
+				<arg value="${dir.jarfile}" />
+				<arg value="--main-jar" />
+				<arg value="TextViewer.jar" />
+				<arg value="--main-class" />
+				<arg value="main.Main" />
+				<arg value="--name" />
+				<arg value="TextViewer" />
+				<arg value="--vendor" />
+				<arg value="Eugene Hong" />
+				<arg value="--app-version" />
+				<arg value="${version_num}" />
+				<arg value="--license-file" />
+				<arg value="${dir.buildfile}/LICENSE" />
+				<arg value="--copyright" />
+				<arg value="Copyright (c) 2022-2023 Eugene Hong. All Rights Reserved." />
+				<arg value="--win-dir-chooser" />
+				<arg value="--win-menu" />
+				<arg value="--win-shortcut" />
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<target name="clean">
+		<delete dir="${dir.buildfile}/build" />
+	</target>
+
+	<target name="create_run_jar" depends="clean">
+		<jar destfile="${dir.jarfile}/TextViewer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="main.Main"/>
+				<attribute name="Class-Path" value="."/>
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin"/>
+		</jar>
+	</target>
+
+	<target depends="create_run_jar" name="deploy_jpackage_win">
+		<jpackage.exec/>
+	</target>
+
+	<target depends="deploy_jpackage_win" name="deploy"/>
+
+
+</project>

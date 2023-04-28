@@ -3,6 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=java,eclipse
 
 logs/
+build/
 
 ### Eclipse ###
 .metadata
