@@ -410,7 +410,7 @@ public class MainFrame extends JFrame {
 		formatMenu.setMnemonic(KeyEvent.VK_T);
 		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 
-		setting = new JMenuItem("Setting Dialog", KeyEvent.VK_D);
+		setting = new JMenuItem("Setting dialog", KeyEvent.VK_D);
 		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.ALT_MASK));
 		setting.getAccessibleContext().setAccessibleDescription("Buffer size setting");
 		setting.addActionListener((e) -> {
