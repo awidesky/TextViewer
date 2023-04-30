@@ -9,8 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gui.MetadataGenerator;
-import gui.SwingDialogs;
 import main.LineSeparator;
+import util.SwingDialogs;
 
 public class TextFile {
 

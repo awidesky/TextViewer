@@ -22,12 +22,15 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
-import gui.SwingDialogs;
 import main.Main;
 import main.SettingData;
+import util.SwingDialogs;
+import util.TaskLogger;
 
 public class SelectedFileHandler {
 
+	private TaskLogger logger;
+	
 	private TextFile readFile;
 	private boolean paged;
 	private BlockingQueue<Page> fileContentQueue = new LinkedBlockingQueue<>();
@@ -54,16 +57,16 @@ public class SelectedFileHandler {
 	 *  write-only instance
 	 * */
 	public SelectedFileHandler() {
+		logger = Main.getLogger("[FileHandler | \"Untitled\"]");
 		this.paged = false;
 		this.arr = new char[setting.getCharBufSize()];
 	}
 	
-	public SelectedFileHandler(TextFile read) { 
-
+	public SelectedFileHandler(TextFile read) {
+		logger = Main.getLogger("[FileHandler | " + read.file.getName() + "]");
 		this.readFile = read;
 		this.paged = readFile.file.length() > setting.getSinglePageFileSizeLimit(); 
 		this.arr = new char[setting.getCharBufSize()];
-		
 	}	
 	
 	public boolean isPaged() { return paged; }
@@ -84,10 +87,10 @@ public class SelectedFileHandler {
 		reachedEOF = false;
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - reader - " + (int)(Math.random()*100) + "] ";
-		Main.logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
-		Main.logger.log(taskID + "Reading file " + readFile.file.getAbsolutePath());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.getSinglePageFileSizeLimit()));
-		Main.logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
+		logger.log(taskID + "Read task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
+		logger.log(taskID + "Reading file " + readFile.file.getAbsolutePath());
+		logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatExactFileSize(setting.getSinglePageFileSizeLimit()));
+		logger.log(taskID + "Buffer size : " + arr.length + "(chars)");
 		long startTime = System.currentTimeMillis();
 		
 		try(TextReader reader = new TextReader(setting, readFile, taskID)) {
@@ -105,7 +108,7 @@ public class SelectedFileHandler {
 		}
 		
 		if(failed) SwingUtilities.invokeLater(Main.getMainFrame()::closeFile);
-		Main.logger.log(taskID + "Read task " + (failed ? "failed" : "completed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
+		logger.log(taskID + "Read task " + (failed ? "failed" : "completed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
 
 	}
 	
@@ -115,8 +118,8 @@ public class SelectedFileHandler {
 		while (true) {
 
 			long nowPage = reader.getNextPageNum();
-			Main.logger.newLine();
-			Main.logger.log(taskID + "start reading a page #" + nowPage);
+			logger.newLine();
+			logger.log(taskID + "start reading a page #" + nowPage);
 			long startTime = System.currentTimeMillis();
 			
 			Page result;
@@ -130,13 +133,13 @@ public class SelectedFileHandler {
 			
 			if(result == Page.EOF) {
 				reachedEOF = true;
-				Main.logger.log(taskID + "No more page to read!");
+				logger.log(taskID + "No more page to read!");
 				break readFile; //EOF
 			} else if(result.isLastPage()) {
 				reachedEOF = true;
 			}
 			
-			Main.logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
+			logger.log(taskID + "reading page #" + nowPage + " is completed in " + (System.currentTimeMillis() - startTime) + "ms");
 			
 			if(hashes.size() < result.pageNum()) hashes.add(Main.getHash(result.text));
 			
@@ -151,11 +154,11 @@ public class SelectedFileHandler {
 				}
 			} catch (InterruptedException e) {
 				if(reReading) {
-					Main.logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");
+					logger.log(taskID + "Re-reading the file. Thread " + Thread.currentThread().getName() + " - " + Thread.currentThread().getId() + " interrupted");
 					reReading = false;
 					return; // EDT is not waiting for the queue. it's executing ActionListener of reRead
 				} else if(readingClosed) {
-					Main.logger.log(taskID + "File reading task has canceled.");
+					logger.log(taskID + "File reading task has canceled.");
 					return; // EDT is not waiting for the queue. it's executing ActionListener of closeFile
 				} else {
 					SwingDialogs.error(taskID + "Cannot read file!", "%e%", e, true);
@@ -172,7 +175,7 @@ public class SelectedFileHandler {
 			SwingDialogs.error(taskID + "Cannot read file!", "%e%", e, true);
 			for(int i = 0; !fileContentQueue.offer(Page.ERR) && i < 1000; i++);
 		}
-		Main.logger.log(taskID + "Paged file reading " + (failed ? "failed" : "completed"));
+		logger.log(taskID + "Paged file reading " + (failed ? "failed" : "completed"));
 
 	}
 
@@ -186,19 +189,19 @@ public class SelectedFileHandler {
 		boolean ret = true;
 		
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
-		Main.logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
-		Main.logger.log(taskID + "Writing file " + writeTo.file.getAbsolutePath() + " as encoding : " + writeTo.encoding.name());
-		Main.logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.getSinglePageFileSizeLimit()));
+		logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
+		logger.log(taskID + "Writing file " + writeTo.file.getAbsolutePath() + " as encoding : " + writeTo.encoding.name());
+		logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.getSinglePageFileSizeLimit()));
 		
 		long startTime = System.currentTimeMillis();
 		
 		boolean overWriteSameFile = writeTo.equals(readFile);
 		File outputFile = writeTo.file;
 		if (overWriteSameFile) {
-			Main.logger.log(taskID + "Output file is same as original file! creating temporary file....");
+			logger.log(taskID + "Output file is same as original file! creating temporary file....");
 			try {
 				outputFile = File.createTempFile(writeTo.file.getName() + new SimpleDateFormat("yyyyMMddkkmmss").format(new Date()), ".txt");
-				Main.logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
+				logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
 			} catch (IOException e) {
 				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
 				ret = false;
@@ -234,32 +237,32 @@ public class SelectedFileHandler {
 			}
 		}
 		
-		Main.logger.log(taskID + "Write task " + (ret ? "completed" : "failed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
+		logger.log(taskID + "Write task " + (ret ? "completed" : "failed") + " in " + (System.currentTimeMillis()- startTime) + "ms");
 		return ret;
 		
 	}
 	
 	private boolean pagedFileWriteLoop(TextFile writeTo) { 
 
-		Main.logger.newLine();
-		Main.logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.name());
+		logger.newLine();
+		logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, taskID);
 				OutputStreamWriter ow = new OutputStreamWriter(new FileOutputStream(writeTo.file), writeTo.encoding);) {
 
 			 while (true) {
-				Main.logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
+				logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
 				Page page = reader.readOnePage();
 				if (page == Page.EOF) {
-					Main.logger.log(taskID + "page #" + (reader.getNextPageNum() - 1) + " is EOF!");
+					logger.log(taskID + "page #" + (reader.getNextPageNum() - 1) + " is EOF!");
 					break;
 				}
-				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
+				logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
 				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));  //TODO
 				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 
-			Main.logger.log(taskID + "Reached EOF!");
+			logger.log(taskID + "Reached EOF!");
 			return true;
 		} catch (IOException e) {
 			SwingDialogs.error("Unable to open&write I/O stream!", "%e%\nFile : " + writeTo.file.getAbsolutePath(), e, true);
@@ -283,10 +286,10 @@ public class SelectedFileHandler {
 			String read = hashes.get((int) (pageNum - 1));
 			boolean ret = !read.equals(hash);
 
-			Main.logger.log("\nComparing hashes of page #" + pageNum);
-			Main.logger.log("Original hash : " + read);
-			Main.logger.log("TextArea hash : " + hash);
-			Main.logger.log("Edited : " + ret + "\n");
+			logger.log("\nComparing hashes of page #" + pageNum);
+			logger.log("Original hash : " + read);
+			logger.log("TextArea hash : " + hash);
+			logger.log("Edited : " + ret + "\n");
 
 			return ret;
 		} catch (IndexOutOfBoundsException e) {
@@ -313,7 +316,7 @@ public class SelectedFileHandler {
 		try {
 			readingThread.awaitTermination(5000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
-			Main.logger.log(e);
+			logger.log(e);
 		}
 		readingThread = null;
 		

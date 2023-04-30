@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
-import java.security.Security;
 import java.security.Provider.Service;
+import java.security.Security;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -20,7 +20,9 @@ import javax.swing.SwingUtilities;
 
 import gui.FontDialog;
 import gui.MainFrame;
-import gui.SwingDialogs;
+import util.LoggerThread;
+import util.SwingDialogs;
+import util.TaskLogger;
 
 public class Main {
 
@@ -41,7 +43,8 @@ public class Main {
 	public static SettingData setting = new SettingData(1800, 1800, true, 1024 * 1024 * 1024, 3, LineSeparator.getDefault());
 	
 	private static MainFrame mf;
-	public static LoggerThread logger = null;
+	private static LoggerThread logThread = new LoggerThread();
+	private static TaskLogger logger = null;
 	
 	private static HashGenerator hasher = HashGenerator.getChecksumHashInstance(new CRC32());
 	
@@ -58,7 +61,7 @@ public class Main {
 			} else if(args[i].equals("--verbose")) {
 				verbose = true;
 			} else if(args[i].equals("--logConsole")) {
-				logger = new LoggerThread();
+				logThread.setLogDestination(System.out);
 			} else if (args[i].startsWith("--pageHash=")) {
 				String hashAlgo = args[i].split("=")[1];
 				if ("Adler32".equalsIgnoreCase(hashAlgo)) {
@@ -83,23 +86,24 @@ public class Main {
 		}
 		
 		try {
-			if (logger == null) {
+			if (logThread == null) {
 				File logFolder = new File("." + File.separator + "logs");
 				File logFile = new File(logFolder.getAbsolutePath() + File.separator + "log-"
 						+ new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss").format(new Date()) + ".txt");
 				logFolder.mkdirs();
 				logFile.createNewFile();
 
-				logger = new LoggerThread(new FileOutputStream(logFile));
+				logThread.setLogDestination(new FileOutputStream(logFile));
 			}
 		} catch (IOException e) {
 
-			logger = new LoggerThread();
+			logThread.setLogDestination(System.out);
 			//GUI.error("Error when creating log flie", "%e%", e, false);
 			
 		} finally {
-			logger.setVerbose(verbose);
-			logger.start();
+			logThread.setVerbose(verbose);
+			logThread.start();
+			logger = logThread.getLogger("[Main]");
 		}
 		
 		logger.log("Setup done!");
@@ -231,7 +235,10 @@ public class Main {
 	public static String getHash(String src) {
 		return hasher.getHash(src);
 	}
-	
+
+	public static TaskLogger getLogger(String prefix) {
+		return logThread.getLogger(prefix);
+	}
 
 	public static MainFrame getMainFrame() {
 		return mf;
@@ -240,7 +247,7 @@ public class Main {
 	public static void kill(int errCode) {
 		
 		logger.log("Kill application with error code : " + errCode);
-		logger.kill(3000);
+		logThread.kill(3000);
 		System.exit(errCode);
 		
 	}

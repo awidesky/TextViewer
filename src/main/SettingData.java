@@ -1,6 +1,6 @@
 package main;
 
-import gui.SwingDialogs;
+import util.SwingDialogs;
 
 public class SettingData {
 

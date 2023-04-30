@@ -7,9 +7,12 @@ import java.io.InputStreamReader;
 import main.LineSeparator;
 import main.Main;
 import main.SettingData;
+import util.TaskLogger;
 
 public class TextReader implements AutoCloseable{
 
+	private TaskLogger logger;
+	
 	private TextFile readFile;
 	private InputStreamReader ir;
 	private StringBuilder leftOver = new StringBuilder();
@@ -29,21 +32,22 @@ public class TextReader implements AutoCloseable{
 		this.ls = readFile.lineSep;
 		if (setting.getPageEndsWithNewline()) { leftOver = new StringBuilder(""); }
 		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding);
-		Main.logger.log("");
+		logger = Main.getLogger("[TextReader | " + readFile.file.getName() + "]");
+		logger.log("");
 	}
 	
 	
 	public long getNextPageNum() { return nextPageNum; }
 	
 	public Page readAll() throws IOException {
-		Main.logger.log(taskID + "start reading the file until reach EOF");
+		logger.log(taskID + "start reading the file until reach EOF");
 		StringBuilder sb = new StringBuilder((int) readFile.file.length());
 		int read = 0;
 		while (true) {
 			if ((read = readArray()) == -1) break;
 			sb.append(arr, 0, read);
 		}
-		Main.logger.log(taskID + "Reached EOF");
+		logger.log(taskID + "Reached EOF");
 		String res = sb.toString();
 		
 		return new Page(replaceNewLine(res), -1, true);
@@ -68,7 +72,7 @@ public class TextReader implements AutoCloseable{
 			int read = readArray(nextRead);
 			if (read == -1) { // no more chars to read
 				if(totalRead == 0 && leftOver.length() == 0) {
-					Main.logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
+					logger.log("Reached EOF in first attempt reading a new Page, No more page to read!");
 					//Does not close this TextReader until close() is explicitly called.
 					//Just like InputStream behaves.
 					return Page.EOF; 
@@ -152,30 +156,30 @@ public class TextReader implements AutoCloseable{
 	 * */
 	private int readArray(int len) throws IOException {
 
-		Main.logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
+		logger.logVerbose(taskID + "Try reading " + len + " char(s)...");
 		int totalRead = ir.read(arr, 0, len);
-		Main.logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
+		logger.logVerbose(taskID + "Read " + totalRead + " char(s)");
 		if (totalRead == -1) {
-			Main.logger.logVerbose(taskID + "File pointer position was at EOF");
+			logger.logVerbose(taskID + "File pointer position was at EOF");
 			return -1;
 		}
 
 		if (totalRead != len) {
-			Main.logger.logVerbose(taskID + "Buffer not full, try reading more...");
+			logger.logVerbose(taskID + "Buffer not full, try reading more...");
 			int read;
 			while ((read = ir.read(arr, totalRead, len - totalRead)) != -1) {
-				Main.logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
+				logger.logVerbose(taskID + "Read " + read + " char(s), total : " + totalRead);
 				totalRead += read;
 				if (totalRead == len) {
-					Main.logger.logVerbose(taskID + "Buffer is full!");
+					logger.logVerbose(taskID + "Buffer is full!");
 					break;
 				}
 			}
 			if (read == -1)
-				Main.logger.logVerbose(taskID + "EOF reached!");
+				logger.logVerbose(taskID + "EOF reached!");
 		}
 
-		Main.logger.logVerbose(taskID + "total read char(s) : " + totalRead);
+		logger.logVerbose(taskID + "total read char(s) : " + totalRead);
 		return totalRead;
 
 	}

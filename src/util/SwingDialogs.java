@@ -1,28 +1,33 @@
-package gui;
+package util;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
-import main.Main;
 
 
 public class SwingDialogs {
 
 
+	private static Logger logger = Logger.consoleLogger;
 
+	
+	public static void setLogger(AbstractLogger newLogger) {
+		logger = newLogger;
+	}
+	
 	/**
 	 * show error dialog.
 	 * String <code>"%e%"</code> in <code>content</code> will replaced by error message of given <code>Exception</code> if it's not <code>null</code>
 	 * */
 	public static void error(String title, String content, Exception e, boolean waitTillClosed) {
 
-		Main.logger.log("\n");
-		String co = content.replace("%e%", (e == null) ? "null" : e.getMessage());
+		logger.log("\n");
+		String co = content.replace("%e%", (e == null || e.getMessage() == null) ? "null" : e.getMessage());
 		
 		if (waitTillClosed) {
 			showErrorDialog(title, co);
@@ -32,8 +37,8 @@ public class SwingDialogs {
 			});
 		}
 		
-		Main.logger.log("[GUI.error] " + title + "\n\t" + co);
-		if(e != null) Main.logger.log(e);
+		logger.log("[SwingDialogs.error] " + title + "\n\t" + co);
+		if(e != null) logger.log(e);
 		
 	}
 	
@@ -45,6 +50,7 @@ public class SwingDialogs {
 
 		final JDialog dialog = new JDialog();
 		dialog.setAlwaysOnTop(true);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		if (EventQueue.isDispatchThread()) {
 
@@ -57,7 +63,7 @@ public class SwingDialogs {
 					JOptionPane.showMessageDialog(dialog, content.replace("\n", System.lineSeparator()), title.replace("\n", System.lineSeparator()), JOptionPane.ERROR_MESSAGE);
 				});
 			} catch (Exception e) {
-				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, true);
+				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, false);
 			}
 
 		}
@@ -74,8 +80,8 @@ public class SwingDialogs {
 	 * */
 	public static void warning(String title, String content, Exception e, boolean waitTillClosed) {
 
-		Main.logger.log("\n");
-		String co = content.replace("%e%", (e == null) ? "null" : e.getMessage());
+		logger.log("\n");
+		String co = content.replace("%e%", (e == null || e.getMessage() == null) ? "null" : e.getMessage());
 		
 		if (waitTillClosed) {
 			showWarningDialog(title, co);
@@ -85,8 +91,8 @@ public class SwingDialogs {
 			});
 		}
 		
-		Main.logger.log("[GUI.error] " + title + "\n\t" + co);
-		if(e != null) Main.logger.log(e);
+		logger.log("[SwingDialogs.warning] " + title + "\n\t" + co);
+		if(e != null) logger.log(e);
 		
 	}
 	
@@ -98,6 +104,7 @@ public class SwingDialogs {
 		
 		final JDialog dialog = new JDialog();
 		dialog.setAlwaysOnTop(true);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		if (EventQueue.isDispatchThread()) {
 
@@ -110,7 +117,7 @@ public class SwingDialogs {
 					JOptionPane.showMessageDialog(dialog, content.replace("\n", System.lineSeparator()), title.replace("\n", System.lineSeparator()), JOptionPane.WARNING_MESSAGE);
 				});
 			} catch (Exception e) {
-				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, true);
+				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, false);
 			}
 
 		}
@@ -127,7 +134,7 @@ public class SwingDialogs {
 	 * */
 	public static void information(String title, String content, boolean waitTillClosed) {
 
-		Main.logger.log("\n");
+		logger.log("\n");
 
 		if (waitTillClosed) {
 			showInfoDialog(title, content);
@@ -137,7 +144,7 @@ public class SwingDialogs {
 			});
 		}
 		
-		Main.logger.log("[GUI.information] " + title + "\n\t" + content);
+		logger.log("[SwingDialogs.info] " + title + "\n\t" + content);
 		
 	}
 	
@@ -149,6 +156,7 @@ public class SwingDialogs {
 		
 		final JDialog dialog = new JDialog();
 		dialog.setAlwaysOnTop(true);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		if (EventQueue.isDispatchThread()) {
 
@@ -161,7 +169,7 @@ public class SwingDialogs {
 					JOptionPane.showMessageDialog(dialog, content.replace("\n", System.lineSeparator()), title.replace("\n", System.lineSeparator()), JOptionPane.INFORMATION_MESSAGE);
 				});
 			} catch (Exception e) {
-				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, true);
+				error("Exception in Thread working(SwingWorker)", "%e%", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, false);
 			}
 
 		}
@@ -178,6 +186,7 @@ public class SwingDialogs {
 
 		final JDialog dialog = new JDialog();
 		dialog.setAlwaysOnTop(true);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		if (EventQueue.isDispatchThread()) {
 
@@ -197,7 +206,7 @@ public class SwingDialogs {
 
 			} catch (Exception e) {
 				error("Exception in Thread working(SwingWorker)",
-						e.getClass().getName() + "-%e%\nI'll consider you chose \"no\"", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, true);
+						e.getClass().getName() + "-%e%\nI'll consider you chose \"no\"", (e instanceof InvocationTargetException) ? (Exception)e.getCause() : e, false);
 			}
 
 			return false;

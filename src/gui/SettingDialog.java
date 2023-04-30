@@ -18,6 +18,7 @@ import javax.swing.JTextField;
 import main.LineSeparator;
 import main.Main;
 import main.SettingData;
+import util.SwingDialogs;
 
 public class SettingDialog extends JDialog {
 	

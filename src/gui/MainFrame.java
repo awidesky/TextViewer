@@ -1,7 +1,5 @@
 package gui;
 
-import static main.Main.logger;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -60,11 +58,15 @@ import io.TextFile;
 import main.LineSeparator;
 import main.Main;
 import main.ReferenceDTO;
+import util.SwingDialogs;
+import util.TaskLogger;
 
 public class MainFrame extends JFrame {
 
-	private static final long serialVersionUID = -5689481800496264177L;
+	private static final long serialVersionUID = -2213063916837230382L;
 
+	private TaskLogger logger = Main.getLogger("[MainFrame]");
+	
 	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
 	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
 
@@ -300,7 +302,7 @@ public class MainFrame extends JFrame {
 		quickSaveFile.getAccessibleContext().setAccessibleDescription("Quick save the current file");
 		quickSaveFile.addActionListener((e) -> {
 
-			Main.logger.log("Quicksave!");
+			logger.log("Quicksave!");
 			TextFile saveTo;
 
 			if (fileHandle == null) {
@@ -308,7 +310,7 @@ public class MainFrame extends JFrame {
 					return;
 			} else {
 				if (!isEdited && editedPage.isEmpty()) {
-					Main.logger.log("Nothing to save! Page unedited!");
+					logger.log("Nothing to save! Page unedited!");
 					return;
 				}
 
@@ -338,7 +340,7 @@ public class MainFrame extends JFrame {
 		saveFile.getAccessibleContext().setAccessibleDescription("Save file in another encoding");
 		saveFile.addActionListener((e) -> {
 
-			Main.logger.log("Save in another encoding!");
+			logger.log("Save in another encoding!");
 			/** Write file in EDT */
 			if (fileHandle != null && fileHandle.isPaged() && isEdited
 					&& fileHandle.isPageEdited(nowPageMetadata.pageNum, Main.getHash(ta.getText()))) {
@@ -605,7 +607,7 @@ public class MainFrame extends JFrame {
 		switch (fileChooser.showSaveDialog(null)) {
 
 		case JFileChooser.CANCEL_OPTION:
-			Main.logger.log("JFileChooser canceled!");
+			logger.log("JFileChooser canceled!");
 			return null;
 		case JFileChooser.ERROR_OPTION:
 			SwingDialogs.error("JFileChooser error occured!", "Cancelling save operation...", null, false);
@@ -621,7 +623,7 @@ public class MainFrame extends JFrame {
 
 		if (f.exists() && JOptionPane.showConfirmDialog(null, "replace file?", f.getName() + " already exists!",
 				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-			Main.logger.log("User refuesed to overwrite existing file!");
+			logger.log("User refuesed to overwrite existing file!");
 			return null;
 		}
 		return new TextFile(f, fileChooser.getSelectedCharset(), Main.setting.getLineSeparator());
@@ -650,7 +652,7 @@ public class MainFrame extends JFrame {
 			setTitle(Main.VERSION);
 			MetadataGenerator.fileClosed();
 			MetadataGenerator.edited(true);
-			Main.logger.log("File write failed!");
+			logger.log("File write failed!");
 			return false;
 		}
 		lastSaved = saveTo;
@@ -713,7 +715,7 @@ public class MainFrame extends JFrame {
 				MetadataGenerator.loading(false);
 				editable(originVal);
 				newPageReading.set(false);
-				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId()
+				logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId()
 						+ ")]Task is failed. abort waiting new page.");
 				return;
 			} else if (nowDisplayed == null) {
@@ -732,7 +734,7 @@ public class MainFrame extends JFrame {
 			if (nowDisplayed.isLastPage())
 				noNextPage = true;
 			if (fileHandle.isPaged()) {
-				Main.logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId()
+				logger.log("[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId()
 						+ ")] page #" + nowDisplayed.pageNum() + " is consumed and displayed");
 				MetadataGenerator.pageNum(nowDisplayed.pageNum());
 			}

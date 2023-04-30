@@ -20,6 +20,7 @@ import javax.swing.JList;
 import javax.swing.JTextField;
 
 import main.ReferenceDTO;
+import util.SwingDialogs;
 
 public class FontDialog extends JDialog {
 
