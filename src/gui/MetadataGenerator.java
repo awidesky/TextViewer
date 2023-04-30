@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import main.LineSeparator;
 import main.Main;
 
 public class MetadataGenerator {
@@ -16,6 +17,7 @@ public class MetadataGenerator {
 	private static boolean edited = false;
 	private static boolean loading = false;
 	private static long pageNum = -1L;
+	private static LineSeparator lineSeparator = Main.setting.getLineSeparator();
 	
 	public static void metadataConsumer(Consumer<Metadata> metadataConsumer) {
 		MetadataGenerator.metadataConsumer = metadataConsumer;
@@ -35,6 +37,10 @@ public class MetadataGenerator {
 		file = null;
 	}
 
+	public static void lineSeparator(LineSeparator ls) {
+		lineSeparator = ls;
+	}
+	
 	public static void reset(File file, boolean paged, String charset, boolean edited, boolean loading, long pageNum) {
 		MetadataGenerator.file = file;
 		MetadataGenerator.paged = paged;
@@ -54,7 +60,7 @@ public class MetadataGenerator {
 						(file == null) ? " " : file.getAbsolutePath(),
 						(file == null) ? " " : Main.formatFileSize(file.length()),
 						Optional.ofNullable(charset).orElse(" "),
-						Main.setting.getLineSeparator().getAbbreviation()));
+						lineSeparator.getAbbreviation()));
 	}
 
 	public static void pageNum(long l) {
@@ -77,5 +83,6 @@ public class MetadataGenerator {
 			this.newline = newline;
 		}
 	}
+
 	
 }

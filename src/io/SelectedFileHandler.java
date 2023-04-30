@@ -207,7 +207,7 @@ public class SelectedFileHandler {
 
 		if (ret) { //if not already failed, write
 			if (paged) {
-				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding));
+				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator()));
 			} else {
 				try {
 					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
@@ -255,7 +255,7 @@ public class SelectedFileHandler {
 					break;
 				}
 				Main.logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));
+				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));  //TODO
 				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
 			}
 

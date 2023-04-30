@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import main.LineSeparator;
 import main.Main;
 import main.SettingData;
 
@@ -15,6 +16,7 @@ public class TextReader implements AutoCloseable{
 	private SettingData setting;
 	private long nextPageNum = 1L;
 	private String taskID = null;
+	private LineSeparator ls = LineSeparator.getDefault();
 	
 	private char[] arr;
 	
@@ -24,6 +26,7 @@ public class TextReader implements AutoCloseable{
 		this.readFile = readFile;
 		this.arr = new char[setting.getCharBufSize()];
 		this.taskID = taskID;
+		this.ls = readFile.lineSep;
 		if (setting.getPageEndsWithNewline()) { leftOver = new StringBuilder(""); }
 		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding);
 		Main.logger.log("");
@@ -31,8 +34,6 @@ public class TextReader implements AutoCloseable{
 	
 	
 	public long getNextPageNum() { return nextPageNum; }
-	
-	private static String replaceNewLine(String str) { return str.replaceAll(Main.setting.getLineSeparator().getStr(), "\n"); }
 	
 	public Page readAll() throws IOException {
 		Main.logger.log(taskID + "start reading the file until reach EOF");
@@ -43,9 +44,10 @@ public class TextReader implements AutoCloseable{
 			sb.append(arr, 0, read);
 		}
 		Main.logger.log(taskID + "Reached EOF");
-		return new Page(replaceNewLine(sb.toString()), -1, true);
+		String res = sb.toString();
+		
+		return new Page(replaceNewLine(res), -1, true);
 	}
-	
 
 	/**
 	 * Read a <code>Page</code>.
@@ -82,7 +84,8 @@ public class TextReader implements AutoCloseable{
 			nextRead = Math.min(arr.length, setting.getCharPerPage() - totalRead);
 		}
 		
-		String res = strBuf.toString();
+		String res = leftOver.append(strBuf).toString();
+		leftOver = new StringBuilder();
 		
 		/**
 		 * <code>lastLittlePortion</code> Exist only because of following case may exist.
@@ -92,38 +95,36 @@ public class TextReader implements AutoCloseable{
 		 * unless I find a line break sequence longer than 3~4 characters, 3 will (hopefully) work fine.   
 		 * */
 		final int LASTLITTLEPORTIONMARGIN = 3;
-		int lastLittlePortionStartsAt = TextReader.lastLineBreak(res) - LASTLITTLEPORTIONMARGIN;
-		String lastLittlePortion = "";
-		if(lastLittlePortionStartsAt > 0) { 
-			lastLittlePortion = res.substring(lastLittlePortionStartsAt);
-		} else {
-			lastLittlePortionStartsAt = res.length();
+		int lastLittlePortionStartsAt = lastLineSeparator(res);
+		if(lastLittlePortionStartsAt != res.length()) { 
+			lastLittlePortionStartsAt -= LASTLITTLEPORTIONMARGIN;
 		}
-		res = replaceNewLine(res.substring(0, lastLittlePortionStartsAt)); //Replace \R so that we can easily find newline
+		res = res.substring(0, lastLittlePortionStartsAt); //Replace \R so that we can easily find newline
+		leftOver.append(res.substring(lastLittlePortionStartsAt));
 		
+		/**
+		 * If a page should end with a Line Separator,
+		 * */
 		if (setting.getPageEndsWithNewline()) {
-			int lastLineFeedIndex = res.lastIndexOf("\n"); 
+			int lastLineSeparatorIndex = lastLineSeparator(res);
 
-			if (lastLineFeedIndex != -1) {
-				result = leftOver.append(res.substring(0, lastLineFeedIndex)).toString().replaceAll("\\R", "\n");// system-dependent \\R might be exist in leftOver because lastLittlePortion
-				leftOver = new StringBuilder();
-				leftOver.append(res.substring(lastLineFeedIndex + "\n".length())).append(lastLittlePortion); // remove trailing \n so that next page won't be starting as \n
+			if (lastLineSeparatorIndex != -1) {
+				result = res.substring(0, lastLineSeparatorIndex);// system-dependent \\R might be exist in leftOver because lastLittlePortion
+				leftOver.insert(0, res.substring(lastLineSeparatorIndex + ls.getStr().length())); // remove trailing \n so that next page won't be starting as \n
 				lastNewlineRemoved = true;
-			} else {
-				result = leftOver.append(res).toString();
-				leftOver = new StringBuilder();
-			}
+			} //If there's no line separator, there's noting we can do.
 		} else {
 			result = res;
 		}
 
-		return new Page(result, nextPageNum++, isLastPage, lastNewlineRemoved);
+		return new Page(replaceNewLine(result), nextPageNum++, isLastPage, lastNewlineRemoved);
 	}
-	
-	
 
-	private static int lastLineBreak(String res) {
-		String lineSep = Main.setting.getLineSeparator().getStr();
+	
+	private String replaceNewLine(String str) { return str.replaceAll(ls.getStr(), "\n"); }
+
+	private int lastLineSeparator(String res) {
+		String lineSep = ls.getStr();
 		int lineSepLen = lineSep.length();
 		for(int i = res.length() - lineSepLen; i > -1; i -= lineSepLen) {
 			if (res.substring(i, i + lineSepLen).equals(lineSep)) return i;

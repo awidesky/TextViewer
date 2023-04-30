@@ -65,8 +65,8 @@ public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = -5689481800496264177L;
 
-	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset());
-	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset());
+	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
+	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
 
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
@@ -224,7 +224,7 @@ public class MainFrame extends JFrame {
 				} catch (Exception ex) {
 					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
 				}
-				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset()));
+				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset(), Main.setting.getLineSeparator()));
 			}
 		});
 		ta.addMouseWheelListener(mouseWheelEvent -> {
@@ -569,7 +569,7 @@ public class MainFrame extends JFrame {
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
 
-			lastOpened = new TextFile(fileChooser.getSelectedFile(), fileChooser.getSelectedCharset());
+			lastOpened = new TextFile(fileChooser.getSelectedFile(), fileChooser.getSelectedCharset(), Main.setting.getLineSeparator());
 		}
 
 		if (fileHandle != null)
@@ -625,7 +625,7 @@ public class MainFrame extends JFrame {
 			Main.logger.log("User refuesed to overwrite existing file!");
 			return null;
 		}
-		return new TextFile(f, fileChooser.getSelectedCharset());
+		return new TextFile(f, fileChooser.getSelectedCharset(), Main.setting.getLineSeparator());
 
 	}
 

@@ -24,7 +24,7 @@ import gui.SwingDialogs;
 
 public class Main {
 
-	public static final String VERSION = "TextViewer v1.0";
+	public static final String VERSION = "TextViewer v1.0"; //TODO : change version number + add license comment to top
 	
 	/**
 	 * <pre>

@@ -9,6 +9,8 @@
 
 package main;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import gui.SwingDialogs;
@@ -43,15 +45,44 @@ public enum LineSeparator {
 		for(LineSeparator l : values()) {
 			if(explain.equals(l.getExplain())) return l;
 		}
-		SwingDialogs.error("Invalid Line Separator!", "Invalid Line Separator :\n" + explain, null, false);
+		SwingDialogs.error("Invalid Line Separator!", "Invalid Line Separator : " + explain, null, false);
+		return getDefault();
+	}
+	public static LineSeparator getFromStr(String lineSepStr) {
+		for(LineSeparator l : values()) {
+			if(lineSepStr.equals(l.getStr())) return l;
+		}
+		SwingDialogs.error("Invalid Line Separator!", "Invalid Line Separator : \"" +
+				getUnicodePoints(lineSepStr) + "\"\n\n" +
+				getUnicodeExplane(lineSepStr, "\n") , null, false);
 		return getDefault();
 	}
 	public static LineSeparator getDefault() {
 		for(LineSeparator l : values()) {
 			if(System.lineSeparator().equals(l.str)) return l;
 		}
-		SwingDialogs.error("Unknown system default Line Separator!", "Unknown system default Line Separator :\n"
-				+ System.lineSeparator().chars().mapToObj(Character::getName).collect(Collectors.joining(" + ")), null, false);
+		SwingDialogs.error("Unknown system default Line Separator!", "Unknown system default Line Separator : \"" +
+				getUnicodePoints(System.lineSeparator()) + "\"\n\n" +
+				getUnicodeExplane(System.lineSeparator(), "\n"), null, false);
 		return DETECT;
 	}
+	
+	
+	private static String getUnicodeExplane(String s, String delimeter) {
+		List<String> l = new ArrayList<>(s.length());
+		char[] arr = s.toCharArray();
+		for(int i = 0; i < arr.length; i++) {
+			l.add(String.format("U+%04x", Character.codePointAt(arr, i)).toUpperCase() + " : " + Character.getName(arr[i]));
+		}
+		return l.stream().collect(Collectors.joining(delimeter));
+	}
+	private static String getUnicodePoints(String s) {
+		StringBuilder sb = new StringBuilder();
+		char[] arr = s.toCharArray();
+		for(int i = 0; i < arr.length; i++) {
+			sb.append(String.format("U+%04x", Character.codePointAt(arr, i)).toUpperCase());
+		}
+		return sb.toString();
+	}
+	
 }
