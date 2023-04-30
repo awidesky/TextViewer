@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2023 Eugene Hong
+ *
+ * This software is distributed under license. Use of this software
+ * implies agreement with all terms and conditions of the accompanying
+ * software license.
+ * Please refer to LICENSE
+ * */
+
 package main;
 
 import java.io.File;
@@ -26,7 +35,7 @@ import util.TaskLogger;
 
 public class Main {
 
-	public static final String VERSION = "TextViewer v1.0"; //TODO : change version number + add license comment to top
+	public static final String VERSION = "TextViewer v1.0"; //TODO : change version number + jdk17
 	
 	/**
 	 * <pre>
