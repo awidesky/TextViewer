@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
+import main.LineSeparator;
 import main.Main;
 import main.SettingData;
 import util.SwingDialogs;
@@ -214,7 +215,7 @@ public class SelectedFileHandler {
 			} else {
 				try {
 					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
-					bw.write(text.replaceAll("\\R", System.lineSeparator()));
+					bw.write(replaceNewLine(text, writeTo.lineSep));
 					bw.close();
 					ret = true;
 				} catch (IOException e) {
@@ -258,8 +259,8 @@ public class SelectedFileHandler {
 					break;
 				}
 				logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				ow.write(changes.getOrDefault(page.pageNum(), page).text.replaceAll("\\R", System.lineSeparator()));  //TODO
-				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(System.lineSeparator()); //last lane separator at the end of a page is eliminated
+				ow.write(replaceNewLine(changes.getOrDefault(page.pageNum(), page).text, writeTo.lineSep));
+				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(writeTo.lineSep.getStr()); //last lane separator at the end of a page is eliminated
 			}
 
 			logger.log(taskID + "Reached EOF!");
@@ -327,6 +328,9 @@ public class SelectedFileHandler {
 		if(readTaskFuture != null) readTaskFuture.cancel(true);
 	}
 
+
+	private String replaceNewLine(String str, LineSeparator to) { return str.replaceAll("\n", to.getStr()); }
+	
 	public Charset getReadCharset() {
 		return readFile.encoding;
 	}

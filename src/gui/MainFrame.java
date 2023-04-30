@@ -305,7 +305,7 @@ public class MainFrame extends JFrame {
 			logger.log("Quicksave!");
 			TextFile saveTo;
 
-			if (fileHandle == null) {
+			if (fileHandle == null) { //Written as Untitled status
 				if ((saveTo = selectSaveFile()) == null)
 					return;
 			} else {
@@ -626,7 +626,7 @@ public class MainFrame extends JFrame {
 			logger.log("User refuesed to overwrite existing file!");
 			return null;
 		}
-		return new TextFile(f, fileChooser.getSelectedCharset(), Main.setting.getLineSeparator());
+		return new TextFile(f, fileChooser.getSelectedCharset(), lastOpened.lineSep);
 
 	}
 
