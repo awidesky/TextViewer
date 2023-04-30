@@ -104,6 +104,26 @@ public class Main {
 		
 		logger.log("Setup done!");
 		
+		/** Set Default Uncaught Exception Handlers */
+		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+			try {
+				SwingDialogs.error("Unhandled exception in thread " + t.getName() + " : " + ((Exception)e).getClass().getName(), "%e%", (Exception)e , true);
+				mf.closeFile();
+			} catch(Exception err) {
+				err.printStackTrace();
+			}
+		});
+		SwingUtilities.invokeLater(() -> {
+			Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
+				try {
+					SwingDialogs.error("Unhandled exception in EDT : " + ((Exception) e).getClass().getName(), "%e%", (Exception) e, true);
+					mf.closeFile();
+				} catch (Exception err) {
+					err.printStackTrace();
+				}
+			});
+		});
+		
 		SwingUtilities.invokeLater(() ->{
 			logger.log("Starting Mainframe...");
 			mf = new MainFrame();
