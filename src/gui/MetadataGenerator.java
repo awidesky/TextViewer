@@ -35,6 +35,9 @@ public class MetadataGenerator {
 	
 	public static void fileClosed() {
 		file = null;
+		charset = TextFilechooser.defaultCharset;
+		lineSeparator(Main.setting.getLineSeparator());
+		edited(false);
 	}
 
 	public static void lineSeparator(LineSeparator ls) {

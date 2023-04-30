@@ -70,8 +70,8 @@ public class TextFilechooser extends JFileChooser {
 
 	}
 	
-	public void setLastOpendFile(TextFile lastOpened) {
-		setSelectedFile(lastOpened.file.getParentFile());
+	public void setLastOpendDir(TextFile lastOpened) {
+		setCurrentDirectory(lastOpened.file.getParentFile());
 		comboBox.setSelectedIndex(charsetNameList.indexOf(lastOpened.encoding.name()));
 	}
 	

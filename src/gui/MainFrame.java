@@ -564,7 +564,7 @@ public class MainFrame extends JFrame {
 			lastOpened = openfile;
 		} else {
 			fileChooser.setDialogTitle("Select file to read...");
-			fileChooser.setLastOpendFile(lastOpened);
+			fileChooser.setLastOpendDir(lastOpened);
 			fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null);
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
@@ -602,7 +602,6 @@ public class MainFrame extends JFrame {
 
 		fileChooser.setDialogTitle("Save file at...");
 		fileChooser.setSelectedFile(lastOpened.file);
-		fileChooser.setCurrentDirectory(lastSaved.file.getParentFile());
 		switch (fileChooser.showSaveDialog(null)) {
 
 		case JFileChooser.CANCEL_OPTION:
