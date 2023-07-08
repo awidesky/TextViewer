@@ -35,7 +35,7 @@ import util.TaskLogger;
 
 public class Main {
 
-	public static final String VERSION = "TextViewer v1.0"; //TODO : change version number + jdk17
+	public static final String VERSION = "TextViewer v1.1";
 	
 	/**
 	 * <pre>
