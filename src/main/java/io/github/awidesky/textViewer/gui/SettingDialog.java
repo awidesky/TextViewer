@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package gui;
+package io.github.awidesky.textViewer.gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -24,10 +24,10 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-import main.LineSeparator;
-import main.Main;
-import main.SettingData;
-import util.SwingDialogs;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.Main;
+import io.github.awidesky.textViewer.SettingData;
+import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class SettingDialog extends JDialog {
 	

@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package main;
+package io.github.awidesky.textViewer;
 
 /**
  * Class that holds reference of object so that it can transfer(send) object from callee to caller.

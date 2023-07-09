@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package util;
+package io.github.awidesky.textViewer.util;
 
 import java.io.Flushable;
 import java.io.PrintWriter;

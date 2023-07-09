@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package io;
+package io.github.awidesky.textViewer.io;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,9 +17,9 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gui.MetadataGenerator;
-import main.LineSeparator;
-import util.SwingDialogs;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.gui.MetadataGenerator;
+import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class TextFile {
 

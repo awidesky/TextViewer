@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package gui;
+package io.github.awidesky.textViewer.gui;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -21,7 +21,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
-import io.TextFile;
+import io.github.awidesky.textViewer.io.TextFile;
 
 public class TextFilechooser extends JFileChooser {
 	

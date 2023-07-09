@@ -7,8 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package io;
-
+package io.github.awidesky.textViewer.io;
 
 /**
  * Read-only immutable object that represents a Page.

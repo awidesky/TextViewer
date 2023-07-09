@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package io;
+package io.github.awidesky.textViewer.io;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
-import main.LineSeparator;
-import main.Main;
-import main.SettingData;
-import util.SwingDialogs;
-import util.TaskLogger;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.Main;
+import io.github.awidesky.textViewer.SettingData;
+import io.github.awidesky.textViewer.util.SwingDialogs;
+import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class SelectedFileHandler {
 

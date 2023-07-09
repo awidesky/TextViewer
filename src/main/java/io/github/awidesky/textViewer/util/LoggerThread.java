@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package util;
+package io.github.awidesky.textViewer.util;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;

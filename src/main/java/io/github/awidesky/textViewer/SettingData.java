@@ -7,9 +7,9 @@
  * Please refer to LICENSE
  * */
 
-package main;
+package io.github.awidesky.textViewer;
 
-import util.SwingDialogs;
+import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class SettingData {
 

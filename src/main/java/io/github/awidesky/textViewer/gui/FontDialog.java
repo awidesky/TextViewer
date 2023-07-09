@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package gui;
+package io.github.awidesky.textViewer.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -28,8 +28,8 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTextField;
 
-import main.ReferenceDTO;
-import util.SwingDialogs;
+import io.github.awidesky.textViewer.ReferenceDTO;
+import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class FontDialog extends JDialog {
 

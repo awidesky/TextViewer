@@ -7,13 +7,13 @@
  * Please refer to LICENSE
  * */
 
-package main;
+package io.github.awidesky.textViewer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import util.SwingDialogs;
+import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public enum LineSeparator {
 	

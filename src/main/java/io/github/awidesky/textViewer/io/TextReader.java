@@ -7,16 +7,16 @@
  * Please refer to LICENSE
  * */
 
-package io;
+package io.github.awidesky.textViewer.io;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import main.LineSeparator;
-import main.Main;
-import main.SettingData;
-import util.TaskLogger;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.Main;
+import io.github.awidesky.textViewer.SettingData;
+import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class TextReader implements AutoCloseable{
 

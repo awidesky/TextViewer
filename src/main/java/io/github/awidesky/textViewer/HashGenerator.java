@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package main;
+package io.github.awidesky.textViewer;
 
 import java.security.MessageDigest;
 import java.util.zip.Checksum;

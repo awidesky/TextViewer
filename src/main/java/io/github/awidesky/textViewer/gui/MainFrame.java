@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package gui;
+package io.github.awidesky.textViewer.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -61,14 +61,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
-import io.Page;
-import io.SelectedFileHandler;
-import io.TextFile;
-import main.LineSeparator;
-import main.Main;
-import main.ReferenceDTO;
-import util.SwingDialogs;
-import util.TaskLogger;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.Main;
+import io.github.awidesky.textViewer.ReferenceDTO;
+import io.github.awidesky.textViewer.io.Page;
+import io.github.awidesky.textViewer.io.SelectedFileHandler;
+import io.github.awidesky.textViewer.io.TextFile;
+import io.github.awidesky.textViewer.util.SwingDialogs;
+import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class MainFrame extends JFrame {
 

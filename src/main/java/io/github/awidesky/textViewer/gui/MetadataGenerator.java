@@ -7,14 +7,14 @@
  * Please refer to LICENSE
  * */
 
-package gui;
+package io.github.awidesky.textViewer.gui;
 
 import java.io.File;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import main.LineSeparator;
-import main.Main;
+import io.github.awidesky.textViewer.LineSeparator;
+import io.github.awidesky.textViewer.Main;
 
 public class MetadataGenerator {
 

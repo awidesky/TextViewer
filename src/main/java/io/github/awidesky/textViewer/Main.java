@@ -7,7 +7,7 @@
  * Please refer to LICENSE
  * */
 
-package main;
+package io.github.awidesky.textViewer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,11 +27,11 @@ import java.util.zip.CRC32;
 
 import javax.swing.SwingUtilities;
 
-import gui.FontDialog;
-import gui.MainFrame;
-import util.LoggerThread;
-import util.SwingDialogs;
-import util.TaskLogger;
+import io.github.awidesky.textViewer.gui.FontDialog;
+import io.github.awidesky.textViewer.gui.MainFrame;
+import io.github.awidesky.textViewer.util.LoggerThread;
+import io.github.awidesky.textViewer.util.SwingDialogs;
+import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class Main {
 
