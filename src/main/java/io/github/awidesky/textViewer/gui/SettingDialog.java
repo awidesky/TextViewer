@@ -24,10 +24,10 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
+import io.github.awidesky.guiUtil.SwingDialogs;
 import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
-import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class SettingDialog extends JDialog {
 	

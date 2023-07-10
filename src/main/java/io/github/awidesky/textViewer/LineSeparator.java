@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.github.awidesky.textViewer.util.SwingDialogs;
+import io.github.awidesky.guiUtil.SwingDialogs;
 
 public enum LineSeparator {
 	

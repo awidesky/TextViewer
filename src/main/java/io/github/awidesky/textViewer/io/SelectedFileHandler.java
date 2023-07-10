@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
+import io.github.awidesky.guiUtil.SwingDialogs;
+import io.github.awidesky.guiUtil.TaskLogger;
 import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
-import io.github.awidesky.textViewer.util.SwingDialogs;
-import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class SelectedFileHandler {
 
@@ -201,6 +201,7 @@ public class SelectedFileHandler {
 		taskID = "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + ") - writer - " + (int)(Math.random()*100) + "] ";
 		logger.log(taskID + "Write task started at - " + new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()));
 		logger.log(taskID + "Writing file " + writeTo.file.getAbsolutePath() + " as encoding : " + writeTo.encoding.name());
+		// TODO : writeTo null이면 파일 선택되지 않았다고 하고 넘어가 
 		logger.log(taskID + "File is " + (paged ? "" : "not ") + "paged because it's " + (paged ? "bigger" : "smaller") + " than " + Main.formatFileSize(setting.getSinglePageFileSizeLimit()));
 		
 		long startTime = System.currentTimeMillis();

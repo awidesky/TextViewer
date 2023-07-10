@@ -27,11 +27,11 @@ import java.util.zip.CRC32;
 
 import javax.swing.SwingUtilities;
 
+import io.github.awidesky.guiUtil.LoggerThread;
+import io.github.awidesky.guiUtil.SwingDialogs;
+import io.github.awidesky.guiUtil.TaskLogger;
 import io.github.awidesky.textViewer.gui.FontDialog;
 import io.github.awidesky.textViewer.gui.MainFrame;
-import io.github.awidesky.textViewer.util.LoggerThread;
-import io.github.awidesky.textViewer.util.SwingDialogs;
-import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class Main {
 

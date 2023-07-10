@@ -13,10 +13,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import io.github.awidesky.guiUtil.TaskLogger;
 import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
-import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class TextReader implements AutoCloseable{
 

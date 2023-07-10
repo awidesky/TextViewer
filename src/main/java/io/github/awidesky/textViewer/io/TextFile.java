@@ -17,9 +17,9 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.awidesky.guiUtil.SwingDialogs;
 import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.gui.MetadataGenerator;
-import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class TextFile {
 

@@ -28,8 +28,8 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTextField;
 
+import io.github.awidesky.guiUtil.SwingDialogs;
 import io.github.awidesky.textViewer.ReferenceDTO;
-import io.github.awidesky.textViewer.util.SwingDialogs;
 
 public class FontDialog extends JDialog {
 

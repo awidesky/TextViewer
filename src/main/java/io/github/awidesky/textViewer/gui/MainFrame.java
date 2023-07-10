@@ -61,14 +61,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.undo.UndoManager;
 
+import io.github.awidesky.guiUtil.SwingDialogs;
+import io.github.awidesky.guiUtil.TaskLogger;
 import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.ReferenceDTO;
 import io.github.awidesky.textViewer.io.Page;
 import io.github.awidesky.textViewer.io.SelectedFileHandler;
 import io.github.awidesky.textViewer.io.TextFile;
-import io.github.awidesky.textViewer.util.SwingDialogs;
-import io.github.awidesky.textViewer.util.TaskLogger;
 
 public class MainFrame extends JFrame {
 

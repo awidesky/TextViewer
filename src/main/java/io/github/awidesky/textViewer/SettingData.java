@@ -9,7 +9,7 @@
 
 package io.github.awidesky.textViewer;
 
-import io.github.awidesky.textViewer.util.SwingDialogs;
+import io.github.awidesky.guiUtil.SwingDialogs;
 
 public class SettingData {
 
