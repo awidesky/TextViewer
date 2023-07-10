@@ -93,17 +93,15 @@ public class Main {
 				return;
 			}
 		}
-		
-		try {
-			if (logThread == null) {
-				File logFolder = new File("." + File.separator + "logs");
-				File logFile = new File(logFolder.getAbsolutePath() + File.separator + "log-"
-						+ new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss").format(new Date()) + ".txt");
-				logFolder.mkdirs();
-				logFile.createNewFile();
 
-				logThread.setLogDestination(new FileOutputStream(logFile));
-			}
+		try {
+			File logFolder = new File("." + File.separator + "logs");
+			File logFile = new File(logFolder.getAbsolutePath() + File.separator + "log-"
+					+ new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss").format(new Date()) + ".txt");
+			logFolder.mkdirs(); logFile.createNewFile();
+
+			logThread.setDatePrefix(new SimpleDateFormat("[kk:mm:ss.SSS]"));
+			logThread.setLogDestination(new FileOutputStream(logFile));
 		} catch (IOException e) {
 
 			logThread.setLogDestination(System.out);
