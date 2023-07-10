@@ -27,8 +27,13 @@
 			<artifactId>GUIUtil</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>io.github.awidesky</groupId>
+			<artifactId>JCipherUtil</artifactId>
+			<version>1.0.1</version>
+		</dependency>
 	</dependencies>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
