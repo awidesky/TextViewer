@@ -36,7 +36,7 @@ public class TextFilechooser extends JFileChooser {
 	public static final ArrayList<String> charsetNameList = Charset.availableCharsets().keySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	public static final String defaultCharset = "UTF-8";
 	private static final JComboBox<String> comboBox = getCharsetChooseComboBox();
-	private static final JCheckBox checkBox = new JCheckBox("Encrypted", false);
+	private static final JCheckBox encryptedCheckBox = new JCheckBox("Encrypted", false);
 	
 	public static final FileFilter TEXTFILEFILTER = new FileFilter() {
 		public boolean accept(File f) {
@@ -65,7 +65,7 @@ public class TextFilechooser extends JFileChooser {
 
 		panel2.removeAll();
 
-		checkBox.setSize(checkBox.getPreferredSize().width, checkBox.getPreferredSize().height);
+		encryptedCheckBox.setSize(encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
 
 		panel2.setLayout(new BorderLayout());
 		panel2.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
@@ -78,7 +78,7 @@ public class TextFilechooser extends JFileChooser {
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(b2);
 
-		panel2.add(checkBox, BorderLayout.WEST);
+		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
 
 	}
@@ -93,6 +93,9 @@ public class TextFilechooser extends JFileChooser {
     	comboBox.setSelectedIndex(comboBox.getSelectedIndex());
     	return Charset.forName(charsetNameList.get(comboBox.getSelectedIndex()));
     }
+	public boolean isEncrypted() {
+		return encryptedCheckBox.isSelected();
+	}
 	
 	public static JComboBox<String> getCharsetChooseComboBox() {
 		return new JComboBox<>(new DefaultComboBoxModel<String>(charsetNameList.toArray(new String[] {})));

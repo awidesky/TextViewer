@@ -15,6 +15,7 @@ import java.awt.Window;
 import java.nio.charset.Charset;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 
@@ -24,6 +25,7 @@ public class CharsetChooser extends JDialog {
 	
 	private JButton btn_open = new JButton("open");
 	private JComboBox<String> combo = TextFilechooser.getCharsetChooseComboBox();
+	private JCheckBox encryptedCheckBox = new JCheckBox("Encrypted", false);
 	
 	public CharsetChooser(Charset encoding) {
 		
@@ -39,13 +41,15 @@ public class CharsetChooser extends JDialog {
 
 		combo.setSelectedIndex(TextFilechooser.charsetNameList.indexOf(encoding.name()));
 		combo.setBounds(getSize().width/2 - combo.getPreferredSize().width/2 - 10, 10, combo.getPreferredSize().width, combo.getPreferredSize().height);
-		btn_open.setBounds(getSize().width/2 - btn_open.getPreferredSize().width/2 - 10, 40, btn_open.getPreferredSize().width, btn_open.getPreferredSize().height);
+		encryptedCheckBox.setBounds(12, 40, encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
+		btn_open.setBounds(encryptedCheckBox.getSize().width + 22, 40, btn_open.getPreferredSize().width, btn_open.getPreferredSize().height);
 		btn_open.addActionListener((e) -> {
 			setVisible(false);
 			dispose();
 		});
 		
 		add(combo);
+		add(encryptedCheckBox);
 		add(btn_open);
 		
 		setVisible(true);
@@ -56,5 +60,7 @@ public class CharsetChooser extends JDialog {
 		combo.setSelectedIndex(combo.getSelectedIndex());
 		return Charset.forName(TextFilechooser.charsetNameList.get(combo.getSelectedIndex()));
 	}
-	
+	public boolean isEncrypted() {
+		return encryptedCheckBox.isSelected();
+	}
 }

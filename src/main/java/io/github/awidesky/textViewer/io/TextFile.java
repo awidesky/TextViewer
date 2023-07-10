@@ -26,11 +26,13 @@ public class TextFile {
 	public final File file;
 	public final Charset encoding;
 	public final LineSeparator lineSep;
+	public final boolean isEncrypted;
 	
-	public TextFile(File file, Charset encoding, LineSeparator lineSep) {
+	public TextFile(File file, Charset encoding, LineSeparator lineSep, boolean isEncrypted) {
 		this.file = file;
 		this.encoding = encoding;
 		this.lineSep = lineSep == LineSeparator.DETECT ? detectLineSepator() : lineSep;
+		this.isEncrypted = isEncrypted;
 	}
 	
 	@Override
@@ -62,4 +64,5 @@ public class TextFile {
 		}
 		return LineSeparator.getDefault();
 	}
+
 }

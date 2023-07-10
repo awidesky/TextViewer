@@ -221,7 +221,7 @@ public class SelectedFileHandler {
 
 		if (ret) { //if not already failed, write
 			if (paged) {
-				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator()));
+				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator(), writeTo.isEncrypted));
 			} else {
 				try {
 					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
