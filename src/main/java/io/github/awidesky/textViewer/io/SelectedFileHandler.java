@@ -339,8 +339,6 @@ public class SelectedFileHandler {
 	}
 
 
-	private String replaceNewLine(String str, LineSeparator to) { return str.replaceAll("\n", to.getStr()); }
-	
 	public Charset getReadCharset() {
 		return readFile.encoding;
 	}
