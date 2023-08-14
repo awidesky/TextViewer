@@ -18,7 +18,7 @@ import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
 
-public class TextReader implements AutoCloseable{
+public class TextReader implements AutoCloseable {
 
 	private TaskLogger logger;
 	
