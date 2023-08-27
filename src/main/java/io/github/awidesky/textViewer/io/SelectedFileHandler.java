@@ -33,7 +33,6 @@ import javax.swing.SwingUtilities;
 
 import io.github.awidesky.guiUtil.SwingDialogs;
 import io.github.awidesky.guiUtil.TaskLogger;
-import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
 
@@ -221,11 +220,11 @@ public class SelectedFileHandler {
 
 		if (ret) { //if not already failed, write
 			if (paged) {
-				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator(), writeTo.isEncrypted));
+				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator(), writeTo.getPassword()));
 			} else {
 				try {
 					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
-					bw.write(replaceNewLine(text, writeTo.lineSep));
+					//bw.write(replaceNewLine(text, writeTo.lineSep));
 					bw.close();
 					ret = true;
 				} catch (IOException e) {
@@ -269,7 +268,7 @@ public class SelectedFileHandler {
 					break;
 				}
 				logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				ow.write(replaceNewLine(changes.getOrDefault(page.pageNum(), page).text, writeTo.lineSep));
+				//ow.write(replaceNewLine(changes.getOrDefault(page.pageNum(), page).text, writeTo.lineSep));
 				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(writeTo.lineSep.getStr()); //last lane separator at the end of a page is eliminated
 			}
 
