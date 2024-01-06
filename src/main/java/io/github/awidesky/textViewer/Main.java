@@ -254,7 +254,7 @@ public class Main {
 	public static void kill(int errCode) {
 		
 		logger.log("Kill application with error code : " + errCode);
-		logThread.kill(3000);
+		logThread.shutdown(3000);
 		System.exit(errCode);
 		
 	}
