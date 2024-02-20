@@ -83,15 +83,13 @@ public class TextFilechooser extends JFileChooser {
 			System.out.println(checkComponents(c));
 		}
 		
-		JPanel p = ((JPanel) this.getComponent(3));
-		//System.out.println(p.getComponentCount());
-		//System.out.println(p.getComponents());
-		JPanel panel2 = (JPanel) p
-				.getComponent(3);
+		JPanel panel2 = (JPanel)((JPanel) this.getComponent(3)).getComponent(3);
 
-		JButton b1 = (JButton) panel2.getComponent(0); // choose button
-		JButton b2 = (JButton) panel2.getComponent(1); // cancel button
+		//JButton b1 = (JButton) panel2.getComponent(0); // choose button
+		//JButton b2 = (JButton) panel2.getComponent(1); // cancel button
 
+		Component[] comps = panel2.getComponents();
+		
 		panel2.removeAll();
 
 		encryptedCheckBox.setSize(encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
@@ -102,10 +100,10 @@ public class TextFilechooser extends JFileChooser {
 		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(comboBox);
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(b1);
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(b2);
+		for(Component c : comps) {
+			innerPanel.add(Box.createHorizontalStrut(15));
+			innerPanel.add(c);
+		}
 
 		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
