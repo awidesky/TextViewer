@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,11 +27,23 @@ public class TextFile {
 	public final File file;
 	public final Charset encoding;
 	public final LineSeparator lineSep;
+	public final boolean isEncrypted;
 	
-	public TextFile(File file, Charset encoding, LineSeparator lineSep) {
+	private final char[] password;
+	
+	public TextFile(File file, Charset encoding, LineSeparator lineSep, char[] password) {
 		this.file = file;
 		this.encoding = encoding;
 		this.lineSep = lineSep == LineSeparator.DETECT ? detectLineSepator() : lineSep;
+		this.isEncrypted = password != null;
+		this.password = isEncrypted ? password.clone() : null;
+	}
+	public TextFile(File file, Charset encoding, LineSeparator lineSep, boolean isEncrypted) {
+		this.file = file;
+		this.encoding = encoding;
+		this.lineSep = lineSep == LineSeparator.DETECT ? detectLineSepator() : lineSep;
+		this.isEncrypted = isEncrypted;
+		this.password = isEncrypted ? askPassword(file.getName()) : null;
 	}
 	
 	@Override
@@ -61,5 +74,17 @@ public class TextFile {
 			SwingDialogs.error("Cannot detect Line Separator!", "Unable to detect Line Separator!\nUse system default instead..", null, false);
 		}
 		return LineSeparator.getDefault();
+	}
+
+	char[] getPassword() { return password.clone(); }
+
+	public void clearPassword() {
+		Random r = new Random(); //don't let compiler to optimize password clearing.
+		for(int i = 0; i < password.length; i++) password[i] = (char)(r.nextInt());
+	}
+	
+	
+	private static char[] askPassword(String fileName) {
+		return SwingDialogs.inputPassword("Enter password!", "Password for " + fileName + " :");
 	}
 }

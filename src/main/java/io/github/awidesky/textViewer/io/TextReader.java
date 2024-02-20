@@ -18,7 +18,7 @@ import io.github.awidesky.textViewer.LineSeparator;
 import io.github.awidesky.textViewer.Main;
 import io.github.awidesky.textViewer.SettingData;
 
-public class TextReader implements AutoCloseable{
+public class TextReader implements AutoCloseable {
 
 	private TaskLogger logger;
 	
@@ -40,7 +40,7 @@ public class TextReader implements AutoCloseable{
 		this.taskID = taskID;
 		this.ls = readFile.lineSep;
 		if (setting.getPageEndsWithNewline()) { leftOver = new StringBuilder(""); }
-		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding);
+		this.ir = new InputStreamReader(new FileInputStream(readFile.file), readFile.encoding); //TODO : FileInputStream자리에 Cipher
 		logger = Main.getLogger("[TextReader | " + readFile.file.getName() + "]");
 		logger.log("");
 	}

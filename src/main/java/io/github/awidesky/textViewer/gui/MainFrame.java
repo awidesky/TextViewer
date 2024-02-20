@@ -76,8 +76,8 @@ public class MainFrame extends JFrame {
 
 	private TaskLogger logger = Main.getLogger("[MainFrame]");
 	
-	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
-	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault());
+	private TextFile lastOpened = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault(), false);
+	private TextFile lastSaved = new TextFile(new File(System.getProperty("user.home")), Charset.defaultCharset(), LineSeparator.getDefault(), false);
 
 	private JScrollPane sp;
 	private JTextArea ta = new JTextArea();
@@ -235,7 +235,8 @@ public class MainFrame extends JFrame {
 				} catch (Exception ex) {
 					SwingDialogs.error("Drag & Drop error!", "%e%", ex, false);
 				}
-				openFile(new TextFile(dropped, new CharsetChooser(lastOpened.encoding).getSelectedCharset(), Main.setting.getLineSeparator()));
+				CharsetChooser cc = new CharsetChooser(lastOpened.encoding);
+				openFile(new TextFile(dropped, cc.getSelectedCharset(), Main.setting.getLineSeparator(), cc.isEncrypted()));
 			}
 		});
 		ta.addMouseWheelListener(mouseWheelEvent -> {
@@ -580,7 +581,7 @@ public class MainFrame extends JFrame {
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
 
-			lastOpened = new TextFile(fileChooser.getSelectedFile(), fileChooser.getSelectedCharset(), Main.setting.getLineSeparator());
+			lastOpened = new TextFile(fileChooser.getSelectedFile(), fileChooser.getSelectedCharset(), Main.setting.getLineSeparator(), fileChooser.isEncrypted());
 		}
 
 		if (fileHandle != null)
@@ -635,7 +636,7 @@ public class MainFrame extends JFrame {
 			logger.log("User refuesed to overwrite existing file!");
 			return null;
 		}
-		return new TextFile(f, fileChooser.getSelectedCharset(), lastOpened.lineSep);
+		return new TextFile(f, fileChooser.getSelectedCharset(), lastOpened.lineSep, fileChooser.isEncrypted());
 
 	}
 

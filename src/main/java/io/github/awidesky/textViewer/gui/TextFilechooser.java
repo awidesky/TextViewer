@@ -9,13 +9,18 @@
 
 package io.github.awidesky.textViewer.gui;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -31,6 +36,7 @@ public class TextFilechooser extends JFileChooser {
 	public static final ArrayList<String> charsetNameList = Charset.availableCharsets().keySet().stream().collect(Collectors.toCollection(ArrayList::new));
 	public static final String defaultCharset = "UTF-8";
 	private static final JComboBox<String> comboBox = getCharsetChooseComboBox();
+	private static final JCheckBox encryptedCheckBox = new JCheckBox("Encrypted", false);
 	
 	public static final FileFilter TEXTFILEFILTER = new FileFilter() {
 		public boolean accept(File f) {
@@ -54,28 +60,26 @@ public class TextFilechooser extends JFileChooser {
 
 		JPanel panel2 = (JPanel) ((JPanel) this.getComponent(3)).getComponent(3);
 
-		JButton b1 = (JButton) panel2.getComponent(0);// optional used to add the buttons after combobox
-		JButton b2 = (JButton) panel2.getComponent(1);// optional used to add the buttons after combobox
-
-		// Dimension d1 = new Dimension(b1.getPreferredSize().width,
-		// b1.getPreferredSize().height);
-		// Dimension d2 = new Dimension(b2.getPreferredSize().width,
-		// b2.getPreferredSize().height);
-
-		// b1.setMaximumSize(new Dimension(20,20));
-		// b2.setMaximumSize(d2);
+		JButton b1 = (JButton) panel2.getComponent(0); // choose button
+		JButton b2 = (JButton) panel2.getComponent(1); // cancel button
 
 		panel2.removeAll();
 
-		panel2.add(comboBox);
-		panel2.add(b1);// optional used to add the buttons after combobox
-		panel2.add(b2);// optional used to add the buttons after combobox
+		encryptedCheckBox.setSize(encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
 
-		// panel2.pack();
+		panel2.setLayout(new BorderLayout());
+		panel2.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-		/*
-		 * JPanel panel = new JPanel(); panel.add(comboBox); setAccessory(panel);
-		 */
+		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(comboBox);
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(b1);
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(b2);
+
+		panel2.add(encryptedCheckBox, BorderLayout.WEST);
+		panel2.add(innerPanel, BorderLayout.EAST);
 
 	}
 	
@@ -89,6 +93,9 @@ public class TextFilechooser extends JFileChooser {
     	comboBox.setSelectedIndex(comboBox.getSelectedIndex());
     	return Charset.forName(charsetNameList.get(comboBox.getSelectedIndex()));
     }
+	public boolean isEncrypted() {
+		return encryptedCheckBox.isSelected();
+	}
 	
 	public static JComboBox<String> getCharsetChooseComboBox() {
 		return new JComboBox<>(new DefaultComboBoxModel<String>(charsetNameList.toArray(new String[] {})));
