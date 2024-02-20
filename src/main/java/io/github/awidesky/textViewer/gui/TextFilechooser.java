@@ -10,6 +10,8 @@
 package io.github.awidesky.textViewer.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.nio.charset.Charset;
@@ -50,6 +52,21 @@ public class TextFilechooser extends JFileChooser {
 		}
 	};
 	
+	
+	private String checkComponents(Component c) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(c.getClass().getSimpleName()).append("\n");
+		if (c instanceof Container con) {
+			for (Component cc : con.getComponents()) {
+				for(String s : checkComponents(cc).split("\n")) {
+					sb.append("  ").append(s).append("\n");
+				}
+			}
+		}
+		//sb.append("\n");
+		return sb.toString();
+	}
+	
 	public TextFilechooser() {
 
 		comboBox.setSelectedIndex(charsetNameList.indexOf(defaultCharset));
@@ -58,7 +75,15 @@ public class TextFilechooser extends JFileChooser {
 		setFileSelectionMode(JFileChooser.FILES_ONLY);
 		addChoosableFileFilter(TEXTFILEFILTER);
 
-		JPanel panel2 = (JPanel) ((JPanel) this.getComponent(3)).getComponent(3);
+		for (Component c : this.getComponents()) {
+			System.out.println(checkComponents(c));
+		}
+		
+		JPanel p = ((JPanel) this.getComponent(3));
+		//System.out.println(p.getComponentCount());
+		//System.out.println(p.getComponents());
+		JPanel panel2 = (JPanel) p
+				.getComponent(3);
 
 		JButton b1 = (JButton) panel2.getComponent(0); // choose button
 		JButton b2 = (JButton) panel2.getComponent(1); // cancel button
