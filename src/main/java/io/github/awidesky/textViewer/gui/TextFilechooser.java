@@ -55,7 +55,7 @@ public class TextFilechooser extends JFileChooser {
 	
 	private String checkComponents(Component c) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(c.getClass().getSimpleName()).append("\n");
+		sb.append(c.getClass().getSimpleName()).append(" ").append(c.hashCode()).append("\n");
 		if (c instanceof Container con) {
 			for (Component cc : con.getComponents()) {
 				for(String s : checkComponents(cc).split("\n")) {
@@ -106,6 +106,10 @@ public class TextFilechooser extends JFileChooser {
 		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
 
+		System.out.println("=====================================");
+		for (Component c : this.getComponents()) {
+			System.out.println(checkComponents(c));
+		}
 	}
 	
 	public void setLastOpendDir(TextFile lastOpened) {
