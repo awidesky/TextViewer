@@ -12,7 +12,9 @@ package io.github.awidesky.textViewer.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.HeadlessException;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -61,10 +63,12 @@ public class TextFilechooser extends JFileChooser {
 		}
 		sb.append("\n");
 		if (c instanceof Container con) {
+			int i = 0;
 			for (Component cc : con.getComponents()) {
 				for(String s : checkComponents(cc).split("\n")) {
-					sb.append("  ").append(s).append("\n");
+					sb.append(i).append("  ").append(s).append("\n");
 				}
+				i++;
 			}
 		}
 		//sb.append("\n");
@@ -79,18 +83,19 @@ public class TextFilechooser extends JFileChooser {
 		setFileSelectionMode(JFileChooser.FILES_ONLY);
 		addChoosableFileFilter(TEXTFILEFILTER);
 
+		int i = 0;
 		for (Component c : this.getComponents()) {
-			System.out.println(checkComponents(c));
+			System.out.println(i++ + checkComponents(c));
 		}
 		
-		JPanel p = ((JPanel) this.getComponent(3));
+		JPanel p = ((JPanel) this.getComponent(4));
 		//System.out.println(p.getComponentCount());
 		//System.out.println(p.getComponents());
-		JPanel panel2 = (JPanel) p
-				.getComponent(3);
+		JPanel panel2 = (JPanel) ((JPanel)((JPanel) p.getComponent(2)).getComponent(1)).getComponent(1);
 
 		JButton b1 = (JButton) panel2.getComponent(0); // choose button
-		JButton b2 = (JButton) panel2.getComponent(1); // cancel button
+		JButton b2 = (JButton) panel2.getComponent(2); // cancel button
+		JButton b3 = (JButton) panel2.getComponent(4); // cancel button
 
 		panel2.removeAll();
 
@@ -106,6 +111,8 @@ public class TextFilechooser extends JFileChooser {
 		innerPanel.add(b1);
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(b2);
+		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(b3);
 
 		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
@@ -116,6 +123,14 @@ public class TextFilechooser extends JFileChooser {
 		}
 	}
 	
+	@Override
+	public int showSaveDialog(Component parent) throws HeadlessException {
+		Dimension dim = getPreferredSize();
+		dim.width += 45; // add some more space for "new Folder" button
+		setPreferredSize(dim);
+		return super.showSaveDialog(parent);
+	}
+
 	public void setLastOpendDir(TextFile lastOpened) {
 		setCurrentDirectory(lastOpened.file.getParentFile());
 		comboBox.setSelectedIndex(charsetNameList.indexOf(lastOpened.encoding.name()));
