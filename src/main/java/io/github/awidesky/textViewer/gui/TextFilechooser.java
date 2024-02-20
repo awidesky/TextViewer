@@ -88,15 +88,15 @@ public class TextFilechooser extends JFileChooser {
 			System.out.println(i++ + checkComponents(c));
 		}
 		
-		JPanel p = ((JPanel) this.getComponent(4));
-		//System.out.println(p.getComponentCount());
-		//System.out.println(p.getComponents());
-		JPanel panel2 = (JPanel) ((JPanel)((JPanel) p.getComponent(2)).getComponent(1)).getComponent(1);
+		JPanel panel2;
+		if(System.getProperty("os.name").toLowerCase().contains("mac")) {
+			panel2 = (JPanel)((JPanel)((JPanel)((JPanel) this.getComponent(4)).getComponent(2)).getComponent(1)).getComponent(1);
+		} else { //windows
+			panel2 = (JPanel)((JPanel) this.getComponent(3)).getComponent(3);
+		}
 
-		JButton b1 = (JButton) panel2.getComponent(0); // choose button
-		JButton b2 = (JButton) panel2.getComponent(2); // cancel button
-		JButton b3 = (JButton) panel2.getComponent(4); // cancel button
-
+		Component[] comps = panel2.getComponents();
+		
 		panel2.removeAll();
 
 		encryptedCheckBox.setSize(encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
@@ -107,12 +107,10 @@ public class TextFilechooser extends JFileChooser {
 		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(comboBox);
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(b1);
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(b2);
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(b3);
+		for(Component c : comps) {
+			innerPanel.add(Box.createHorizontalStrut(15));
+			innerPanel.add(c);
+		}
 
 		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
