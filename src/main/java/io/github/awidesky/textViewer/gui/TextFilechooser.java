@@ -55,7 +55,11 @@ public class TextFilechooser extends JFileChooser {
 	
 	private String checkComponents(Component c) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(c.getClass().getSimpleName()).append(" ").append(c.hashCode()).append("\n");
+		sb.append(c.getClass().getSimpleName());
+		if(c instanceof JButton jb) {
+			sb.append(":").append(jb.getText());
+		}
+		sb.append("\n");
 		if (c instanceof Container con) {
 			for (Component cc : con.getComponents()) {
 				for(String s : checkComponents(cc).split("\n")) {
