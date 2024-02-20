@@ -90,7 +90,10 @@ public class TextFilechooser extends JFileChooser {
 		
 		JPanel panel2;
 		if(System.getProperty("os.name").toLowerCase().contains("mac")) {
-			panel2 = (JPanel)((JPanel)((JPanel)((JPanel) this.getComponent(4)).getComponent(2)).getComponent(1)).getComponent(1);
+			Dimension dim = getPreferredSize();
+			dim.width += 60; // add some more space for "new Folder" button
+			setPreferredSize(dim);
+			panel2 = (JPanel)((JPanel)((JPanel) this.getComponent(4)).getComponent(2)).getComponent(1);
 		} else { //windows
 			panel2 = (JPanel)((JPanel) this.getComponent(3)).getComponent(3);
 		}
@@ -121,13 +124,6 @@ public class TextFilechooser extends JFileChooser {
 		}
 	}
 	
-	@Override
-	public int showSaveDialog(Component parent) throws HeadlessException {
-		Dimension dim = getPreferredSize();
-		dim.width += 45; // add some more space for "new Folder" button
-		setPreferredSize(dim);
-		return super.showSaveDialog(parent);
-	}
 
 	public void setLastOpendDir(TextFile lastOpened) {
 		setCurrentDirectory(lastOpened.file.getParentFile());
