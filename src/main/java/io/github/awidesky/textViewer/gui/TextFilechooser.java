@@ -11,10 +11,8 @@ package io.github.awidesky.textViewer.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.HeadlessException;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -23,7 +21,6 @@ import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -53,27 +50,7 @@ public class TextFilechooser extends JFileChooser {
 			return "Text files (*.txt)";
 		}
 	};
-	
-	
-	private String checkComponents(Component c) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(c.getClass().getSimpleName());
-		if(c instanceof JButton jb) {
-			sb.append(":").append(jb.getText());
-		}
-		sb.append("\n");
-		if (c instanceof Container con) {
-			int i = 0;
-			for (Component cc : con.getComponents()) {
-				for(String s : checkComponents(cc).split("\n")) {
-					sb.append(i).append("  ").append(s).append("\n");
-				}
-				i++;
-			}
-		}
-		//sb.append("\n");
-		return sb.toString();
-	}
+
 	
 	public TextFilechooser() {
 
@@ -83,11 +60,6 @@ public class TextFilechooser extends JFileChooser {
 		setFileSelectionMode(JFileChooser.FILES_ONLY);
 		addChoosableFileFilter(TEXTFILEFILTER);
 
-		int i = 0;
-		for (Component c : this.getComponents()) {
-			System.out.println(i++ + checkComponents(c));
-		}
-		
 		JPanel panel2;
 		if(System.getProperty("os.name").toLowerCase().contains("mac")) {
 			Dimension dim = getPreferredSize();
@@ -118,10 +90,6 @@ public class TextFilechooser extends JFileChooser {
 		panel2.add(encryptedCheckBox, BorderLayout.WEST);
 		panel2.add(innerPanel, BorderLayout.EAST);
 
-		System.out.println("=====================================");
-		for (Component c : this.getComponents()) {
-			System.out.println(checkComponents(c));
-		}
 	}
 	
 
