@@ -58,6 +58,8 @@ public class Main {
 	private static HashGenerator hasher = HashGenerator.getChecksumHashInstance(new CRC32());
 	
 	public static void main(String[] args) { 
+		
+		setUpExceptionHandler();
 
 		boolean verbose = false;
 		
@@ -142,6 +144,29 @@ public class Main {
 		});
     }
 	
+
+	private static void setUpExceptionHandler() {
+		/** Set Default Uncaught Exception Handlers */
+		Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+			try {
+				SwingDialogs.error("Unhandled exception in thread " + t.getName() + " : " + ((Exception)e).getClass().getName(), "%e%", (Exception)e , true);
+				Main.kill(-1);
+			} catch(Exception err) {
+				err.printStackTrace();
+			}
+		});
+		SwingUtilities.invokeLater(() -> {
+			Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
+				try {
+					SwingDialogs.error("Unhandled exception in EDT : " + ((Exception) e).getClass().getName(), "%e%", (Exception) e, true);
+					Main.kill(-1);
+				} catch (Exception err) {
+					err.printStackTrace();
+				}
+			});
+		});
+	}
+
 
 	private static void printConsoleHelp() {
 
