@@ -55,6 +55,8 @@ public class Main {
 	private static LoggerThread logThread = new LoggerThread();
 	private static TaskLogger logger = null;
 	
+	private static volatile boolean isKilled = false;
+	
 	private static HashGenerator hasher = HashGenerator.getChecksumHashInstance(new CRC32());
 	
 	public static void main(String[] args) { 
@@ -280,7 +282,13 @@ public class Main {
 		
 		logger.log("Kill application with error code : " + errCode);
 		logThread.shutdown(3000);
+		isKilled = true;
 		System.exit(errCode);
 		
+	}
+
+
+	public static boolean isKilled() {
+		return isKilled;
 	}
 }

@@ -29,6 +29,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,12 +50,14 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.DocumentEvent;
@@ -84,6 +87,8 @@ public class MainFrame extends JFrame {
 	private JPanel statusPanel;
 
 	private JLabel pathName = new JLabel();
+	private JProgressBar memUsage = new JProgressBar();
+	private MemUsageChecker memChecker;
 	private JLabel size = new JLabel();
 	private JLabel encoding = new JLabel();
 	private JLabel newline = new JLabel(LineSeparator.getDefault().getAbbreviation(), SwingConstants.RIGHT);
@@ -109,11 +114,12 @@ public class MainFrame extends JFrame {
 	private JMenu editMenu;
 	private JMenuItem undo;
 	private JMenuItem redo;
-	private JMenu formatMenu;
+	private JMenu settingMenu;
 	private JMenuItem setting;
 	private JMenuItem font;
 	private JCheckBoxMenuItem editable;
 	private JCheckBoxMenuItem wrap;
+	private JCheckBoxMenuItem memStatus;
 	private JMenu pageMenu;
 	private JMenuItem next;
 	private JMenuItem reRead;
@@ -122,6 +128,7 @@ public class MainFrame extends JFrame {
 	private AtomicBoolean newPageReading = new AtomicBoolean(false);
 
 	private boolean noNextPage = false;
+
 
 	public MainFrame() {
 
@@ -274,6 +281,10 @@ public class MainFrame extends JFrame {
 	private void addstatusPanel() {
 		statusPanel = new JPanel(new BorderLayout());
 		statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 1, 1, 1));
+		
+		memUsage.setStringPainted(true);
+		memUsage.setVisible(false);
+		
 		/*
 		size.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		encoding.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
@@ -282,11 +293,14 @@ public class MainFrame extends JFrame {
 		*/
 		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		innerPanel.add(Box.createHorizontalStrut(15));
+		innerPanel.add(memUsage);
+		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(size);
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(encoding);
 		innerPanel.add(Box.createHorizontalStrut(15));
 		innerPanel.add(newline);
+		innerPanel.add(Box.createHorizontalStrut(5));
 		statusPanel.add(pathName, BorderLayout.CENTER);
 		statusPanel.add(innerPanel, BorderLayout.EAST);
 		MetadataGenerator.generate();
@@ -418,9 +432,9 @@ public class MainFrame extends JFrame {
 		editMenu.setEnabled(true);
 		editable(true);
 		
-		formatMenu = new JMenu("Setting");
-		formatMenu.setMnemonic(KeyEvent.VK_T);
-		formatMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
+		settingMenu = new JMenu("Setting");
+		settingMenu.setMnemonic(KeyEvent.VK_T);
+		settingMenu.getAccessibleContext().setAccessibleDescription("Setting menu");
 
 		setting = new JMenuItem("Setting dialog", KeyEvent.VK_D);
 		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, ActionEvent.ALT_MASK));
@@ -460,10 +474,24 @@ public class MainFrame extends JFrame {
 				ta.setLineWrap(false);
 			}
 		});
-		formatMenu.add(setting);
-		formatMenu.add(font);
-		formatMenu.add(editable);
-		formatMenu.add(wrap);
+		memStatus = new JCheckBoxMenuItem("Show memory usage");
+		memStatus.getAccessibleContext().setAccessibleDescription("Show Java Heap memory usage staus");
+		memStatus.setSelected(false);
+		memStatus.addActionListener((e) -> {
+			if(memStatus.isSelected()) {
+				memChecker = new MemUsageChecker(memUsage);
+				memChecker.execute();
+				memUsage.setVisible(true);
+			} else {
+				memChecker.cancel(true);
+				memUsage.setVisible(false);
+			}
+		});
+		settingMenu.add(setting);
+		settingMenu.add(font);
+		settingMenu.add(editable);
+		settingMenu.add(wrap);
+		settingMenu.add(memStatus);
 
 		pageMenu = new JMenu("Pages");
 		pageMenu.setMnemonic(KeyEvent.VK_P);
@@ -490,7 +518,7 @@ public class MainFrame extends JFrame {
 
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
-		menuBar.add(formatMenu);
+		menuBar.add(settingMenu);
 		menuBar.add(pageMenu);
 
 		setJMenuBar(menuBar);
@@ -773,4 +801,40 @@ public class MainFrame extends JFrame {
 		next.setEnabled(false);
 	}
 
+}
+
+
+class MemUsageChecker extends SwingWorker<Void, Long> {
+
+	private Long[] before = new Long[] { -1L, -1L, -1L };
+	private final JProgressBar progressBar;
+	
+	public MemUsageChecker(JProgressBar progressBar) {
+		this.progressBar = progressBar;
+	}
+	
+	@Override
+	protected Void doInBackground() {
+		while(!Main.isKilled() && !isCancelled()) {
+			Long[] mem = new Long[] { Runtime.getRuntime().maxMemory(),
+									  Runtime.getRuntime().totalMemory(),
+									  Runtime.getRuntime().freeMemory()
+									};
+			if(!Arrays.equals(before, mem)) publish(mem);
+			try { Thread.sleep(1000); } catch(InterruptedException e) {}
+		}
+		return null;
+	}
+	
+	@Override
+    protected void process(List<Long> chunks) {
+		long max = chunks.get(0);
+		long total = chunks.get(1);
+		long used = total - chunks.get(2);
+		progressBar.setValue((int) (100 * used / total));
+		progressBar.setString(Main.formatFileSize(used) + " of " + Main.formatFileSize(total));
+		progressBar.setToolTipText("Heap usage : " + Main.formatFileSize(used) + 
+				" of Total : " + Main.formatFileSize(total) + ", Max : " + Main.formatFileSize(max));
+    }
+	
 }
