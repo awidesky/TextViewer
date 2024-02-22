@@ -61,11 +61,11 @@ public class TextFilechooser extends JFileChooser {
 		addChoosableFileFilter(TEXTFILEFILTER);
 
 		JPanel panel2;
-		if(System.getProperty("os.name").toLowerCase().contains("mac")) {
+		if(isMac()) {
 			Dimension dim = getPreferredSize();
-			dim.width += 60; // add some more space for "new Folder" button
+			dim.width += 90; // add some more space for "new Folder" button
 			setPreferredSize(dim);
-			panel2 = (JPanel)((JPanel)((JPanel) this.getComponent(4)).getComponent(2)).getComponent(1);
+			panel2 = (JPanel)((JPanel)((JPanel)this.getComponent(4)).getComponent(2)).getComponent(1);
 		} else { //windows
 			panel2 = (JPanel)((JPanel) this.getComponent(3)).getComponent(3);
 		}
@@ -76,19 +76,35 @@ public class TextFilechooser extends JFileChooser {
 
 		encryptedCheckBox.setSize(encryptedCheckBox.getPreferredSize().width, encryptedCheckBox.getPreferredSize().height);
 
-		panel2.setLayout(new BorderLayout());
-		panel2.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+		if(isMac()) {
+			panel2.setLayout(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+			panel2.add(Box.createHorizontalStrut(15));
+			panel2.add(comps[0]); //add new Folder button first
+			
+			panel2.add(Box.createHorizontalStrut(15));
+			panel2.add(encryptedCheckBox);
+			panel2.add(Box.createHorizontalStrut(15));
+			panel2.add(comboBox);
 
-		JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		innerPanel.add(Box.createHorizontalStrut(15));
-		innerPanel.add(comboBox);
-		for(Component c : comps) {
+			for (int i = 1; i < comps.length; i++) { // add rest of the original components(cancel, save/open) 
+				panel2.add(Box.createHorizontalStrut(15));
+				panel2.add(comps[i]);
+			}
+		} else {
+			panel2.setLayout(new BorderLayout());
+			panel2.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+			
+			JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 			innerPanel.add(Box.createHorizontalStrut(15));
-			innerPanel.add(c);
-		}
+			innerPanel.add(comboBox);
+			for (Component c : comps) {
+				innerPanel.add(Box.createHorizontalStrut(15));
+				innerPanel.add(c);
+			}
 
-		panel2.add(encryptedCheckBox, BorderLayout.WEST);
-		panel2.add(innerPanel, BorderLayout.EAST);
+			panel2.add(encryptedCheckBox, BorderLayout.WEST); // encryption checkbox must be on the leftest(in windows)
+			panel2.add(innerPanel, BorderLayout.EAST);
+		}
 
 	}
 	
@@ -105,6 +121,11 @@ public class TextFilechooser extends JFileChooser {
     }
 	public boolean isEncrypted() {
 		return encryptedCheckBox.isSelected();
+	}
+	
+	
+	private static boolean isMac() {
+		return System.getProperty("os.name").toLowerCase().contains("mac");
 	}
 	
 	public static JComboBox<String> getCharsetChooseComboBox() {
