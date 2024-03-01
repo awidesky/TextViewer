@@ -605,7 +605,6 @@ public class MainFrame extends JFrame {
 		} else {
 			fileChooser.setDialogTitle("Select file to read...");
 			fileChooser.setLastOpendDir(lastOpened);
-			//fileChooser.getActionMap().get("viewTypeDetails").actionPerformed(null); TODO : why this not working on mac?
 			if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION)
 				return;
 
