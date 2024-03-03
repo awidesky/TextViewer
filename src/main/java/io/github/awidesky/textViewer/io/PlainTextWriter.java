@@ -19,7 +19,7 @@ public class PlainTextWriter extends TextWriter {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws IOException {
 		if(bw != null) bw.close();
 	}
 	

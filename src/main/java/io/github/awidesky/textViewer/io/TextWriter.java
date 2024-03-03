@@ -20,4 +20,6 @@ public abstract class TextWriter implements AutoCloseable {
 		return tf.isEncrypted ? new EncryptedTextWriter(tf) : new PlainTextWriter(tf);
 	}
 	
+	public abstract void close() throws IOException;
+	
 }

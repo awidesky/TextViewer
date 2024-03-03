@@ -206,12 +206,13 @@ public class SelectedFileHandler {
 		long startTime = System.currentTimeMillis();
 		
 		boolean overWriteSameFile = writeTo.equals(readFile);
-		File outputFile = writeTo.file;
+		final File outputFile = writeTo.file; // Hold output file in case of we need to overwrite after.
 		if (overWriteSameFile) {
 			logger.log(taskID + "Output file is same as original file! creating temporary file....");
 			try {
-				outputFile = File.createTempFile(writeTo.file.getName() + new SimpleDateFormat("yyyyMMddkkmmss").format(new Date()), ".txt");
-				logger.log(taskID + "Temp File created at : " + outputFile.getAbsolutePath());
+				File temp = File.createTempFile(writeTo.file.getName() + new SimpleDateFormat("yyyyMMddkkmmss").format(new Date()), ".txt");
+				logger.log(taskID + "Temp File created at : " + temp.getAbsolutePath());
+				writeTo = new TextFile(outputFile, writeTo.encoding, writeTo.lineSep, writeTo.getPassword());
 			} catch (IOException e) {
 				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
 				ret = false;
@@ -220,12 +221,10 @@ public class SelectedFileHandler {
 
 		if (ret) { //if not already failed, write
 			if (paged) {
-				ret = pagedFileWriteLoop(new TextFile(outputFile, writeTo.encoding, setting.getLineSeparator(), writeTo.getPassword()));
+				ret = pagedFileWriteLoop(writeTo);
 			} else {
 				try {
-					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), writeTo.encoding));
-					//bw.write(replaceNewLine(text, writeTo.lineSep));
-					bw.close();
+					TextWriter.getTextWriter(writeTo).writeString(text);
 					ret = true;
 				} catch (IOException e) {
 					SwingDialogs.error("unable to write file!", "%e%\n\nFile : " + outputFile.getAbsolutePath(), e, false);
@@ -235,13 +234,13 @@ public class SelectedFileHandler {
 
 			if (overWriteSameFile) {
 				try {
-					Files.copy(outputFile.toPath(), writeTo.file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					if (!outputFile.delete())
-						outputFile.deleteOnExit();
+					Files.copy(writeTo.file.toPath(), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					if (!writeTo.file.delete())
+						writeTo.file.deleteOnExit();
 				} catch (IOException e) {
 					SwingDialogs.error("Failed to move temp file do destination!",
 							"%e%\nTemp file that (probably) holding the text you tried to save is in : "
-									+ outputFile.getAbsolutePath(), e, false);
+									+ writeTo.file.getAbsolutePath(), e, false);
 					ret = false;
 				}
 			}
@@ -258,7 +257,7 @@ public class SelectedFileHandler {
 		logger.log(taskID + "Original file is  : " + readFile.file.getAbsolutePath() + " as encoding : " + readFile.encoding.name());
 		
 		try (TextReader reader = new TextReader(setting, readFile, taskID);
-				OutputStreamWriter ow = new OutputStreamWriter(new FileOutputStream(writeTo.file), writeTo.encoding);) {
+				TextWriter writer = TextWriter.getTextWriter(writeTo);) {
 
 			 while (true) {
 				logger.log(taskID + "start reading a page #" + reader.getNextPageNum());
@@ -268,8 +267,9 @@ public class SelectedFileHandler {
 					break;
 				}
 				logger.log(taskID + "start writing a page #" + (reader.getNextPageNum() - 1));
-				//ow.write(replaceNewLine(changes.getOrDefault(page.pageNum(), page).text, writeTo.lineSep));
-				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) ow.write(writeTo.lineSep.getStr()); //last lane separator at the end of a page is eliminated
+				writer.writePage(changes.getOrDefault(page.pageNum(), page));
+				//last line separator at the end of a page is eliminated, so append it.
+				if (page.lastNewlineRemoved() && setting.getPageEndsWithNewline()) writer.writeString(writeTo.lineSep.getStr());
 			}
 
 			logger.log(taskID + "Reached EOF!");

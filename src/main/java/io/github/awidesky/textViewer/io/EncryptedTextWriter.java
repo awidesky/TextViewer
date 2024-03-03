@@ -32,7 +32,7 @@ public class EncryptedTextWriter extends TextWriter {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws IOException {
 		cipher.doFinal(null);
 		writeFile.clearPassword();
 	}
