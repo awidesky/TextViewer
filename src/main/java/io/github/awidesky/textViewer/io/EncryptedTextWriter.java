@@ -27,8 +27,7 @@ public class EncryptedTextWriter extends TextWriter {
 	
 	@Override
 	public void writeString(String str) throws IOException {
-		str = replaceNewLine(str, writeFile.lineSep.getStr());
-		cipher.update(str.getBytes(writeFile.encoding));
+		cipher.update(replaceNewLine(str, writeFile.lineSep.getStr()).getBytes(writeFile.encoding));
 	}
 
 	@Override
