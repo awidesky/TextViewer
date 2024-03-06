@@ -76,7 +76,7 @@ public class TextFile {
 		return LineSeparator.getDefault();
 	}
 
-	char[] getPassword() { return password.clone(); }
+	char[] getPassword() { return password == null ? null : password.clone(); }
 
 	public void clearPassword() {
 		Random r = new Random(); //don't let compiler to optimize password clearing.
