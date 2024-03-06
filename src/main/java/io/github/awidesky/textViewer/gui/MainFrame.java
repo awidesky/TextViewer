@@ -666,6 +666,7 @@ public class MainFrame extends JFrame {
 			return false;
 		}
 		lastSaved = saveTo;
+		fileChooser.setLastOpendDir(lastSaved);
 		return true;
 
 	}
