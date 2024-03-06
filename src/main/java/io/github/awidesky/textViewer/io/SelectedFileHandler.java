@@ -9,11 +9,8 @@
 
 package io.github.awidesky.textViewer.io;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -212,7 +209,7 @@ public class SelectedFileHandler {
 			try {
 				File temp = File.createTempFile(writeTo.file.getName() + new SimpleDateFormat("yyyyMMddkkmmss").format(new Date()), ".txt");
 				logger.log(taskID + "Temp File created at : " + temp.getAbsolutePath());
-				writeTo = new TextFile(outputFile, writeTo.encoding, writeTo.lineSep, writeTo.getPassword());
+				writeTo = new TextFile(temp, writeTo.encoding, writeTo.lineSep, writeTo.getPassword());
 			} catch (IOException e) {
 				SwingDialogs.error("Failed to make temp file!", "%e%", e, false);
 				ret = false;
@@ -233,6 +230,7 @@ public class SelectedFileHandler {
 			}
 
 			if (overWriteSameFile) {
+				logger.log(taskID + "Moving temporary file to final destination....");
 				try {
 					Files.copy(writeTo.file.toPath(), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					if (!writeTo.file.delete())
