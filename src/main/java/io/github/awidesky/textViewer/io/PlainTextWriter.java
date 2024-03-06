@@ -16,6 +16,7 @@ public class PlainTextWriter extends TextWriter {
 	
 	public void writeString(String str) throws IOException {
 		bw.write(replaceNewLine(str, writeFile.lineSep.getStr()));
+		bw.flush();
 	}
 
 	@Override
