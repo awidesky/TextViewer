@@ -60,6 +60,7 @@ public class Main {
 	public static void main(String[] args) { 
 
 		boolean verbose = false;
+		SwingDialogs.setLogger(logThread.getLogger());
 		
 		for(int i = 0; i < args.length; i++) {
 			if(args[i].equals("--help")) {
